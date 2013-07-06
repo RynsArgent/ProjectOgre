@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Test</title>
+	
+	<!-- Load socket.io client side contents. -->
+	<script src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="engine.js"></script>
+
+	<style type="text/css">
+	html { margin: 0; padding: 0; height: 100%; overflow: hidden }
+	body { margin: 0; padding: 0; height: 100% }
+	
+	#logContainer { margin: 10; float: right; width: 300px; height: 400px; overflow: auto; border: 2px solid gray }
+	</style>
+
+	<script type="text/javascript">
+		window.onload = function() {
+			
+			var game_core = function()
+			{
+				this.players = [];
+			
+				this.client_onconnected = function(data)
+				{
+					this.players.push(data.id);
+					var log_msg = data.id + ' has connected.';
+					var logElem = document.getElementById('log');
+					logElem.appendChild( document.createElement('li').appendChild( document.createTextNode( log_msg )));
+				}
+				
+				this.client_ondisconnected = function(data)
+				{
+				
+				}
+				
+				this.client_onserverupdate_recieved = function(data)
+				{
+				
+				}
+				
+				this.client_onnetmessage = function(data)
+				{
+					var log_msg = data;
+					var logElem = document.getElementById('log');
+					logElem.appendChild( document.createElement('li').appendChild( document.createTextNode( log_msg )));
+				}
+				
+				this.socket = io.connect();
+				// When we connect, we are not 'connected' until we have a server id
+		    // and are placed in a game by the server. The server sends us a message for that.
+				this.socket.on('connect', function() {
+					// TODO: handle this case - probably should set a state to CONNECTING
+				});
+				// Handle when we connect to the server, showing state and storing id's.
+		    this.socket.on('onconnected', client_onconnected.bind(this));
+				// Sent when we are disconnected (network, server down, etc)
+				this.socket.on('ondisconnected', client_ondisconnected.bind(this));
+				// Sent each tick of the server simulation. This is our authoritive update
+        this.socket.on('onserverupdate', client_onserverupdate_recieved.bind(this));
+        // On error we just show that we are not connected for now. Can print the data.
+        this.socket.on('error', client_ondisconnected.bind(this));
+        // On message from the server, we parse the commands and send it to the handlers
+        this.socket.on('message', client_onnetmessage.bind(this));
+			}();
+
+			
+			var Keys = {
+				UP :	38,
+				DOWN:	40,
+				LEFT:	37,
+				RIGHT:39
+			}
+			var Scroll = { x:0, y:0 }
+			
+			var TerrainToColor = {
+				'Plains' : '#009966',
+				'Sea' : '#000099',
+				'Mountains' : '#999933',
+				'Forests' : '#009900',
+				'Swamps' : '#666666'
+			};
+			
+			var canvas = document.getElementById('game');
+			
+			canvas.width = 800;//document.body.clientWidth;
+			canvas.height = 600;//document.body.clientHeight;
+			
+			var ctx = canvas.getContext('2d');
+			
+			var map = new Map(100, 100, 32);
+			map.generate_random();
+			
+			window.addEventListener('keydown', handleKeyDown, false);
+			canvas.addEventListener('mousedown', handleMouseDown, false);
+			
+			// initializeGrid(); --> This is done by map.generate_random()
+			draw();
+			
+			function handleMouseDown(e)
+			{
+				game_core.socket.send('event-mousedown');
+			}
+			
+			function handleKeyDown(e) 
+			{
+				switch(e.keyCode) 
+				{
+					case Keys.UP:
+						Scroll.y -= ((Scroll.y - map.TilePixelHeight) >= 0) ? map.TilePixelHeight : 0;
+						break;
+					case Keys.DOWN:
+						Scroll.y += ((Scroll.y + map.TilePixelHeight) > map.get_pixel_height()) ? 0 : map.TilePixelHeight;
+						break;
+					case Keys.LEFT:
+						Scroll.x -= ((Scroll.x - map.TilePixelWidth) >= 0) ? map.TilePixelWidth : 0;
+						break;
+					case Keys.RIGHT:
+						Scroll.x += ((Scroll.x + map.TilePixelWidth) > map.get_pixel_width()) ? 0 : map.TilePixelWidth;
+						break;
+				}
+				
+				document.getElementById('scrollx').innerHTML = Scroll.x;
+				document.getElementById('scrolly').innerHTML = Scroll.y;
+			}
+			
+			function draw()
+			{
+				ctx.fillStyle = '#ffffff';
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+				
+				var startRow = Math.floor(Scroll.x / map.TilePixelWidth);
+				var startCol = Math.floor(Scroll.y / map.TilePixelHeight);
+				var rowCount = startRow + Math.floor(canvas.width / map.TilePixelWidth) + 1;
+				var colCount = startCol + Math.floor(canvas.height / map.TilePixelHeight) + 1;
+				
+				rowCount = ((startRow + rowCount) > map.get_grid().width) ? map.get_grid().width : rowCount;
+				colCount = ((startCol + colCount) > map.get_grid().height) ? map.get_grid().height : colCount;
+				
+				for(var row = startRow; row < rowCount && row < map.get_grid().width; row++)
+				{
+					for(var col = startCol; col < colCount && col < map.get_grid().height; col++)
+					{
+						var tilePositionX = map.TilePixelWidth * row;
+						var tilePositionY = map.TilePixelHeight * col;
+						
+						tilePositionX -= Scroll.x;
+						tilePositionY -= Scroll.y;
+						//console.log( 'Grid-width: ' + map.get_grid().width + ' Grid-height: ' + map.get_grid().height );
+						//console.log( 'row: ' + row + ' col: ' + col + ' rowCount: ' + rowCount + ' colCount: ' + colCount + '  TILE: ' + map.get_tile(row, col) );
+						
+						var tile = map.get_tile(row, col);
+						var img = tile.get_image();
+						
+						ctx.drawImage(img, tilePositionX, tilePositionY, map.TilePixelWidth, map.TilePixelHeight);
+						
+						//ctx.fillStyle = TerrainToColor[ map.get_tile(row, col).get_label() ];
+						//ctx.fillRect(tilePositionX, tilePositionY, map.TilePixelWidth, map.TilePixelHeight);
+					}
+				}
+				
+				setTimeout(draw, 1);
+			}
+		}
+	</script>
+
+</head>
+<body>
+	<canvas id="game" width="100" height="100"></canvas>
+	<div id="logContainer"><h3>Log</h3><ul id="log"></ul></div>
+	<p>Use the UP, DOWN, LEFT and RIGHT keys to scroll</p>
+	<p>Scroll X: <span id="scrollx">0</span></p>
+	<p>Scroll Y: <span id="scrolly">0</span></p>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title></title>
+	
+	<!-- Load socket.io client side contents -->
+	<script src="/socket.io/socket.io.js"></script>
+
+	<!-- temporary externally generated map -->
+	<!-- script type="text/javascript" src="resources/tmp.map.js"></script -->
+	<!-- script type="text/javascript" src="resources/tmp.map.1.js"></script -->
+	<script type="text/javascript" src="resources/tmp.map.2.js"></script>
+	<!---------------------------------------------------------------->
+	
+	<script type="text/javascript" src="js/game-engine.js"></script>
+	<script type="text/javascript" src="js/client-engine.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="css/game.css" />
+</head>
+<body>
+	<canvas id="viewport"></canvas>
+	<div id="log_container">
+		<h3>LOGS</h3>
+		<p>Scroll X: <span id="scrollx">0</span></p>
+		<p>Scroll Y: <span id="scrolly">0</span></p>
+		<ul id="log"></ul>
+	</div>
+	<div id="tools_container">
+		<h3>Tools</h3>
+		<p>Use the WASD keys to scroll</p>
+	</div>
+	
+</body>
+</html>

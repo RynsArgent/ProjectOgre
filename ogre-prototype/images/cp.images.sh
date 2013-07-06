@@ -1,0 +1,17 @@
+cp ~/Share/Beaches.png .
+cp ~/Share/CastleRed.32.png .
+cp ~/Share/CastleRed.png .
+cp ~/Share/Deserts.png .
+cp ~/Share/ForestDeserts.png .
+cp ~/Share/ForestPlains.png .
+cp ~/Share/ForestSnows.png .
+cp ~/Share/Forests.png .
+cp ~/Share/MountainDeserts.png .
+cp ~/Share/MountainPlains.png .
+cp ~/Share/MountainSnows.png .
+cp ~/Share/Mountains.png .
+cp ~/Share/Oceans.png .
+cp ~/Share/Plains.png .
+cp ~/Share/Seas.png .
+cp ~/Share/Snows.png .
+cp ~/Share/Swamps.png .

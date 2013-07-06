@@ -1,0 +1,15 @@
+{
+  "name": "ogre-prototype",
+  "subdomain": "ktp-ogre-prototype",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "2.5.x",
+    "socket.io": "0.9.x"
+  },
+  "version": "0.0.0-19",
+  "engines": {
+    "node": "0.8.x"
+  }
+}
