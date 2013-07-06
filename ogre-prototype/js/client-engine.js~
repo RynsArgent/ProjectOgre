@@ -1,3 +1,37 @@
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+// http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+ 
+// requestAnimationFrame polyfill by Erik Möller
+// fixes from Paul Irish and Tino Zijdel
+ 
+(function() {
+    var lastTime = 0;
+    var vendors = ['ms', 'moz', 'webkit', 'o'];
+    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+        window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+                                   || window[vendors[x]+'CancelRequestAnimationFrame'];
+    }
+ 
+    if (!window.requestAnimationFrame)
+        window.requestAnimationFrame = function(callback, element) {
+            var currTime = new Date().getTime();
+            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+              timeToCall);
+            lastTime = currTime + timeToCall;
+            return id;
+        };
+ 
+    if (!window.cancelAnimationFrame)
+        window.cancelAnimationFrame = function(id) {
+            clearTimeout(id);
+        };
+}());
+////////////////////////////////////////////////////////////////////////////////////////////
+
 window.onload = function() {
 	var screen = {
 		width : 1280,
@@ -61,29 +95,9 @@ window.onload = function() {
 		this.client_onconnected = function(data)
 		{
 			this.players.push(data.id);
-			this.logger( 'You have connected to ' + data.gid + ' as ' + data.id );
+			this.logger( 'You have connected as ' + data.id );
 			
 			this.myid = data.id;
-			
-			this.game = new core_engine(data.gid);
-			this.game.client_init({castles: data.castles, input: tmp_data});
-			
-			console.log( ' --- game: ' + this.game + ' map ' + this.game.map);
-				screen.row_lo = 0;
-				screen.row_hi = screen.width / this.game.map.TilePixelWidth;
-				screen.col_lo = 0;
-				screen.col_hi = screen.height / this.game.map.TilePixelHeight;
-	
-				screen.identity = { 
-					rlo: 0, 
-					rhi: screen.width / this.game.map.TilePixelWidth,
-					clo: 0,
-					chi: screen.height / this.game.map.TilePixelHeight
-				};
-				
-				this.draw();
-				//setInterval(this.draw, 1000);
-
 		}
 		
 		this.client_ondisconnected = function(data)
@@ -132,54 +146,13 @@ window.onload = function() {
     this.socket.on('playerjoined', this.client_onplayerjoin.bind(this));
     
     this.socket.on('onothersclick', this.client_onothersclick.bind(this));
-    
-    //////////////////////////////////////////////////////////////////////////////////
-    this.draw = function()
-		{
-			console.log( "*** GAME: " + this.game );
-			ctx.fillStyle = '#ffffff';
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-		
-			var startRow = Math.floor(Scroll.x / this.game.map.TilePixelWidth);
-			var startCol = Math.floor(Scroll.y / this.game.map.TilePixelHeight);
-			var rowCount = startRow + Math.floor(canvas.width / this.game.map.TilePixelWidth) + 1;
-			var colCount = startCol + Math.floor(canvas.height / this.game.map.TilePixelHeight) + 1;
-		
-			rowCount = ((startRow + rowCount) > this.game.map.GridWidth) ? this.game.map.GridWidth : rowCount;
-			colCount = ((startCol + colCount) > this.game.map.GridHeight) ? this.game.map.GridHeight : colCount;
-		
-			for(var row = startRow; row < rowCount && row < this.game.map.GridWidth; row++)
-			{
-				for(var col = startCol; col < colCount && col < this.game.map.GridHeight; col++)
-				{
-					var tilePositionX = this.game.map.TilePixelWidth * row;
-					var tilePositionY = this.game.map.TilePixelHeight * col;
-				
-					tilePositionX -= Scroll.x;
-					tilePositionY -= Scroll.y;
-				
-					var tile = this.game.map.get_tile(row, col);
-					//var img = tile.Image;
-				
-					ctx.drawImage(tile.Image, tilePositionX, tilePositionY, this.game.map.TilePixelWidth, this.game.map.TilePixelHeight);
-					ctx.drawImage(tile.Image, tilePositionX, tilePositionY, this.game.map.TilePixelWidth, this.game.map.TilePixelHeight);
-					if( tile.hasOwnProperty('Castle') )
-					{
-						var castle = tile.Castle;
-						//console.log( ' huh !? ' + castle.Image + ' ~ ' + castle.Image.src );
-						ctx.drawImage(castle.Image, tilePositionX, tilePositionY, this.game.map.TilePixelWidth, this.game.map.TilePixelHeight);
-					}
-				}
-			}
-			setTimeout(this.draw, 1);
-		} // draw()
 	}
 	
 	var client = new game_client();
 	
-//	var game = new core_engine(324);
-//	game.initialize({width:100,height:100,input:tmp_data});
-	/*
+	var game = new core_engine(324);
+	game.initialize({width:100,height:100,input:tmp_data});
+	
 	screen.row_lo = 0;
 	screen.row_hi = screen.width / game.map.TilePixelWidth;
 	screen.col_lo = 0;
@@ -190,11 +163,11 @@ window.onload = function() {
 		rhi: screen.width / game.map.TilePixelWidth,
 		clo: 0,
 		chi: screen.height / game.map.TilePixelHeight
-	};*/
+	};
 	
 	window.addEventListener('keydown', handleKeyDown, false);
 	canvas.addEventListener('click', handleCanvasClick, false);
-	//draw();
+	draw();
 	
 	function handleCanvasClick(e)
 	{
@@ -248,9 +221,10 @@ window.onload = function() {
 		document.getElementById('scrollx').innerHTML = Scroll.x;
 		document.getElementById('scrolly').innerHTML = Scroll.y;
 	}
-	/*
+	
 	function draw()
 	{
+		requestAnimationFrame(draw);
 		ctx.fillStyle = '#ffffff';
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 		
@@ -284,7 +258,7 @@ window.onload = function() {
 					ctx.drawImage(castle.Image, tilePositionX, tilePositionY, game.map.TilePixelWidth, game.map.TilePixelHeight);
 				}
 			}
-		}*/
+		}
 		
 		/*
 		for(var i in game.castles)
@@ -305,8 +279,8 @@ window.onload = function() {
 				
 				ctx.drawImage(castle.Image, tpx, tpy, game.map.TilePixelWidth, game.map.TilePixelHeight);
 			}
-		}
+		}*/
 		
-		setTimeout(draw, 1);	// should probably go into update function? hrm
-	}*/
+		//setTimeout(draw, 1);	// should probably go into update function? hrm
+	}
 }
