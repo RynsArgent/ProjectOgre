@@ -165,6 +165,7 @@ var core_engine = function(gid)
 
 core_engine.prototype.server_init = function(parameters)
 {
+	console.log( '\t :: core_engine.server_init' );
 	var tileWidth = parameters.tileWidth || 32;
 	var tileHeight = parameters.tileHeight || 32;
 	var mapWidth = parameters.width || 1280 / tileWidth;
@@ -190,8 +191,8 @@ core_engine.prototype.client_init = function(parameters)
 	this.map.generate(parameters.input);
 	
 	console.log( ' map generated and initialized ' + this.map );
-	
-	this.init_castles({castles:parameters.castles.data, imgSrc:parameters.castles.imgsrc});
+	console.log( ' from client_init parameters.data: ' + parameters.data.length );
+	this.init_castles({castles:parameters.data, imgsrc:parameters.imgsrc});
 }
 
 core_engine.prototype.initialize = function(parameters)
@@ -220,18 +221,26 @@ core_engine.prototype.init_castles = function(parameters)
 	var img = new Image();
 	img.src = parameters.imgsrc;
 	
-	for(var i = 0; i < this.castles.length; ++i)
+	console.log( ' -parameters.castles.length = ' + parameters.castles.length);
+	
+	for(var i = 0; i < parameters.castles.length; ++i)
 	{
-		var c = castles[i];
-		var castle = new Castle({label:c.Label, tile_location:{x:c.X, y:c.Y}, image:img});
+		var c = parameters.castles[i];
+		var castle = new Castle({label:c.Label, tile_location:c.Tile, image:img});
 		this.castles.push(castle);
-		
-		this.map.get_tile(c.x,c.y).Castle = castle;
+		//console.log( ' core_engine.init_castles: c.X ' + c.X + ' c.Y ' + c.Y + ' c ' + parameters.castles[i]);
+		//var keys = Object.keys( parameters.castles[i] );
+		/*for( k in keys )
+		{
+			console.log( ' k: ' + keys[k] );
+		}*/
+		this.map.get_tile(c.Tile.x, c.Tile.y).Castle = castle;
 	}
 }
 
 core_engine.prototype.server_generate_castles = function(parameters)
 {
+	console.log( '\t :: core_engine.server_generate_castles' );
 	parameters = parameters || {};
 	var num_of_castles = parameters.numberOfCastles || rand(10);
 	var image_src = parameters.imageSrc || "images/CastleRed.32.png";
@@ -257,6 +266,7 @@ core_engine.prototype.server_generate_castles = function(parameters)
 		// insert castle to tile
 		this.map.get_tile(row,col).Castle = castle;
 	}
+	//console.log( '\t :: core_engine.server_generate_castles completed :: this.castles ' + this.castles + ' length: ' + this.castles.length );
 }
 
 core_engine.prototype.generate_castles = function(parameters)

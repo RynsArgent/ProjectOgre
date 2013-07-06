@@ -98,6 +98,14 @@ window.onload = function() {
 			this.logger( 'You have connected as ' + data.id );
 			
 			this.myid = data.id;
+			this.game.game_id = data.gid;
+			console.log( 'tmpdata: ' + tmp_data );
+			data.castles.input = tmp_data;
+			console.log( 'client_onconnected : castles.data ' + data.castles.data );
+			this.game.client_init(data.castles);
+
+			// { id: client.userid, gid: game.id, castles: { data: game.Castles, imgsrc: "images/CastleRed.32.png" }
+			draw();
 		}
 		
 		this.client_ondisconnected = function(data)
@@ -149,25 +157,27 @@ window.onload = function() {
 	}
 	
 	var client = new game_client();
+	var game = client.game = new core_engine(324);
+
+	//game.initialize({input:tmp_data});
 	
-	var game = new core_engine(324);
-	game.initialize({width:100,height:100,input:tmp_data});
-	
+	/*
 	screen.row_lo = 0;
 	screen.row_hi = screen.width / game.map.TilePixelWidth;
 	screen.col_lo = 0;
 	screen.col_hi = screen.height / game.map.TilePixelHeight;
-	
+	*/
+	/*
 	screen.identity = { 
 		rlo: 0, 
 		rhi: screen.width / game.map.TilePixelWidth,
 		clo: 0,
 		chi: screen.height / game.map.TilePixelHeight
 	};
-	
+	*/
 	window.addEventListener('keydown', handleKeyDown, false);
 	canvas.addEventListener('click', handleCanvasClick, false);
-	draw();
+	//draw();
 	
 	function handleCanvasClick(e)
 	{

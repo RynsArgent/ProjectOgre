@@ -58,6 +58,7 @@ sio.configure(function() {
 
 /* Temporary game server code */
 game_server = require('./js/server-engine.js');
+game_server.createGame();
 console.log( 'Game server initialized: ' + game_server.game_count + ' game running' );
 /* -------------------------- */
 
@@ -66,10 +67,10 @@ sio.sockets.on('connection', function(client) {
 	client.userid = 'Player-' + Math.floor(Math.random() * 100);
 
 	// Tell the player they connected
-	client.emit('onconnected', { id: client.userid });
-	client.broadcast.emit('playerjoined', { id: client.userid});
+	//client.emit('onconnected', { id: client.userid });
+	//client.broadcast.emit('playerjoined', { id: client.userid});
 	// call game_server
-	//game_server.onPlayerConnected( client );
+	game_server.onPlayerConnected( client );
 	console.log('\t :: socket.io :: player ' + client.userid + ' connected');
 
 	
@@ -87,5 +88,6 @@ sio.sockets.on('connection', function(client) {
 	// handle disconnect
 	client.on('disconnect', function() {
 		console.log('\t :: socket.io :: player ' + client.userid + ' disconnected');
+		game_server.onPlayerDisconnected(client);
 	});
 });

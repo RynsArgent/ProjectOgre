@@ -117,5 +117,7 @@ var tmp_data = {
 		['sm','sm','sm','sm','sm','sm','sm','sm','sm','sm','sm','sm','sm','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sm','sm','sm','sm','sm','sn','sn','sn','sn','sn','sn','sn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','wb','ws','ws','ws','ws','wo','wo','wo','wo','wo','wo'],
 		['sm','sm','sm','sm','sm','sm','sm','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sn','sm','sm','sm','sm','sm','sm','sn','sn','sn','sm','sm','sn','sn','sn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','pn','wb','wb','ws','ws','ws','ws','wo','wo','wo','wo','wo']
 	]
-}
+};
+
+var tmp_data = module.exports = tmp_data;
 

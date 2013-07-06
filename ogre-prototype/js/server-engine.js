@@ -3,7 +3,7 @@ var
 	verbose 		= true;
 	
 game_engine = require('./game-engine.js');
-tmp_data = require('../resources/tmp.map.2.js');
+tmp_data = require('../resources/tmp.map.1.js');
 
 global.window = global.document = global;
 
@@ -48,13 +48,21 @@ game_server.onPlayerConnected = function(client)
 	//{
 	var keys = Object.keys(this.games);
 	var game = this.games[ keys[0] ];
-		game.players[client.userid] = client;
+	game.players[client.userid] = client;
+	game.player_count += 1;	
 	//}
 	
-	client.emit('onconnected', { id: client.userid, gid: game.id, castles: { data: game.Castles, imgsrc: "images/CastleRed.32.png" } });
+	client.emit('onconnected', { id: client.userid, gid: game.id, castles: { data: game.engine.castles, imgsrc: "images/CastleRed.32.png" } });
 	client.broadcast.emit('playerjoined', { id: client.userid});
 }
 
-
-/* start a game */
-//game_server.createGame();
+game_server.onPlayerDisconnected = function(client)
+{
+	var keys = Object.keys(this.games);
+	var game = this.games[ keys[0] ];
+	
+	delete game.players[ client.userid ];
+	game.player_count -= 1;
+	//games.players.splice( games.players.indexOf( client.userid ), 1 );
+	console.log( '\t :: game_server.onPlayerDisconnected :: removed player from the game :: game.player_count = ' + game.player_count );
+}
