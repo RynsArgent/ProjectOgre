@@ -301,6 +301,26 @@ core_engine.prototype.generate_castles = function(parameters)
 	}
 }
 
+// Main update loop
+/*
+game_core.prototype.update = function(t) {
+	// work out the delta time
+	this.dt = this.last_frame_time ? ( (t - this.last_frame_time) / 1000.0 ).fixed() : 0.016;
+	
+	// update the game specifics
+	if( !this.server )
+	{
+		this.client_update();
+	}
+	else
+	{
+		this.server_update();
+	}
+	
+	// schedule next update
+	this.updateid = window.requestAnimationFrame( this.update.bind(this), this.viewport );
+}*/
+
 var game_engine = module.exports = core_engine;
 
 // Utilities
@@ -308,3 +328,8 @@ function rand(ulimit)
 {
 	return Math.floor(Math.random() * ulimit);
 }
+
+// Helper functions
+
+// (4.22208334636).fixed(n) will return fixed point value to n places, default n = 3
+Number.prototype.fixed = function(n) { n = n || 3; return parseFloat(this.toFixed(n)); };

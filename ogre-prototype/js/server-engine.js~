@@ -48,7 +48,8 @@ game_server.onPlayerConnected = function(client)
 	//{
 	var keys = Object.keys(this.games);
 	var game = this.games[ keys[0] ];
-		game.players[client.userid] = client;
+	game.players[client.userid] = client;
+	game.player_count += 1;	
 	//}
 	
 	client.emit('onconnected', { id: client.userid, gid: game.id, castles: { data: game.engine.castles, imgsrc: "images/CastleRed.32.png" } });

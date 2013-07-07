@@ -129,6 +129,12 @@ window.onload = function() {
 			this.logger( data.id + ' has connected' );
 		}
 		
+		this.client_onplayerleave = function(data)
+		{
+			this.players.splice( this.players.indexOf( data.id ) );
+			this.logger( data.id + ' has disconnected' );
+		}
+		
 		this.client_onothersclick = function(data)
 		{
 			this.logger( data.pid + ' clicked on map @ {' + data.x + ',' + data.y + '}' );
@@ -152,6 +158,8 @@ window.onload = function() {
     this.socket.on('message', this.client_onnetmessage.bind(this));
     
     this.socket.on('playerjoined', this.client_onplayerjoin.bind(this));
+    
+    this.socket.on('playerleave', this.client_onplayerleave.bind(this));
     
     this.socket.on('onothersclick', this.client_onothersclick.bind(this));
 	}
@@ -269,28 +277,5 @@ window.onload = function() {
 				}
 			}
 		}
-		
-		/*
-		for(var i in game.castles)
-		{
-			var castle = game.castles[i];
-			
-			if( castle.Tile.x >= startRow && castle.Tile.x < startRow + rowCount 
-					&& castle.Tile.y >= startCol && castle.Tile.y < startCol + colCount )
-			{
-				var tpx = game.map.TilePixelWidth * castle.Tile.x;
-				var tpy = game.map.TilePixelHeight * castle.Tile.y;
-				
-				tpx -=  Scroll.x;
-				tpy -= Scroll.y;
-				
-				console.log( ' tpx: ' + tpx + '  tpy: ' + tpy + ' ' + game.map.TilePixelWidth + ' ' + game.map.TilePixelHeight + ' tile.x ' + castle.Tile.x + ' tile.y ' + castle.Tile.y + '  scrollx ' + Scroll.x + '   scrolly ' + Scroll.y );
-				//var cimg = castle.Image;
-				
-				ctx.drawImage(castle.Image, tpx, tpy, game.map.TilePixelWidth, game.map.TilePixelHeight);
-			}
-		}*/
-		
-		//setTimeout(draw, 1);	// should probably go into update function? hrm
-	}
+	} // draw
 }

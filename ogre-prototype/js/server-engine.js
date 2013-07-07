@@ -63,6 +63,8 @@ game_server.onPlayerDisconnected = function(client)
 	
 	delete game.players[ client.userid ];
 	game.player_count -= 1;
-	//games.players.splice( games.players.indexOf( client.userid ), 1 );
+	
+	client.broadcast.emit('playerleave', { id: client.userid} );
+	
 	console.log( '\t :: game_server.onPlayerDisconnected :: removed player from the game :: game.player_count = ' + game.player_count );
 }
