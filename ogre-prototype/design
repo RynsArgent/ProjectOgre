@@ -1,0 +1,46 @@
+
+
+4 canvas
+	* bg canvas : tile layer 
+		- lowest z-index
+	* st canvas : stationary layer 
+		- holds stationary objects such as resources and cities / castles
+	* main canvas : main layer
+		- holds the units and any other things that move about the map
+	* fg canvas : fg layer
+		- optional - paralax, clouds, etc
+
+
+
+main tick : the tick function
+	both server and client
+	needs to be at top-level
+	
+core.engine
+
+	init	
+		#server
+			set up map / read map file
+			initialize resource nodes
+			initialize cities / castles
+			initialize game properties
+				* time	[used to calculate day/night and calendar]
+				* in-game calendar
+				
+		
+		#client
+			set up map from server input
+			initialize resource nodes from server input
+			initialize cities / castles from server input
+	
+	tick
+		#called from main tick
+		call update functions
+		
+		#client
+		update unit positions
+		call draw function
+		
+	handle_input_request
+	
+	
