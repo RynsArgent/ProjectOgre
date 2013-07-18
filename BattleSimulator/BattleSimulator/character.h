@@ -1,6 +1,8 @@
 #pragma once
 
+#include <vector>
 #include <string>
+#include "Skill.h"
 
 using namespace std;
 
@@ -12,10 +14,12 @@ protected:
 	string name;
 
 	int baseHealth;
-	int baseDamage;
+	int basePhysicalAttack;
+	int baseMagicAttack;
 	int baseSpeed;
 	
-	int basePhysicalDefense;
+	int baseMeleeDefense;
+	int baseRangeDefense;
 	int baseFireDefense;
 	int baseWaterDefense;
 	int baseEarthDefense;
@@ -25,19 +29,32 @@ protected:
 	int baseSize;
 	
 	ElementType favoredElement;
+	
+	std::vector<Skill> backSkills;
+	std::vector<Skill> midSkills;
+	std::vector<Skill> frontSkills;
+
 	int baseUpkeep;
 public:
-	Character(const string & name = "", int health = 0, int damage = 0, int speed = 0, 
-		int physicalDefense = 0, int fireDefense = 0, int waterDefense = 0, 
+	Character(const string & name = "", int health = 0, int physicalAttack = 0, int magicAttack = 0, int speed = 0, 
+		int baseMeleeDefense = 0, int baseRangeDefense = 0, int fireDefense = 0, int waterDefense = 0, 
 		int earthDefense = 0, int iceDefense = 0, int lightningDefense = 0,
 		int size = 0, ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
 
-		int getBaseDamage() const {
-		return baseDamage;
+	int getBasePhysicalAttack() const {
+		return basePhysicalAttack;
 	}
 
-	void setBaseDamage(int baseDamage) {
-		this->baseDamage = baseDamage;
+	void setBasePhysicalAttack(int physicalAttack) {
+		this->basePhysicalAttack = physicalAttack;
+	}
+
+	int getBaseMagicAttack() const {
+		return baseMagicAttack;
+	}
+
+	void setBaseMagicAttack(int magicAttack) {
+		this->baseMagicAttack = magicAttack;
 	}
 
 	int getBaseEarthDefense() const {
@@ -80,12 +97,20 @@ public:
 		this->baseLightningDefense = baseLightningDefense;
 	}
 
-	int getBasePhysicalDefense() const {
-		return basePhysicalDefense;
+	int getBaseMeleeDefense() const {
+		return baseMeleeDefense;
 	}
 
-	void setBasePhysicalDefense(int basePhysicalDefense) {
-		this->basePhysicalDefense = basePhysicalDefense;
+	void setBaseMeleeDefense(int baseMeleeDefense) {
+		this->baseMeleeDefense = baseMeleeDefense;
+	}
+	
+	int getBaseRangeDefense() const {
+		return baseRangeDefense;
+	}
+
+	void setBaseRangeDefense(int baseRangeDefense) {
+		this->baseRangeDefense = baseRangeDefense;
 	}
 
 	int getBaseSize() const {
@@ -135,16 +160,20 @@ public:
 	void setName(const string& name) {
 		this->name = name;
 	}
+
+	~Character() {}
 };
 
 class Fighter : public Character
 {
 protected:
 	const static int BASE_HEALTH = 10;
-	const static int BASE_DAMAGE = 3;
+	const static int BASE_PHYSICAL_ATTACK = 3;
+	const static int BASE_MAGIC_ATTACK = 3;
 	const static int BASE_SPEED = 3;
 	
-	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_MELEE_DEFENSE = 0;
+	const static int BASE_RANGE_DEFENSE = 0;
 	const static int BASE_FIRE_DEFENSE = 0;
 	const static int BASE_WATER_DEFENSE = 0;
 	const static int BASE_EARTH_DEFENSE = 0;
@@ -154,16 +183,20 @@ protected:
 	const static int BASE_SIZE = 1;
 public:
 	Fighter(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+
+	~Fighter() {}
 };
 
 class Scout : public Character
 {
 protected:
 	const static int BASE_HEALTH = 8;
-	const static int BASE_DAMAGE = 2;
+	const static int BASE_PHYSICAL_ATTACK = 2;
+	const static int BASE_MAGIC_ATTACK = 2;
 	const static int BASE_SPEED = 5;
 	
-	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_MELEE_DEFENSE = 0;
+	const static int BASE_RANGE_DEFENSE = 0;
 	const static int BASE_FIRE_DEFENSE = 0;
 	const static int BASE_WATER_DEFENSE = 0;
 	const static int BASE_EARTH_DEFENSE = 0;
@@ -173,4 +206,6 @@ protected:
 	const static int BASE_SIZE = 1;
 public:
 	Scout(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+
+	~Scout() {}
 };

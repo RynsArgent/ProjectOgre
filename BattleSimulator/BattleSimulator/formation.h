@@ -31,4 +31,6 @@ public:
 	void setCharacterAt(int x, int y, Character* character) {
 		grid[x][y] = character;
 	}
+
+	~Formation() {}
 };
