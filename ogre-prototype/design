@@ -44,3 +44,8 @@ core.engine
 	handle_input_request
 	
 	
+Server should run the full engine code
+Client should be only display and a lite version of the engine
+We want the server to be the authority and send info to all clients about the game
+	
+	
