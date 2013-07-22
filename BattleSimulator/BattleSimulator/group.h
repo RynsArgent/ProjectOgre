@@ -1,5 +1,7 @@
 #pragma once
 
+#include "pch.h"
+
 #include <vector>
 #include "unit.h"
 #include "formation.h"
@@ -26,11 +28,13 @@ private:
 	int width;
 	int height;
 	
-	std::vector<std::vector<Unit*> > base;
-	std::vector<std::vector<Unit*> > grid;
+	vector<vector<Unit*> > base;
+	vector<vector<Unit*> > grid;
 
 	Facing facing;
 	
+	vector<Unit*> dead;
+
 	void carryOverFormationStatistics();
 public:
 	Group(Formation* formation);
@@ -64,14 +68,31 @@ public:
 	}
 
 	void turnToFace(Facing face);
-
-	std::vector<Unit*> theseUnits() const;
-	std::vector<Unit*> theseUnitsAt(int xmin, int xmax, int ymin, int ymax) const;
-	std::vector<Unit*> theseUnitsFurthestInFront(int xmin, int xmax) const;
 	
-	std::vector<Unit*> enemyUnits(Group* target) const;
-	std::vector<Unit*> enemyUnitsAt(Group* target, int xmin, int xmax, int ymin, int ymax) const;
-	std::vector<Unit*> enemyUnitsFurthestInFront(Group* target, int xmin, int xmax) const;
+	bool groupIsAvailable() const;
+	bool groupIsDead() const;
+	bool withinColumnRange(int x, int xmin, int xmax) const;
+	void cleanDead();
+
+	vector<Unit*> allyUnits() const;
+	vector<Unit*> allyUnitsAt(int xmin, int xmax, int ymin, int ymax) const;
+	vector<Unit*> allyUnitsAtColumn(int x) const;
+	vector<Unit*> allyUnitsAtRow(int y) const;
+	vector<Unit*> allyUnitsAtColumns(int xmin, int xmax) const;
+	vector<Unit*> allyUnitsAtRows(int ymin, int ymax) const;
+	Unit* allyUnitFurthestInFront(int x) const;
+	vector<Unit*> allyUnitsFurthestInFront(int xmin, int xmax) const;
+	
+	vector<Unit*> enemyUnits(Group* target) const;
+	vector<Unit*> enemyUnitsAt(Group* target, int xmin, int xmax, int ymin, int ymax) const;
+	vector<Unit*> enemyUnitsAtColumn(Group* target, int x) const;
+	vector<Unit*> enemyUnitsAtRow(Group* target, int y) const;
+	vector<Unit*> enemyUnitsAtColumns(Group* target, int xmin, int xmax) const;
+	vector<Unit*> enemyUnitsAtRows(Group* target, int ymin, int ymax) const;
+	Unit* enemyUnitFurthestInFront(Group* target, int x) const;
+	vector<Unit*> enemyUnitsFurthestInFront(Group* target, int xmin, int xmax) const;
+
+	void printGroup(bool mirrored) const;
 
 	~Group() {}
 };

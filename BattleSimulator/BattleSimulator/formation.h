@@ -1,5 +1,7 @@
 #pragma once
 
+#include "pch.h"
+
 #include <vector>
 #include "character.h"
 
@@ -27,9 +29,16 @@ public:
 	Character* getCharacterAt(int x, int y) const {
 		return grid[x][y];
 	}
-	
+
 	void setCharacterAt(int x, int y, Character* character) {
 		grid[x][y] = character;
+	}
+	
+	void setCharacterAt(int x, int y, Character* character, Skill backSkill, Skill midSkill, Skill frontSkill) {
+		grid[x][y] = character;
+		character->setBackSkill(backSkill);
+		character->setMidSkill(midSkill);
+		character->setFrontSkill(frontSkill);
 	}
 
 	~Formation() {}

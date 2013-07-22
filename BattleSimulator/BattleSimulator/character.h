@@ -1,8 +1,10 @@
 #pragma once
 
+#include "pch.h"
+
 #include <vector>
 #include <string>
-#include "Skill.h"
+#include "skill.h"
 
 using namespace std;
 
@@ -33,6 +35,9 @@ protected:
 	std::vector<Skill> backSkills;
 	std::vector<Skill> midSkills;
 	std::vector<Skill> frontSkills;
+	Skill backSkill;
+	Skill midSkill;
+	Skill frontSkill;
 
 	int baseUpkeep;
 public:
@@ -151,6 +156,30 @@ public:
 
 	void setFavoredElement(ElementType favoredElement) {
 		this->favoredElement = favoredElement;
+	}
+
+	Skill getBackSkill() const {
+		return backSkill;
+	}
+	
+	void setBackSkill(Skill value) {
+		backSkill = value;
+	}
+
+	Skill getMidSkill() const {
+		return midSkill;
+	}
+	
+	void setMidSkill(Skill value) {
+		midSkill = value;
+	}
+	
+	Skill getFrontSkill() const {
+		return frontSkill;
+	}
+
+	void setFrontSkill(Skill value) {
+		frontSkill = value;
 	}
 
 	const string& getName() const {
