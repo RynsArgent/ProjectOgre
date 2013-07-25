@@ -104,7 +104,7 @@ Facing fullTurn(Facing face)
 static int groupCount = 0;
 
 Group::Group(Formation *formation)
-	: gid(groupCount++), formation(formation), facing(FACING_FORWARD)
+	: gid(groupCount++), formation(formation), dead(), facing(FACING_FORWARD)
 {
 	carryOverFormationStatistics();
 }
@@ -113,20 +113,28 @@ void Group::carryOverFormationStatistics()
 {
 	width = formation->getWidth();
 	height = formation->getHeight();
-	base = std::vector<std::vector<Unit*> >(width, std::vector<Unit*>(height, NULL));
-	grid = std::vector<std::vector<Unit*> >(width, std::vector<Unit*>(height, NULL));
+	base = vector<vector<Unit*> >(width, vector<Unit*>(height, nullptr));
+	grid = vector<vector<Unit*> >(width, vector<Unit*>(height, nullptr));
 	for (int x = 0; x < width; ++x)
 		for (int y = 0; y < height; ++y)
 		{
-			Unit* unit = new Unit(formation->getCharacterAt(x, y), gid, x, y);
-			base[x][y] = unit;
-			grid[x][y] = base[x][y];
+			if (formation->getCharacterAt(x, y) != nullptr) {
+				Unit* unit = new Unit(formation->getCharacterAt(x, y), gid, x, y);
+				unit->applyCharacterSkillSets();
+				base[x][y] = unit;
+				grid[x][y] = base[x][y];
+			}
 		}
 }
 
 void Group::turnToFace(Facing face)
 {
 	facing = face;
+	for (int x = 0; x < width; ++x)
+		for (int y = 0; y < height; ++y)
+		{
+			grid[x][y] = nullptr;
+		}
 	for (int x = 0; x < width; ++x)
 		for (int y = 0; y < height; ++y)
 		{
@@ -156,41 +164,157 @@ void Group::turnToFace(Facing face)
 					break;
 			}
 			grid[xmod][ymod] = base[x][y];
-			base[x][y]->setOnGrid(xmod, ymod);
+			if (base[x][y] != nullptr)
+				base[x][y]->setOnGrid(xmod, ymod);
 		}
 }
 
-std::vector<Unit*> Group::theseUnits() const
+bool Group::groupIsAvailable() const
+{
+	vector<Unit*> units = allyUnits();
+	for (int i = 0; i < units.size(); ++i)
+		if (units[i]->isAvailable())
+			return true;
+	return false;
+}
+
+bool Group::groupIsDead() const
+{
+	vector<Unit*> units = allyUnits();
+	return units.size() <= 0;
+}
+
+bool Group::withinColumnRange(int x, int xmin, int xmax) const
+{
+	return xmin <= x && x <= xmax;
+}
+
+void Group::cleanDead()
+{
+	vector<Unit*> units = allyUnits();
+	for (int i = 0; i < units.size(); ++i) {
+		if (units[i]->isDead()) {
+			int x = units[i]->getGridX();
+			int y = units[i]->getGridY();
+			grid[x][y] = nullptr;
+			dead.push_back(units[i]);
+		}
+	}
+}
+
+vector<Unit*> Group::allyUnits() const
 {
 	vector<Unit*> ret;
 	for (int x = 0; x < width; ++x)
 		for (int y = 0; y < height; ++y)
 		{
-			if (hasUnitAt(x, y) && grid[x][y]->isAvailable())
+			if (hasUnitAt(x, y))
 				ret.push_back(grid[x][y]);
 		}
 	return ret;
 }
 
-std::vector<Unit*> Group::theseUnitsAt(int xmin, int xmax, int ymin, int ymax) const
+vector<Unit*> Group::allyUnitsAt(int xmin, int xmax, int ymin, int ymax) const
 {
+	xmin = max(0, xmin);
+	xmax = min(width - 1, xmax);
+	ymin = max(0, ymin);
+	ymax = min(height - 1, ymax);
+
 	vector<Unit*> ret;
 	for (int x = xmin; x <= xmax; ++x)
 		for (int y = ymin; y <= ymax; ++y)
 		{
-			if (hasUnitAt(x, y) && grid[x][y]->isAvailable())
+			if (hasUnitAt(x, y))
 				ret.push_back(grid[x][y]);
 		}
 	return ret;
 }
 
-std::vector<Unit*> Group::theseUnitsFurthestInFront(int xmin, int xmax) const
+vector<Unit*> Group::allyUnitsAtColumn(int x) const
 {
+	if (x < 0 || x >= width)
+		return vector<Unit*>();
+
+	vector<Unit*> ret;
+	for (int y = 0; y < height; ++y)
+	{
+		if (hasUnitAt(x, y))
+			ret.push_back(grid[x][y]);
+	}
+	return ret;
+}
+
+
+vector<Unit*> Group::allyUnitsAtRow(int y) const
+{
+	if (y < 0 || y >= height)
+		return vector<Unit*>();
+
+	vector<Unit*> ret;
+	for (int x = 0; x < width; ++x)
+	{
+		if (hasUnitAt(x, y))
+			ret.push_back(grid[x][y]);
+	}
+	return ret;
+}
+
+vector<Unit*> Group::allyUnitsAtColumns(int xmin, int xmax) const
+{
+	xmin = max(0, xmin);
+	xmax = min(width - 1, xmax);
+
 	vector<Unit*> ret;
 	for (int x = xmin; x <= xmax; ++x)
-		for (int y = 0; y < height - 1; ++y)
+		for (int y = 0; y < height; ++y)
 		{
-			if (hasUnitAt(x, y) && grid[x][y]->isAvailable())
+			if (hasUnitAt(x, y))
+				ret.push_back(grid[x][y]);
+		}
+	return ret;
+}
+
+vector<Unit*> Group::allyUnitsAtRows(int ymin, int ymax) const
+{
+	ymin = max(0, ymin);
+	ymax = min(height - 1, ymax);
+
+	vector<Unit*> ret;
+	for (int x = 0; x < width; ++x)
+		for (int y = ymin; y <= ymax; ++y)
+		{
+			if (hasUnitAt(x, y))
+				ret.push_back(grid[x][y]);
+		}
+	return ret;
+}
+
+Unit* Group::allyUnitFurthestInFront(int x) const
+{
+	x = max(0, x);
+	x = min(width - 1, x);
+
+	for (int y = 0; y < height; ++y)
+	{
+		if (hasUnitAt(x, y))
+		{
+			return grid[x][y];
+		}
+	}
+	return nullptr;
+}
+
+vector<Unit*> Group::allyUnitsFurthestInFront(int xmin, int xmax) const
+{
+	xmin = max(0, xmin);
+	xmax = min(width - 1, xmax);
+
+	vector<Unit*> ret;
+	for (int x = xmin; x <= xmax; ++x)
+		for (int y = 0; y < height; ++y)
+		{
+			if (hasUnitAt(x, y))
 			{
 				ret.push_back(grid[x][y]);
 				break;
@@ -199,25 +323,94 @@ std::vector<Unit*> Group::theseUnitsFurthestInFront(int xmin, int xmax) const
 	return ret;
 }
 
-std::vector<Unit*> Group::enemyUnits(Group* target) const
+vector<Unit*> Group::enemyUnits(Group* target) const
 {
-	return target->theseUnits();
+	return target->allyUnits();
 }
 
-std::vector<Unit*> Group::enemyUnitsAt(Group* target, int xmin, int xmax, int ymin, int ymax) const
+vector<Unit*> Group::enemyUnitsAt(Group* target, int xmin, int xmax, int ymin, int ymax) const
 {
 	int xminmod = target->getWidth() - xmax - 1;
 	int xmaxmod = target->getWidth() - xmin - 1;
 	int yminmod = ymin;
 	int ymaxmod = ymax;
 
-	return target->theseUnitsAt(xminmod, xmaxmod, yminmod, ymaxmod);
+	return target->allyUnitsAt(xminmod, xmaxmod, yminmod, ymaxmod);
 }
 
-std::vector<Unit*> Group::enemyUnitsFurthestInFront(Group* target, int xmin, int xmax) const
+vector<Unit*> Group::enemyUnitsAtColumn(Group* target, int x) const
+{
+	int xmod = target->getWidth() - x - 1;
+
+	return target->allyUnitsAtColumn(xmod);
+}
+
+vector<Unit*> Group::enemyUnitsAtRow(Group* target, int y) const
+{
+	int ymod = y;
+
+	return target->allyUnitsAtColumn(ymod);
+}
+
+vector<Unit*> Group::enemyUnitsAtColumns(Group* target, int xmin, int xmax) const
 {
 	int xminmod = target->getWidth() - xmax - 1;
 	int xmaxmod = target->getWidth() - xmin - 1;
 
-	return target->theseUnitsFurthestInFront(xminmod, xmaxmod);
+	return target->allyUnitsAtColumns(xminmod, xmaxmod);
+}
+
+vector<Unit*> Group::enemyUnitsAtRows(Group* target, int ymin, int ymax) const
+{
+	int yminmod = ymin;
+	int ymaxmod = ymax;
+	
+	return target->allyUnitsAtRows(yminmod, ymaxmod);
+}
+
+Unit* Group::enemyUnitFurthestInFront(Group* target, int x) const
+{
+	int xmod = target->getWidth() - x - 1;
+
+	return target->allyUnitFurthestInFront(x);
+}
+
+vector<Unit*> Group::enemyUnitsFurthestInFront(Group* target, int xmin, int xmax) const
+{
+	int xminmod = target->getWidth() - xmax - 1;
+	int xmaxmod = target->getWidth() - xmin - 1;
+
+	return target->allyUnitsFurthestInFront(xminmod, xmaxmod);
+}
+
+void Group::printGroup(bool mirrored) const
+{
+	if (mirrored)
+	{
+		for (int y = height - 1; y >= 0; --y)
+		{
+			for (int x = width - 1; x >= 0; --x)
+			{
+				if (grid[x][y] != nullptr)
+					cout << grid[x][y]->currentHealth << " ";
+				else
+					cout << "*" << " ";
+			}
+			cout << endl;
+		}
+	}
+	else
+	{
+		for (int y = 0; y < height; ++y)
+		{
+			for (int x = 0; x < width; ++x)
+			{
+				if (grid[x][y] != nullptr)
+					cout << grid[x][y]->currentHealth << " ";
+				else
+					cout << "*" << " ";
+			}
+			cout << endl;
+		}
+	}
 }

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "group.h"
-#include "status.h"
+#include "pch.h"
 
-#include <map>
+#include "group.h"
 
 class Battle
 {
@@ -11,8 +10,11 @@ private:
 	Group* group1;
 	Group* group2;
 	
+	int roundNumber;
+	int turnIndex;
 	vector<Unit*> unitOrder;
-	map<Unit*, vector<Status*> > statusEffects;
+
+	bool isOver;
 public:
 	Battle(Group *group1, Group *group2);
 
@@ -34,9 +36,15 @@ public:
 			return group2;
 	}
 
+	bool isBattleOver() const;
 	void initializeUnits();
 	void newUnitOrder();
 	void executeTurn();
+
+	void simulate();
+	
+	void print() const;
+
 
 	~Battle() {}
 

@@ -1,10 +1,35 @@
 #include <Windows.h>
 #include <gl\glut.h>
 
+#include "pch.h"
+
+#include <ctime>
+#include <cstdlib>
 #include "battle.h"
 
-const int WINDOW_WIDTH = 1024;
-const int WINDOW_HEIGHT = 800;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
+
+Formation* formA = new Formation();
+Formation* formB = new Formation();
+
+Group* groupA = nullptr;
+Group* groupB = nullptr;
+Battle* battle = nullptr;
+
+void initialize() {
+	formA->setCharacterAt(0, 1, new Fighter("fighter1A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	formA->setCharacterAt(2, 1, new Fighter("fighter2A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	formA->setCharacterAt(1, 1, new Fighter("fighter3A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	groupA = new Group(formA);
+
+	formB->setCharacterAt(0, 0, new Fighter("fighter1B"), BLOCK, STRIKE, TAUNT);
+	formB->setCharacterAt(2, 0, new Fighter("fighter2B"), BLOCK, STRIKE, TAUNT);
+	formB->setCharacterAt(1, 2, new Fighter("fighter3B"), BLOCK, STRIKE, TAUNT);
+	groupB = new Group(formB);
+
+	battle = new Battle(groupA, groupB);
+}
 
 //Converts the provided point, p, from screen coordinates to OpenGL coordinate system 
 void GLscreenToWindowCoordinates(double x, double y, double & rx, double & ry)
@@ -37,6 +62,10 @@ int main(int argc, char** argv)
 	glutMouseFunc(GLprocessMouse);
 	gluOrtho2D(0.0, WINDOW_WIDTH, WINDOW_HEIGHT, 0.0);
 
+	srand(time(0));
+	initialize();
+	battle->print();
+
 	glutMainLoop();
 
 	return 0;
@@ -55,4 +84,9 @@ void GLrender()
 
 void GLprocessMouse(int button, int state, int x, int y)
 {
+	if (state == GLUT_DOWN)
+	{
+		battle->executeTurn();
+		battle->print();
+	}
 }

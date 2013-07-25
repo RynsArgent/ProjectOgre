@@ -1,14 +1,20 @@
 #pragma once
 
+#include "pch.h"
+
 #include "battle.h"
 
+// Base class for abilities
 class Ability
 {
 protected:
 	int cost;
 public:
 	Ability(int cost = 0);
+	
+	// Most abilities will have their logic implemented in this function
 	virtual void action(Unit* caster, Battle* battle) const = 0;
+
 	~Ability() {}
 };
 

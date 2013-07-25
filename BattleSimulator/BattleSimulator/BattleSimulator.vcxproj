@@ -90,6 +90,7 @@
     <ClInclude Include="character.h" />
     <ClInclude Include="formation.h" />
     <ClInclude Include="group.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="skill.h" />
     <ClInclude Include="status.h" />
     <ClInclude Include="unit.h" />
