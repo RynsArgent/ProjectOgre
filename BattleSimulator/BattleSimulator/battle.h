@@ -1,7 +1,9 @@
-#pragma once
+#ifndef __BATTLE_H__
+#define __BATTLE_H__
 
 #include "pch.h"
 
+#include "unit.h"
 #include "group.h"
 
 class Battle
@@ -23,14 +25,14 @@ public:
 	}
 
 	Group* getAllyGroup(int gid) const {
-		if (gid == group1->getGid())
+		if (gid == group1->getGrid())
 			return group1;
 		else
 			return group2;
 	}
 
 	Group* getEnemyGroup(int gid) const {
-		if (gid != group1->getGid())
+		if (gid != group1->getGrid())
 			return group1;
 		else
 			return group2;
@@ -50,3 +52,5 @@ public:
 
 	friend class Ability;
 };
+
+#endif

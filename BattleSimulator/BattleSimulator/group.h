@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __GROUP_H__
+#define __GROUP_H__
 
 #include "pch.h"
 
@@ -28,18 +29,21 @@ private:
 	int width;
 	int height;
 	
-	vector<vector<Unit*> > base;
-	vector<vector<Unit*> > grid;
-
+	vector<vector<Unit*> > base; // Original representation of units
+	vector<vector<Unit*> > grid; // Modified representation of units due to facing and battle
 	Facing facing;
 	
-	vector<Unit*> dead;
+	vector<Unit*> dead; // Collects dead units in battle
 
 	void carryOverFormationStatistics();
 public:
 	Group(Formation* formation);
 	
-	int getGid() const {
+	TargetType getTargetOrder() const {
+		return formation->getTargetOrder();
+	}
+
+	int getGrid() const {
 		return gid;
 	}
 	
@@ -52,7 +56,7 @@ public:
 	}
 
 	bool hasUnitAt(int x, int y) const {
-		return grid[x][y] != nullptr;
+		return grid[x][y] != NULL;
 	}
 
 	Unit* getUnitAt(int x, int y) const {
@@ -68,31 +72,36 @@ public:
 	}
 
 	void turnToFace(Facing face);
+	void cleanDead();
 	
 	bool groupIsAvailable() const;
 	bool groupIsDead() const;
 	bool withinColumnRange(int x, int xmin, int xmax) const;
-	void cleanDead();
 
+	// Returns units of this group based on function request
 	vector<Unit*> allyUnits() const;
 	vector<Unit*> allyUnitsAt(int xmin, int xmax, int ymin, int ymax) const;
 	vector<Unit*> allyUnitsAtColumn(int x) const;
 	vector<Unit*> allyUnitsAtRow(int y) const;
 	vector<Unit*> allyUnitsAtColumns(int xmin, int xmax) const;
 	vector<Unit*> allyUnitsAtRows(int ymin, int ymax) const;
-	Unit* allyUnitFurthestInFront(int x) const;
-	vector<Unit*> allyUnitsFurthestInFront(int xmin, int xmax) const;
+	vector<Unit*> allyUnitsFurthestInFront(int xmin, int xmax, int depth = 1) const;
+	vector<Unit*> allyUnitsInRowFurthestInFront(int rows = 1) const;
 	
+	// Returns unit that are on the opposite side of this group. The parameters passed belong to
+	// this group's x and y values that will be translated to the enemy group coordinate ranges.
 	vector<Unit*> enemyUnits(Group* target) const;
 	vector<Unit*> enemyUnitsAt(Group* target, int xmin, int xmax, int ymin, int ymax) const;
 	vector<Unit*> enemyUnitsAtColumn(Group* target, int x) const;
 	vector<Unit*> enemyUnitsAtRow(Group* target, int y) const;
 	vector<Unit*> enemyUnitsAtColumns(Group* target, int xmin, int xmax) const;
 	vector<Unit*> enemyUnitsAtRows(Group* target, int ymin, int ymax) const;
-	Unit* enemyUnitFurthestInFront(Group* target, int x) const;
-	vector<Unit*> enemyUnitsFurthestInFront(Group* target, int xmin, int xmax) const;
+	vector<Unit*> enemyUnitsFurthestInFront(Group* target, int xmin, int xmax, int depth = 1) const;
+	vector<Unit*> enemyUnitsInRowFurthestInFront(Group* target, int rows = 1) const;
 
 	void printGroup(bool mirrored) const;
 
 	~Group() {}
 };
+
+#endif

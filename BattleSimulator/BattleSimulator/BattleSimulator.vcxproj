@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{B2F3BE72-E58F-4BB0-8383-59EE6EFE8B37}</ProjectGuid>
+    <ProjectGuid>{F934632F-385C-4119-9848-A39A31AA30DC}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>BattleSimulator</RootNamespace>
   </PropertyGroup>
@@ -19,11 +19,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -49,7 +51,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IN_WINDOWS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -75,25 +77,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ability.h" />
+    <ClInclude Include="battle.h" />
+    <ClInclude Include="character.h" />
+    <ClInclude Include="damage.h" />
+    <ClInclude Include="formation.h" />
+    <ClInclude Include="group.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="status.h" />
+    <ClInclude Include="unit.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="ability.cpp" />
     <ClCompile Include="battle.cpp" />
     <ClCompile Include="character.cpp" />
+    <ClCompile Include="damage.cpp" />
     <ClCompile Include="formation.cpp" />
     <ClCompile Include="group.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="status.cpp" />
     <ClCompile Include="unit.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ability.h" />
-    <ClInclude Include="battle.h" />
-    <ClInclude Include="character.h" />
-    <ClInclude Include="formation.h" />
-    <ClInclude Include="group.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="skill.h" />
-    <ClInclude Include="status.h" />
-    <ClInclude Include="unit.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

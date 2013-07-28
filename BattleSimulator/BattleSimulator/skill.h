@@ -1,6 +1,0 @@
-#pragma once
-
-#include "pch.h"
-
-enum Skill { NO_SKILL, HUNDRED_BLADES, BLOCK, STRIKE, TAUNT, BATTLE_SHOUT, SHOOT, FOREWARN, SCOPE, TANGLE_TRAP };
-#define NUMBER_OF_SKILLS 10
