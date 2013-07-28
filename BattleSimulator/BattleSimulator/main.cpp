@@ -1,10 +1,21 @@
+#ifdef IN_WINDOWS
 #include <Windows.h>
-#include <gl\glut.h>
+#endif
+
+#ifdef IN_MAC 
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
 
 #include "pch.h"
 
 #include <ctime>
 #include <cstdlib>
+#include "character.h"
+#include "formation.h"
+#include "unit.h"
+#include "group.h"
 #include "battle.h"
 
 const int WINDOW_WIDTH = 800;
@@ -13,19 +24,49 @@ const int WINDOW_HEIGHT = 600;
 Formation* formA = new Formation();
 Formation* formB = new Formation();
 
-Group* groupA = nullptr;
-Group* groupB = nullptr;
-Battle* battle = nullptr;
+Group* groupA = NULL;
+Group* groupB = NULL;
+Battle* battle = NULL;
 
 void initialize() {
-	formA->setCharacterAt(0, 1, new Fighter("fighter1A"), HUNDRED_BLADES, STRIKE, TAUNT);
-	formA->setCharacterAt(2, 1, new Fighter("fighter2A"), HUNDRED_BLADES, STRIKE, TAUNT);
-	formA->setCharacterAt(1, 1, new Fighter("fighter3A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	/*
+		*********GROUP A*********
+		FRONT	[0,0] [1,0] [2,0]
+		MIDDLE	[0,1] [1,1] [2,1]
+		BACK	[0,2] [1,2] [2,2]
+		
+		        100Bl 100Bl 100Bl
+		        Strik shoot Strik
+		              
+	*/
+	formA->setCharacterAt(0, 0, new Fighter("fighter1A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	formA->setCharacterAt(1, 0, new Fighter("fighter2A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	formA->setCharacterAt(2, 0, new Fighter("fighter3A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	formA->setCharacterAt(0, 1, new Fighter("fighter4A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	formA->setCharacterAt(2, 1, new Fighter("fighter5A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	formA->setCharacterAt(1, 1, new Scout("scout1A"), SHOOT, SHOOT, SCOPE);
+	formA->setTargetOrder(TARGET_RANDOM);
 	groupA = new Group(formA);
 
+	/*
+		*********GROUP B*********
+		BACK	[2,2] [1,2] [0,2]
+		MIDDLE	[2,1] [1,1] [0,1]
+		FRONT	[2,0] [1,0] [0,0]
+		
+		              BShout
+		        Shoot Block Shoot
+		        Block       Block
+	*/
+
 	formB->setCharacterAt(0, 0, new Fighter("fighter1B"), BLOCK, STRIKE, TAUNT);
+	//formB->setCharacterAt(1, 0, new Fighter("fighter4B"), BLOCK, BLOCK, BATTLE_SHOUT);
 	formB->setCharacterAt(2, 0, new Fighter("fighter2B"), BLOCK, STRIKE, TAUNT);
-	formB->setCharacterAt(1, 2, new Fighter("fighter3B"), BLOCK, STRIKE, TAUNT);
+	formB->setCharacterAt(1, 1, new Fighter("fighter3B"), BLOCK, STRIKE, TAUNT);
+	formB->setCharacterAt(1, 2, new Fighter("fighter4B"), BLOCK, BLOCK, BATTLE_SHOUT);
+	formB->setCharacterAt(0, 1, new Scout("scout1B"), SHOOT, SHOOT, SCOPE);
+	formB->setCharacterAt(2, 1, new Scout("scout12"), SHOOT, SHOOT, SCOPE);
+	formB->setTargetOrder(TARGET_RANDOM);
 	groupB = new Group(formB);
 
 	battle = new Battle(groupA, groupB);

@@ -4,12 +4,13 @@
 #include <cstdlib>
 #include "ability.h"
 
+// Load only abilities that are used for each battle, functions below are associated to loading and accessing abilities
 Ability* abilities[NUMBER_OF_SKILLS];
 
 void initAbilityList()
 {
 	for (int i = 0; i < NUMBER_OF_SKILLS; ++i)
-		abilities[i] = nullptr;
+		abilities[i] = NULL;
 }
 
 void setAbility(Skill skill)
@@ -31,6 +32,9 @@ void setAbility(Skill skill)
 	case BATTLE_SHOUT:
 		abilities[skill] = new BattleShout();
 		break;
+	case SHOOT:
+		abilities[skill] = new Shoot();
+		break;
 	default:
 		abilities[skill] = new NoSkill();
 		break;
@@ -39,26 +43,30 @@ void setAbility(Skill skill)
 
 Ability* getAbility(Skill skill)
 {
-	if (abilities[skill] == nullptr)
+	if (abilities[skill] == NULL)
 		setAbility(skill);
 	
 	return abilities[skill];
 }
 
-bool compareSpeed(Unit* lhs, Unit* rhs)
-{
-	return lhs->getCurrentSpeed() < rhs->getCurrentSpeed() || 
-		(lhs->getCurrentSpeed() == rhs->getCurrentSpeed() && lhs->getCurrentInitiative() < rhs->getCurrentInitiative());
+//
+
+// Used to determine unit order, faster units are sorted to the front of the list
+bool compareSpeed(Unit* lhs, Unit* rhs) {
+	return lhs->getCurrentSpeed() > rhs->getCurrentSpeed() || 
+		(lhs->getCurrentSpeed() == rhs->getCurrentSpeed() && lhs->getCurrentInitiative() > rhs->getCurrentInitiative());
 }
 
 Battle::Battle(Group* group1, Group* group2)
 	: group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), isOver(false)
 {
+	// Clear the ability array to null values
 	initAbilityList();
 
 	group1->turnToFace(FACING_FORWARD);
 	group2->turnToFace(FACING_FORWARD);
 
+	// Set up unit order
 	initializeUnits();
 }
 
@@ -72,9 +80,12 @@ void Battle::initializeUnits()
 	vector<Unit*> units1 = group1->allyUnits();
 	vector<Unit*> units2 = group2->allyUnits();
 	for (int i = 0; i < units1.size(); ++i)
-		unitOrder.push_back(units1[i]);
+		unitOrder.push_back(units1[i]);		
 	for (int i = 0; i < units2.size(); ++i)
 		unitOrder.push_back(units2[i]);
+	
+	newUnitOrder();
+	sort(unitOrder.begin(), unitOrder.end(), compareSpeed);
 }
 
 void Battle::newUnitOrder()
@@ -82,8 +93,6 @@ void Battle::newUnitOrder()
 	// Set a random initiative so that units with same speed are dealt with
 	for (int i = 0; i < unitOrder.size(); ++i)
 		unitOrder[i]->setCurrentInitiative(rand());
-
-	sort(unitOrder.begin(), unitOrder.end(), compareSpeed);
 }
 
 void Battle::executeTurn()
@@ -96,8 +105,6 @@ void Battle::executeTurn()
 	{
 		turnIndex = 0;
 		++roundNumber;
-
-		newUnitOrder();
 	}
 
 	// Retrieve the next unit in the 
@@ -112,7 +119,7 @@ void Battle::executeTurn()
 	{
 		int row = unit->getGridY();
 
-		Ability* ability = nullptr;
+		Ability* ability = NULL;
 		switch (row)
 		{
 		case 2:
@@ -141,6 +148,9 @@ void Battle::executeTurn()
 	// Determine whether an end result has occurred
 	if (!group1->groupIsAvailable() || !group2->groupIsAvailable())
 		isOver = true;
+	
+	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
+	sort(unitOrder.begin(), unitOrder.end(), compareSpeed);
 }
 
 void Battle::simulate()
@@ -154,6 +164,8 @@ void Battle::simulate()
 void Battle::print() const
 {
 	cout << "Round Number: " << roundNumber << endl;
+
+	cout << "Battle Map: " << endl;
 	group2->printGroup(true);
 	cout << endl;
 	group1->printGroup(false);

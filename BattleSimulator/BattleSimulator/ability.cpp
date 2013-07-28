@@ -1,43 +1,48 @@
 #include "ability.h"
 
+#include <algorithm>
 #include <cstdlib>
+#include "damage.h"
 
-Ability::Ability(int cost)
-	: cost(cost)
-{}
+bool compareLifePreferLess(Unit* lhs, Unit* rhs) {
+	return lhs->getCurrentHealth() < rhs->getCurrentHealth();
+}
+bool compareLifePreferMore(Unit* lhs, Unit* rhs) {
+	return lhs->getCurrentHealth() > rhs->getCurrentHealth();
+}
 
-void HundredBlades::action(Unit* caster, Battle* battle) const
+void HundredBlades::action(Unit* caster, Battle* battle)
 {
-	Group* allyGroup = battle->getAllyGroup(caster->getGid());
-	Group* enemyGroup = battle->getEnemyGroup(caster->getGid());
+	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(caster->getGrid());
 
 	int numTimes = rand() % 3 + 1;
 	for (int i = 0; i < numTimes; ++i)
 	{
-		int range = 1;
-		int xmin = caster->getGridX() - range;
-		int xmax = caster->getGridX() + range;
+		int adjacencyRange = 1;
+		int xmin = caster->getGridX() - adjacencyRange;
+		int xmax = caster->getGridX() + adjacencyRange;
 		vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax);
 		while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
 		{
-			++range;
-			xmin = caster->getGridX() - range;
-			xmax = caster->getGridX() + range;
-			Unit* u1 = allyGroup->enemyUnitFurthestInFront(enemyGroup, xmin);
-			Unit* u2 = allyGroup->enemyUnitFurthestInFront(enemyGroup, xmax);
-			if (u1 != nullptr)
-				targets.push_back(u1);
-			if (u2 != nullptr)
-				targets.push_back(u2);
+			++adjacencyRange;
+			xmin = caster->getGridX() - adjacencyRange;
+			xmax = caster->getGridX() + adjacencyRange;
+			vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin);
+			vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmax);
+			for (int i = 0; i < uLeft.size(); ++i)
+				targets.push_back(uLeft[i]);
+			for (int i = 0; i < uRight.size(); ++i)
+				targets.push_back(uRight[i]);
 		} 
 	
 		if (targets.size() > 0)
 		{
-			Unit* target = nullptr;
+			Unit* target = NULL;
 			int randIndex = rand() % targets.size();
 			target = targets[randIndex];
-		
-			applyDamage(caster, target, DAMAGE_MELEE);
+
+			Damage(this, caster->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL).apply(target);
 			cout << caster->getName() << " uses Hundred Blades on " << target->getName() << endl;
 		}
 		else
@@ -45,9 +50,9 @@ void HundredBlades::action(Unit* caster, Battle* battle) const
 	}
 }
 
-void Block::action(Unit* caster, Battle* battle) const
+void Block::action(Unit* caster, Battle* battle)
 {
-	Group* allyGroup = battle->getAllyGroup(caster->getGid());
+	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
 
 	int minx = 0;
 	int maxx = allyGroup->getWidth() - 1;
@@ -64,8 +69,7 @@ void Block::action(Unit* caster, Battle* battle) const
 		string name = "Block";
 		Effect *effect = new Effect(name, caster);
 		vector<DamageType> types;
-		types.push_back(DAMAGE_MELEE);
-		types.push_back(DAMAGE_RANGE);
+		types.push_back(DAMAGE_PHYSICAL);
 		Status *status = new StatusDamagePrevention(name, BUFF, target, 3, types);
 		status->setTimed(true);
 		status->setTimer(1);
@@ -77,33 +81,52 @@ void Block::action(Unit* caster, Battle* battle) const
 		cout << caster->getName() << " cannot use Block" << endl;
 }
 
-void Strike::action(Unit* caster, Battle* battle) const
+void Strike::action(Unit* caster, Battle* battle)
 {
-	Group* allyGroup = battle->getAllyGroup(caster->getGid());
-	Group* enemyGroup = battle->getEnemyGroup(caster->getGid());
+	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(caster->getGrid());
 	
-	int range = 1;
-	int xmin = caster->getGridX() - range;
-	int xmax = caster->getGridX() + range;
+	int adjacencyRange = 1;
+	int xmin = caster->getGridX() - adjacencyRange;
+	int xmax = caster->getGridX() + adjacencyRange;
 	vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax);
 	while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
 	{
-		++range;
-		xmin = caster->getGridX() - range;
-		xmax = caster->getGridX() + range;
-		Unit* u1 = allyGroup->enemyUnitFurthestInFront(enemyGroup, xmin);
-		Unit* u2 = allyGroup->enemyUnitFurthestInFront(enemyGroup, xmax);
-		if (u1 != nullptr)
-			targets.push_back(u1);
-		if (u2 != nullptr)
-			targets.push_back(u2);
+		++adjacencyRange;
+		xmin = caster->getGridX() - adjacencyRange;
+		xmax = caster->getGridX() + adjacencyRange;
+		vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin);
+		vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmax);
+		for (int i = 0; i < uLeft.size(); ++i)
+			targets.push_back(uLeft[i]);
+		for (int i = 0; i < uRight.size(); ++i)
+			targets.push_back(uRight[i]);
 	} 
 	
 	if (targets.size() > 0)
 	{
-		Unit* target = nullptr;
-		int randIndex = rand() % targets.size();
-		target = targets[randIndex];
+		Unit* target = NULL;
+		switch (allyGroup->getTargetOrder())
+		{
+		case TARGET_RANDOM:
+			{
+				int randIndex = rand() % targets.size();
+				target = targets[randIndex];
+				break;
+			}
+		case TARGET_WEAKEST:
+			{
+				sort(targets.begin(), targets.end(), compareLifePreferLess);
+				target = targets[0];
+				break;
+			}
+		case TARGET_STRONGEST:
+			{
+				sort(targets.begin(), targets.end(), compareLifePreferMore);
+				target = targets[0];
+				break;
+			}
+		}
 
 		for (int i = caster->getCurrentStatus().size() - 1; i >= 0; --i)
 		{
@@ -112,9 +135,10 @@ void Strike::action(Unit* caster, Battle* battle) const
 			{
 				Unit* focus = dynamic_cast<StatusTaunt*>(status)->getFocus();
 			
+				vector<Unit*> uCol = enemyGroup->allyUnitsFurthestInFront(focus->getGridX(), focus->getGridX());
 				int xminmod = enemyGroup->getWidth() - xmax - 1;
 				int xmaxmod = enemyGroup->getWidth() - xmin - 1;
-				if (enemyGroup->allyUnitFurthestInFront(focus->getGridX()) == focus && // Front row reachability test
+				if ((uCol.size() > 0 && find(uCol.begin(), uCol.end(), focus) != uCol.end()) && // Front row reachability test
 					enemyGroup->withinColumnRange(focus->getGridX(), xminmod, xmaxmod)) // Column range test
 				{
 					target = focus;
@@ -122,17 +146,17 @@ void Strike::action(Unit* caster, Battle* battle) const
 				}
 			}
 		}
-
-		applyDamage(caster, target, DAMAGE_MELEE);
+		
+		Damage(this, caster->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL).apply(target);
 		cout << caster->getName() << " uses Strike on " << target->getName() << endl;
 	}
 	else
 		cout << caster->getName() << " cannot use Strike" << endl;
 }
 
-void Taunt::action(Unit* caster, Battle* battle) const
+void Taunt::action(Unit* caster, Battle* battle)
 {
-	Group* enemyGroup = battle->getEnemyGroup(caster->getGid());
+	Group* enemyGroup = battle->getEnemyGroup(caster->getGrid());
 	
 	vector<Unit*> targets = enemyGroup->allyUnits();
 	string name = "Taunt";
@@ -148,9 +172,9 @@ void Taunt::action(Unit* caster, Battle* battle) const
 	cout << caster->getName() << " uses Taunt" << endl;
 }
 
-void BattleShout::action(Unit* caster, Battle* battle) const
+void BattleShout::action(Unit* caster, Battle* battle)
 {
-	Group* allyGroup = battle->getAllyGroup(caster->getGid());
+	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
 	
 	vector<Unit*> targets = allyGroup->allyUnits();
 	string name = "Battle Shout";
@@ -164,4 +188,80 @@ void BattleShout::action(Unit* caster, Battle* battle) const
 		effect->addStatus(status);
 	}
 	cout << caster->getName() << " uses Battle Shout" << endl;
+}
+
+///////// SCOUT
+
+void Shoot::action(Unit* caster, Battle* battle)
+{
+	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(caster->getGrid());
+	
+	int rowRange = 2;
+	int adjacencyRange = 1;
+	int xmin = caster->getGridX() - adjacencyRange;
+	int xmax = caster->getGridX() + adjacencyRange;
+	vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax, rowRange);
+	while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
+	{
+		++adjacencyRange;
+		xmin = caster->getGridX() - adjacencyRange;
+		xmax = caster->getGridX() + adjacencyRange;
+		vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin, rowRange);
+		vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmin, rowRange);
+		for (int i = 0; i < uLeft.size(); ++i)
+			targets.push_back(uLeft[i]);
+		for (int i = 0; i < uRight.size(); ++i)
+			targets.push_back(uRight[i]);
+	} 
+	
+	if (targets.size() > 0)
+	{
+		Unit* target = NULL;
+		switch (allyGroup->getTargetOrder())
+		{
+		case TARGET_RANDOM:
+			{
+				int randIndex = rand() % targets.size();
+				target = targets[randIndex];
+				break;
+			}
+		case TARGET_WEAKEST:
+			{
+				sort(targets.begin(), targets.end(), compareLifePreferLess);
+				target = targets[0];
+				break;
+			}
+		case TARGET_STRONGEST:
+			{
+				sort(targets.begin(), targets.end(), compareLifePreferMore);
+				target = targets[0];
+				break;
+			}
+		}
+
+		for (int i = caster->getCurrentStatus().size() - 1; i >= 0; --i)
+		{
+			Status* status = caster->getCurrentStatus()[i];
+			if (status->getType() == STATUS_TAUNT)
+			{
+				Unit* focus = dynamic_cast<StatusTaunt*>(status)->getFocus();
+			
+				vector<Unit*> uCol = enemyGroup->allyUnitsFurthestInFront(focus->getGridX(), focus->getGridX(), rowRange);
+				int xminmod = enemyGroup->getWidth() - xmax - 1;
+				int xmaxmod = enemyGroup->getWidth() - xmin - 1;
+				if ((uCol.size() > 0 && find(uCol.begin(), uCol.end(), focus) != uCol.end()) && // Front row reachability test
+					enemyGroup->withinColumnRange(focus->getGridX(), xminmod, xmaxmod)) // Column range test
+				{
+					target = focus;
+					break;
+				}
+			}
+		}
+		
+		Damage(this, caster->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL).apply(target);
+		cout << caster->getName() << " uses Shoot on " << target->getName() << endl;
+	}
+	else
+		cout << caster->getName() << " cannot use Shoot" << endl;
 }

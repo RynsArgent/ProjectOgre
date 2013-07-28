@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __FORMATION_H__
+#define __FORMATION_H__
 
 #include "pch.h"
 
@@ -14,7 +15,8 @@ private:
 	int width;
 	int height;
 
-	std::vector<std::vector<Character*> > grid;
+	vector<vector<Character*> > grid;
+	TargetType targetOrder;
 public:
 	Formation();
 
@@ -41,5 +43,15 @@ public:
 		character->setFrontSkill(frontSkill);
 	}
 
+	void setTargetOrder(TargetType targetOrder) {
+		this->targetOrder = targetOrder;
+	}
+
+	TargetType getTargetOrder() const {
+		return targetOrder;
+	}
+
 	~Formation() {}
 };
+
+#endif

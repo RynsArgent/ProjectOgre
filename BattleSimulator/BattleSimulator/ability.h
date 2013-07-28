@@ -1,19 +1,25 @@
-#pragma once
+#ifndef __ABILITY_H__
+#define __ABILITY_H__
 
 #include "pch.h"
 
+#include "unit.h"
 #include "battle.h"
 
 // Base class for abilities
 class Ability
 {
 protected:
-	int cost;
+	AbilityType type; // Defines the category an ability belongs to
+	bool respondable; // Determines whether this ability can be followed with a counterattack
+	int cost; // Potentially can be AP cost
 public:
-	Ability(int cost = 0);
+	Ability(AbilityType type = ABILITY_NONE, bool respondable = false, int cost = 0)
+		: type(type), respondable(respondable), cost(cost)
+	{}
 	
 	// Most abilities will have their logic implemented in this function
-	virtual void action(Unit* caster, Battle* battle) const = 0;
+	virtual void action(Unit* caster, Battle* battle) = 0;
 
 	~Ability() {}
 };
@@ -21,59 +27,87 @@ public:
 class NoSkill : public Ability
 {
 protected:
+	static const AbilityType TYPE = ABILITY_NONE;
+	static const bool RESPONDABLE = false;
 	static const int COST = 0;
 public:
-	NoSkill() : Ability(COST) {}
-	virtual void action(Unit* caster, Battle* battle) const {}
+	NoSkill() : Ability(TYPE, RESPONDABLE, COST) {}
+	virtual void action(Unit* caster, Battle* battle) {}
 	~NoSkill() {}
 };
 
 class HundredBlades : public Ability
 {
 protected:
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool RESPONDABLE = true;
 	static const int COST = 1;
 public:
-	HundredBlades() : Ability(COST) {}
-	virtual void action(Unit* caster, Battle* battle) const;
+	HundredBlades() : Ability(TYPE, RESPONDABLE, COST) {}
+	virtual void action(Unit* caster, Battle* battle);
 	~HundredBlades() {}
 };
 
 class Block : public Ability
 {
 protected:
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool RESPONDABLE = false;
 	static const int COST = 1;
 public:
-	Block() : Ability(COST) {}
-	virtual void action(Unit* caster, Battle* battle) const;
+	Block() : Ability(TYPE, RESPONDABLE, COST) {}
+	virtual void action(Unit* caster, Battle* battle);
 	~Block() {}
 };
 
 class Strike : public Ability
 {
 protected:
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool RESPONDABLE = true;
 	static const int COST = 1;
 public:
-	Strike() : Ability(COST) {}
-	virtual void action(Unit* caster, Battle* battle) const;
+	Strike() : Ability(TYPE, RESPONDABLE, COST) {}
+	virtual void action(Unit* caster, Battle* battle);
 	~Strike() {}
 };
 
 class Taunt : public Ability
 {
 protected:
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool RESPONDABLE = false;
 	static const int COST = 1;
 public:
-	Taunt() : Ability(COST) {}
-	virtual void action(Unit* caster, Battle* battle) const;
+	Taunt() : Ability(TYPE, RESPONDABLE, COST) {}
+	virtual void action(Unit* caster, Battle* battle);
 	~Taunt() {}
 };
 
 class BattleShout : public Ability
 {
 protected:
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool RESPONDABLE = false;
 	static const int COST = 1;
 public:
-	BattleShout() : Ability(COST) {}
-	virtual void action(Unit* caster, Battle* battle) const;
+	BattleShout() : Ability(TYPE, RESPONDABLE, COST) {}
+	virtual void action(Unit* caster, Battle* battle);
 	~BattleShout() {}
 };
+
+// SCOUT
+
+class Shoot : public Ability
+{
+protected:
+	static const AbilityType TYPE = ABILITY_ATTACK_RANGE;
+	static const bool RESPONDABLE = true;
+	static const int COST = 1;
+public:
+	Shoot() : Ability(TYPE, RESPONDABLE, COST) {}
+	virtual void action(Unit* caster, Battle* battle);
+	~Shoot() {}
+};
+
+#endif

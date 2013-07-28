@@ -1,12 +1,10 @@
-#pragma once
+#ifndef __STATUS_H__
+#define __STATUS_H__
 
 #include "pch.h"
 
 #include <algorithm>
 #include "unit.h"
-
-enum StatusType { STATUS_NONE, STATUS_DAMAGE_PREVENTION, STATUS_DAMAGE_OVER_TIME, STATUS_TAUNT, STATUS_ATTACK_BONUS };
-enum StatusBenefit { NEUTRAL, BUFF, DEBUFF };
 
 class Status
 {
@@ -16,18 +14,21 @@ protected:
 	StatusBenefit benefit;
 	Unit* target;
 	
-	bool stackable; // unused
+	// unremovable, stackable, and linked are unimplemented
+	bool unremovable;
+	bool stackable; 
+
 	bool timed;
 	int timer;
-	bool linked; // unused
+	bool linked; // For when a buff/debuff has multiple status effects, if one gets removed, if linked, it removed the other linked effects
 
-	bool clean;
+	bool clean; // Used for efficient memory cleaning
 public:
-	Status(const string & name = "", StatusBenefit benefit = NEUTRAL, StatusType type = STATUS_NONE, Unit* target = nullptr)
+	Status(const string & name = "", StatusBenefit benefit = NEUTRAL, StatusType type = STATUS_NONE, Unit* target = NULL)
 		: name(name), benefit(benefit), type(type), target(target),
-		stackable(false), timed(false), timer(0), linked(false), clean(false)
+		unremovable(false), stackable(false), timed(false), timer(0), linked(false), clean(false)
 	{
-		if (target != nullptr) target->currentStatus.push_back(this);
+		if (target != NULL) target->currentStatus.push_back(this);
 	}
 
 	string getName() const {
@@ -45,9 +46,17 @@ public:
 	Unit* getTarget() const {
 		return target;
 	}
+	
+	void setUnremovable(bool value) {
+		unremovable = value;
+	}
+
+	bool isUnremovable() const {
+		return unremovable;
+	}
 
 	void setStackable(bool value) {
-		stackable = true;
+		stackable = value;
 	}
 
 	bool isStackable() const {
@@ -55,7 +64,7 @@ public:
 	}
 
 	void setTimed(bool value) {
-		timed = true;
+		timed = value;
 	}
 
 	bool isTimed() const {
@@ -180,7 +189,7 @@ public:
 	~StatusAttackBonus() {}
 };
 
-// Keeps track of ongoing Status Effects
+// Keeps track of ongoing Status Effects, also allows multiple status effects to be associated under one name
 class Effect
 {
 private:
@@ -189,12 +198,12 @@ private:
 
 	vector<Status*> status;
 
-	bool clean;
+	bool clean; // Used for efficient memory cleaning
 public:
-	Effect(const string & name = "", Unit* origin = nullptr) 
+	Effect(const string & name = "", Unit* origin = NULL) 
 		: name(name), origin(origin), status(), clean(false)
 	{
-		if (origin != nullptr) origin->currentEffects.push_back(this);
+		if (origin != NULL) origin->currentEffects.push_back(this);
 	}
 
 	string getName() const {
@@ -205,20 +214,28 @@ public:
 		status.push_back(stat);
 	}
 
+	// Each ongoing status effect is processed every round starting from the origin.
+	// For examples, most effects are timed and will be updated here.
 	void processRound() {
 		for (int i = 0; i < status.size(); ++i) {
+			// Process the Status effect
 			status[i]->processRound();
+
+			// Flag certain status effects to be cleaned at the end if it is expired
 			if (status[i]->hasExpired())
 			{
+				// Sets the clean flag and on End effects
 				status[i]->end();
 				
+				// Remove Status buff/debuff link from target
 				Unit* target = status[i]->getTarget();
-				if (target != nullptr) {
+				if (target != NULL) {
 					target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), status[i]));
 				}
 			}
 		}
 
+		// Clean up all expired status effects
 		vector<Status*> nstatus(status.size());
 		int c = 0;
 		for (int i = 0; i < status.size(); ++i) {
@@ -231,6 +248,7 @@ public:
 		nstatus.resize(c);
 		status = nstatus;
 
+		// If there are no more ongoing status effects, set container's clean flag
 		if (status.size() <= 0)
 			end();
 	}
@@ -243,3 +261,5 @@ public:
 		clean = true;
 	}
 };
+
+#endif

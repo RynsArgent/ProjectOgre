@@ -1,14 +1,12 @@
-#pragma once
+#ifndef __CHARACTER_H__
+#define __CHARACTER_H__
 
 #include "pch.h"
 
 #include <vector>
 #include <string>
-#include "skill.h"
 
 using namespace std;
-
-enum ElementType { ELEMENT_NONE, ELEMENT_PHYSICAL, ELEMENT_FIRE, ELEMENT_WATER, ELEMENT_EARTH, ELEMENT_ICE, ELEMENT_LIGHTNING };
 
 class Character
 {
@@ -20,8 +18,7 @@ protected:
 	int baseMagicAttack;
 	int baseSpeed;
 	
-	int baseMeleeDefense;
-	int baseRangeDefense;
+	int basePhysicalDefense;
 	int baseFireDefense;
 	int baseWaterDefense;
 	int baseEarthDefense;
@@ -42,7 +39,7 @@ protected:
 	int baseUpkeep;
 public:
 	Character(const string & name = "", int health = 0, int physicalAttack = 0, int magicAttack = 0, int speed = 0, 
-		int baseMeleeDefense = 0, int baseRangeDefense = 0, int fireDefense = 0, int waterDefense = 0, 
+		int basePhysicalDefense = 0, int fireDefense = 0, int waterDefense = 0, 
 		int earthDefense = 0, int iceDefense = 0, int lightningDefense = 0,
 		int size = 0, ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
 
@@ -102,20 +99,12 @@ public:
 		this->baseLightningDefense = baseLightningDefense;
 	}
 
-	int getBaseMeleeDefense() const {
-		return baseMeleeDefense;
+	int getBasePhysicalDefense() const {
+		return basePhysicalDefense;
 	}
 
-	void setBaseMeleeDefense(int baseMeleeDefense) {
-		this->baseMeleeDefense = baseMeleeDefense;
-	}
-	
-	int getBaseRangeDefense() const {
-		return baseRangeDefense;
-	}
-
-	void setBaseRangeDefense(int baseRangeDefense) {
-		this->baseRangeDefense = baseRangeDefense;
+	void setBasePhysicalDefense(int basePhysicalDefense) {
+		this->basePhysicalDefense = basePhysicalDefense;
 	}
 
 	int getBaseSize() const {
@@ -201,8 +190,7 @@ protected:
 	const static int BASE_MAGIC_ATTACK = 3;
 	const static int BASE_SPEED = 3;
 	
-	const static int BASE_MELEE_DEFENSE = 0;
-	const static int BASE_RANGE_DEFENSE = 0;
+	const static int BASE_PHYSICAL_DEFENSE = 0;
 	const static int BASE_FIRE_DEFENSE = 0;
 	const static int BASE_WATER_DEFENSE = 0;
 	const static int BASE_EARTH_DEFENSE = 0;
@@ -224,8 +212,7 @@ protected:
 	const static int BASE_MAGIC_ATTACK = 2;
 	const static int BASE_SPEED = 5;
 	
-	const static int BASE_MELEE_DEFENSE = 0;
-	const static int BASE_RANGE_DEFENSE = 0;
+	const static int BASE_PHYSICAL_DEFENSE = 0;
 	const static int BASE_FIRE_DEFENSE = 0;
 	const static int BASE_WATER_DEFENSE = 0;
 	const static int BASE_EARTH_DEFENSE = 0;
@@ -238,3 +225,5 @@ public:
 
 	~Scout() {}
 };
+
+#endif

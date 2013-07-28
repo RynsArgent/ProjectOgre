@@ -1,11 +1,11 @@
 #include "character.h"
 
 Character::Character(const string & name, int health, int physicalAttack, int magicAttack, int speed, 
-	int meleeDefense, int rangeDefense, int fireDefense, int waterDefense, 
+	int physicalDefense, int fireDefense, int waterDefense, 
 	int earthDefense, int iceDefense, int lightningDefense,
 	int size, ElementType favoredElement, int upkeep)
 	: name(name), baseHealth(health), basePhysicalAttack(physicalAttack), baseMagicAttack(magicAttack), baseSpeed(speed),
-	baseMeleeDefense(meleeDefense), baseRangeDefense(rangeDefense), baseFireDefense(fireDefense), baseWaterDefense(waterDefense),
+	basePhysicalDefense(physicalDefense), baseFireDefense(fireDefense), baseWaterDefense(waterDefense),
 	baseEarthDefense(earthDefense), baseIceDefense(iceDefense), baseLightningDefense(lightningDefense),
 	baseSize(size), favoredElement(favoredElement), backSkills(), midSkills(), frontSkills(), baseUpkeep(upkeep),
 	backSkill(NO_SKILL), midSkill(NO_SKILL), frontSkill(NO_SKILL)
@@ -14,7 +14,7 @@ Character::Character(const string & name, int health, int physicalAttack, int ma
 
 Fighter::Fighter(const string & name, ElementType favoredElement, int upkeep)
 	: Character(name, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
-		BASE_MELEE_DEFENSE, BASE_RANGE_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+		BASE_PHYSICAL_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
 		BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
 		BASE_SIZE, favoredElement, upkeep)
 {
@@ -28,7 +28,7 @@ Fighter::Fighter(const string & name, ElementType favoredElement, int upkeep)
 
 Scout::Scout(const string & name, ElementType favoredElement, int upkeep)
 	: Character(name, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
-		BASE_MELEE_DEFENSE, BASE_RANGE_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+		BASE_PHYSICAL_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
 		BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
 		BASE_SIZE, favoredElement, upkeep)
 {

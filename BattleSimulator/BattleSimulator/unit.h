@@ -1,10 +1,9 @@
-#pragma once
+#ifndef __UNIT_H__
+#define __UNIT_H__
 
 #include "pch.h"
 
 #include "character.h"
-
-enum DamageType { DAMAGE_NONE, DAMAGE_MELEE, DAMAGE_RANGE, DAMAGE_FIRE, DAMAGE_WATER, DAMAGE_EARTH, DAMAGE_ICE, DAMAGE_LIGHTNING, DAMAGE_HEALING };
 
 class Effect;
 class Status;
@@ -23,8 +22,7 @@ private:
 	int currentPhysicalAttack;
 	int currentMagicAttack;
 	
-	int currentMeleeDefense;
-	int currentRangeDefense;
+	int currentPhysicalDefense;
 	int currentFireDefense;
 	int currentWaterDefense;
 	int currentEarthDefense;
@@ -60,16 +58,100 @@ public:
 		return character->getName();
 	}
 
-	void addCurrentPhysicalAttack(int value) {
-		currentPhysicalAttack += value;
+	int getCurrentPhysicalAttack() const {
+		return currentPhysicalAttack;
 	}
 
-	void addCurrentMagicAttack(int value) {
-		currentMagicAttack += value;
+	void setCurrentPhysicalAttack(int physicalAttack) {
+		this->currentPhysicalAttack = physicalAttack;
+	}
+
+	int getCurrentMagicAttack() const {
+		return currentMagicAttack;
+	}
+
+	void setCurrentMagicAttack(int magicAttack) {
+		this->currentMagicAttack = magicAttack;
+	}
+
+	int getCurrentEarthDefense() const {
+		return currentEarthDefense;
+	}
+
+	void setCurrentEarthDefense(int currentEarthDefense) {
+		this->currentEarthDefense = currentEarthDefense;
+	}
+
+	int getCurrentFireDefense() const {
+		return currentFireDefense;
+	}
+
+	void setCurrentFireDefense(int currentFireDefense) {
+		this->currentFireDefense = currentFireDefense;
+	}
+
+	int getCurrentHealth() const {
+		return currentHealth;
+	}
+
+	void setCurrentHealth(int currentHealth) {
+		this->currentHealth = currentHealth;
+	}
+
+	int getCurrentIceDefense() const {
+		return currentIceDefense;
+	}
+
+	void setCurrentIceDefense(int currentIceDefense) {
+		this->currentIceDefense = currentIceDefense;
+	}
+
+	int getCurrentLightningDefense() const {
+		return currentLightningDefense;
+	}
+
+	void setCurrentLightningDefense(int currentLightningDefense) {
+		this->currentLightningDefense = currentLightningDefense;
+	}
+
+	int getCurrentPhysicalDefense() const {
+		return currentPhysicalDefense;
+	}
+
+	void setCurrentPhysicalDefense(int currentPhysicalDefense) {
+		this->currentPhysicalDefense = currentPhysicalDefense;
+	}
+
+	int getCurrentSize() const {
+		return currentSize;
+	}
+
+	void setCurrentSize(int currentSize) {
+		this->currentSize = currentSize;
 	}
 
 	int getCurrentSpeed() const {
 		return currentSpeed;
+	}
+
+	void setCurrentSpeed(int currentSpeed) {
+		this->currentSpeed = currentSpeed;
+	}
+
+	int getCurrentWaterDefense() const {
+		return currentWaterDefense;
+	}
+
+	void setCurrentWaterDefense(int currentWaterDefense) {
+		this->currentWaterDefense = currentWaterDefense;
+	}
+
+	ElementType getCurrentElement() const {
+		return currentElement;
+	}
+
+	void setCurrentElement(ElementType currentElement) {
+		this->currentElement = currentElement;
 	}
 	
 	int getCurrentInitiative() const {
@@ -104,7 +186,7 @@ public:
 		frontSkill = value;
 	}
 
-	int getGid() const {
+	int getGrid() const {
 		return gid;
 	}
 
@@ -150,24 +232,22 @@ public:
 		return isAlive();
 	}
 
+	// Process all Effects that have originated from this unit
 	void processEffects();
 
+	// Clean up all expired Effects
 	void cleanEffects();
 
 	void print() const;
 
 	~Unit() {}
-	
+
 	friend class Ability;
 	friend class Effect;
 	friend class Status;
 	friend class Group;
-	friend int applyDamage(Unit* caster, Unit* target, DamageType type);
-	friend int applyDamage(Unit* target, int damage, DamageType type);
 };
 
 #include "status.h"
 
-int findNumMatching(const vector<DamageType> & types1, const vector<DamageType> & types2);
-int applyDamage(Unit* caster, Unit* target, DamageType type);
-int applyDamage(Unit* target, int damage, DamageType type);
+#endif
