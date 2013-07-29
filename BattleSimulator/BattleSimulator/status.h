@@ -106,12 +106,13 @@ class StatusDamagePrevention : public Status
 {
 protected:
 	static const StatusType TYPE = STATUS_DAMAGE_PREVENTION;
-
+	
+	bool limited; // If set, amount will drop on use and expire at 0. Otherwise, amount will not drop
 	int amount;
 	vector<DamageType> preventedTypes;
 public:
-	StatusDamagePrevention(const string & name, StatusBenefit benefit, Unit* target, int amount, const vector<DamageType> & preventedTypes)
-		: Status(name, benefit, TYPE, target), amount(amount), preventedTypes(preventedTypes)
+	StatusDamagePrevention(const string & name, StatusBenefit benefit, Unit* target, bool limited, int amount, const vector<DamageType> & preventedTypes)
+		: Status(name, benefit, TYPE, target), limited(limited), amount(amount), preventedTypes(preventedTypes)
 	{}
 	
 	// Functions to use Status Effect
@@ -187,6 +188,33 @@ public:
 	void setAmount(int value) { amount = value; }
 
 	~StatusAttackBonus() {}
+};
+
+class StatusAttackResponse : public Status
+{
+protected:
+	static const StatusType TYPE = STATUS_ABILITY_RESPONSE;
+	
+	Ability* ability;
+	bool preemptive; // If set, respond to the enemy ability before it applies to you
+	bool limited; // If set, will expire based on number of uses
+	int amount;
+public:
+	StatusAttackResponse(const string & name, StatusBenefit benefit, Unit* target, Ability* ability, bool preemptive, bool limited, int amount)
+		: Status(name, benefit, TYPE, target), ability(ability), preemptive(preemptive), limited(limited), amount(amount)
+	{}
+	
+	// Functions to use Status Effect
+	virtual bool hasExpired() const;
+	int applyAbility(Unit* caster, Battle* battle);
+
+	// Set Status Specific Variables
+	void setAbility(Ability* value) { ability = value; }
+	void setPreemptive(bool value) { preemptive = value; }
+	void setLimited(bool value) { limited = value; }
+	void setAmount(int value) { amount = value; }
+
+	~StatusAttackResponse() {}
 };
 
 // Keeps track of ongoing Status Effects, also allows multiple status effects to be associated under one name

@@ -17,6 +17,12 @@ void setAbility(Skill skill)
 {
 	switch (skill)
 	{
+	case NO_STANDARD_SKILL:
+		abilities[skill] = new NoStandardSkill();
+		break;
+	case NO_RESPONSE_SKILL:
+		abilities[skill] = new NoResponseSkill();
+		break;
 	case HUNDRED_BLADES:
 		abilities[skill] = new HundredBlades();
 		break;
@@ -36,7 +42,7 @@ void setAbility(Skill skill)
 		abilities[skill] = new Shoot();
 		break;
 	default:
-		abilities[skill] = new NoSkill();
+		abilities[skill] = new NoStandardSkill();
 		break;
 	}
 }
@@ -132,10 +138,10 @@ void Battle::executeTurn()
 			ability = getAbility(unit->getBackSkill());
 			break;
 		default:
-			ability = getAbility(NO_SKILL);
+			ability = getAbility(NO_STANDARD_SKILL);
 			break;
 		}
-		ability->action(unit, this);
+		ability->action(unit, NULL, this);
 	}
 
 	// Clean up any units that have died

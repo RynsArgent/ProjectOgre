@@ -5,9 +5,6 @@
 
 #include "character.h"
 
-class Effect;
-class Status;
-
 class Unit
 {
 private:
