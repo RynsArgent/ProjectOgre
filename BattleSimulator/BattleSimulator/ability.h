@@ -10,6 +10,7 @@
 class Ability
 {
 protected:
+	const static AbilityAction ACT = ACTION_STANDARD;
 	AbilityAction act; // Action type, standard/response skill
 	AbilityType type; // Defines the category an ability belongs to
 	bool respondable; // Determines whether this ability can be followed with a counterattack
