@@ -245,6 +245,4 @@ public:
 	friend class Group;
 };
 
-#include "status.h"
-
 #endif

@@ -42,6 +42,9 @@
     <ClCompile Include="damage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="target.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="character.h">
@@ -71,5 +74,13 @@
     <ClInclude Include="damage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="target.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="makefile">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

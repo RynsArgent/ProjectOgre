@@ -83,6 +83,7 @@
     <ClCompile Include="group.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="status.cpp" />
+    <ClCompile Include="target.cpp" />
     <ClCompile Include="unit.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -94,7 +95,11 @@
     <ClInclude Include="group.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="status.h" />
+    <ClInclude Include="target.h" />
     <ClInclude Include="unit.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="makefile" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

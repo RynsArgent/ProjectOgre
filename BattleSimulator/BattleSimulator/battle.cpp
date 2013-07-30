@@ -4,59 +4,6 @@
 #include <cstdlib>
 #include "ability.h"
 
-// Load only abilities that are used for each battle, functions below are associated to loading and accessing abilities
-Ability* abilities[NUMBER_OF_SKILLS];
-
-void initAbilityList()
-{
-	for (int i = 0; i < NUMBER_OF_SKILLS; ++i)
-		abilities[i] = NULL;
-}
-
-void setAbility(Skill skill)
-{
-	switch (skill)
-	{
-	case NO_STANDARD_SKILL:
-		abilities[skill] = new NoStandardSkill();
-		break;
-	case NO_RESPONSE_SKILL:
-		abilities[skill] = new NoResponseSkill();
-		break;
-	case HUNDRED_BLADES:
-		abilities[skill] = new HundredBlades();
-		break;
-	case BLOCK:
-		abilities[skill] = new Block();
-		break;
-	case STRIKE:
-		abilities[skill] = new Strike();
-		break;
-	case TAUNT:
-		abilities[skill] = new Taunt();
-		break;
-	case BATTLE_SHOUT:
-		abilities[skill] = new BattleShout();
-		break;
-	case SHOOT:
-		abilities[skill] = new Shoot();
-		break;
-	default:
-		abilities[skill] = new NoStandardSkill();
-		break;
-	}
-}
-
-Ability* getAbility(Skill skill)
-{
-	if (abilities[skill] == NULL)
-		setAbility(skill);
-	
-	return abilities[skill];
-}
-
-//
-
 // Used to determine unit order, faster units are sorted to the front of the list
 bool compareSpeed(Unit* lhs, Unit* rhs) {
 	return lhs->getCurrentSpeed() > rhs->getCurrentSpeed() || 
@@ -156,7 +103,7 @@ void Battle::executeTurn()
 		isOver = true;
 	
 	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
-	sort(unitOrder.begin(), unitOrder.end(), compareSpeed);
+	sort(unitOrder.begin() + turnIndex, unitOrder.end(), compareSpeed);
 }
 
 void Battle::simulate()

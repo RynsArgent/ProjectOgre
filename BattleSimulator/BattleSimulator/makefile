@@ -1,7 +1,3 @@
-## CS134 Winter 2013: Video Game Design
-## Lab 1 Makefile
-#######################################
-
 LIBS_LINUX = -lglut -lGLU -lGL
 LIBS_WINDOWS = -lglut32 -lglu32 -lopengl32
 LIBS_MAC = -framework OpenGL -framework GLUT
@@ -20,9 +16,10 @@ FORMATION_OUT = formation.o
 GROUP_OUT = group.o
 STATUS_OUT = status.o
 UNIT_OUT = unit.o
+TARGET_OUT = target.o
 
 ## Requirements for each command
-MAIN_REQS = main.cpp $(ABILITY_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT)
+MAIN_REQS = main.cpp $(ABILITY_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT) $(DAMAGE_OUT) $(TARGET_OUT)
 ABILITY_REQS = ability.h ability.cpp
 BATTLE_REQS = battle.h battle.cpp
 CHARACTER_REQS = character.h character.cpp
@@ -31,9 +28,10 @@ FORMATION_REQS = formation.h formation.cpp
 GROUP_REQS = group.h group.cpp
 STATUS_REQS = status.h status.cpp
 UNIT_REQS = unit.h unit.cpp
+TARGET_REQS = target.h target.cpp
 
 ## Targets to compile for each command
-MAIN_TARGETS = main.cpp $(ABILITY_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT)
+MAIN_TARGETS = main.cpp $(ABILITY_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT) $(DAMAGE_OUT)
 ABILITY_TARGETS = ability.cpp
 BATTLE_TARGETS = battle.cpp
 CHARACTER_TARGETS = character.cpp
@@ -42,6 +40,7 @@ FORMATION_TARGETS = formation.cpp
 GROUP_TARGETS = group.cpp
 STATUS_TARGETS = status.cpp
 UNIT_TARGETS = unit.cpp
+TARGET_TARGETS = target.cpp
 
 all:
 	echo Usage: make mainwindows
@@ -75,6 +74,8 @@ $(STATUS_OUT): $(STATUS_REQS) $(INCLUDE)
 	$(CC) -c $(STATUS_TARGETS)
 $(DAMAGE_OUT) : $(DAMAGE_REQS) $(INCLUDE)
 	$(CC) -c $(DAMAGE_TARGETS)
+$(TARGET_OUT) : $(TARGET_REQS) $(INCLUDE)
+	$(CC) -c $(TARGET_TARGETS)
 
 cleanwindows:
 	del *~ *.o *.exe

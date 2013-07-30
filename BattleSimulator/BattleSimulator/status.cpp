@@ -1,58 +1,85 @@
 #include "status.h"
 
 #include "damage.h"
-
-void Status::init()
-{
-}
-
-void Status::processRound() 
-{	
-	if (timed && timer > 0)
-		--timer;
-}
+#include "target.h"
 
 bool Status::hasExpired() const {
 	return (timed && timer <= 0);
 }
 
-void Status::end() 
+void Status::onSpawn()
+{
+}
+
+void Status::onRound() 
+{	
+	if (timed && timer > 0)
+		--timer;
+}
+
+void Status::onKill() 
 {
 	clean = true;
 }
 
-bool StatusDamagePrevention::hasExpired() const
+void Status::onPreDamage(Damage* applier)
+{
+}
+
+void Status::onPostDamage(Damage* applier)
+{
+}
+
+void Status::onPreTarget(Targeter* system)
+{
+}
+
+void Status::onPostTarget(Targeter* system)
+{
+}
+
+bool StatusBlock::hasExpired() const
 {
 	return Status::hasExpired() || (limited && amount <= 0);
 }
 
-int StatusDamagePrevention::applyDamagePrevention(int appliedDamage, vector<DamageType> appliedTypes)
+void StatusBlock::applyDamagePrevention(Damage* applier)
 { 
-	int resultantDamage = appliedDamage;
-	int numMatching = findNumMatching(preventedTypes, appliedTypes);
-	if (numMatching > 0)
-	{
-		resultantDamage = appliedDamage - amount;
-		if (resultantDamage < 0)
-			resultantDamage = 0;
+	int currentPrevention = amount;
+	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
+		if (n->type == DAMAGE_PHYSICAL) {
+			int startingDamage = n->amount;
+			int resultantDamage = startingDamage - currentPrevention;
+			if (resultantDamage < 0)
+				resultantDamage = 0;
+			n->amount = resultantDamage;
 
-		if (limited)
-			amount -= (appliedDamage - resultantDamage);
+			currentPrevention -= (startingDamage - resultantDamage);
+		}
 	}
-
-	if (hasExpired())
-		name = "-----";
-	return resultantDamage;
+	if (limited)
+		amount = currentPrevention;
 }
 	
-void StatusDamageOverTime::processRound()
+void StatusBlock::onPreDamage(Damage* applier)
 {
-	Status::processRound();
-	applyTimedDamage();
+	if (hasExpired())
+		return;
+	Status::onPreDamage(applier);
+	
+	applyDamagePrevention(applier);
+	
+	if (hasExpired())
+		name = "-----";
 }
 
-void StatusDamageOverTime::applyTimedDamage()
+void StatusPoison::applyTimedDamage()
 {
+	Damage* damage = new Damage(this, 1, DAMAGE_EARTH);
+	damage->apply(target);
+	delete damage;
+	/*
+	// Has a nice idea for divided damage, however poison is one type
 	int dividedAmount = amount / damageTypes.size();
 	int dividedRemainder = amount % damageTypes.size();
 	for (int i = 0; i < damageTypes.size(); ++i)
@@ -62,24 +89,72 @@ void StatusDamageOverTime::applyTimedDamage()
 		else
 			Damage(this, dividedAmount, damageTypes[i]).apply(target);
 	}
+	*/
 }
 
-void StatusAttackBonus::init()
+void StatusPoison::onRound()
 {
+	if (hasExpired())
+		return;
+	Status::onRound();
+
+	applyTimedDamage();
+
+	if (hasExpired())
+		name = "-----";
+}
+
+void StatusTaunt::addToPriorityList(Targeter* system) const
+{
+	for (int i = 0; i < system->candidates.size(); ++i) {
+		if (focus == system->candidates[i])
+			system->priorities.push_back(i);
+	}
+}
+
+void StatusTaunt::onPreTarget(Targeter* system)
+{
+	if (hasExpired())
+		return;
+	Status::onPreTarget(system);
+	
+	addToPriorityList(system);
+
+	if (hasExpired())
+		name = "-----";
+}
+
+void StatusBattleShout::onSpawn()
+{
+	Status::onSpawn();
 	int val = target->getCurrentPhysicalAttack();
 	val += amount;
 	target->setCurrentPhysicalAttack(val);
+	
 }
 
-void StatusAttackBonus::end()
+void StatusBattleShout::onKill()
 {
-	Status::end();
+	Status::onKill();
 	int val = target->getCurrentPhysicalAttack();
 	val -= amount;
 	target->setCurrentPhysicalAttack(val);
 }
 
+/*
 bool StatusAttackResponse::hasExpired() const
 {
 	return Status::hasExpired() || (limited && amount <= 0);
 }
+
+void StatusAttackResponse::applyAbility(Unit* caster, Battle* battle)
+{
+	if (hasExpired())
+		return;
+	Ability* ability = NULL;
+	ability = getAbility(skill);
+	ability->action(NULL, caster, battle);
+	if (limited)
+		--amount;
+}
+*/

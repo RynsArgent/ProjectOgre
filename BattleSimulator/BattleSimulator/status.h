@@ -62,6 +62,11 @@ public:
 	bool isStackable() const {
 		return stackable;
 	}
+	
+	void setTimed(bool value1, int value2) {
+		timed = value1;
+		timer = value2;
+	}
 
 	void setTimed(bool value) {
 		timed = value;
@@ -91,131 +96,235 @@ public:
 		return clean;
 	}
 
-	// Base function that at its most basic updates the timer
+	// Base function that at its most basic updates the timer, Status Effects will extend
+	// the functions they need
 	virtual bool hasExpired() const;
-	virtual void init();
-	virtual void processRound();
-	virtual void end();
+
+	virtual void onSpawn();
+	virtual void onRound();
+	virtual void onKill();
+	virtual void onPreDamage(Damage* applier);
+	virtual void onPostDamage(Damage* applier);
+	virtual void onPreTarget(Targeter* system);
+	virtual void onPostTarget(Targeter* system);
 
 	~Status() {}
 
 	friend class Effect;
 };
 
-class StatusDamagePrevention : public Status
+// This deals with Status Effects that occur every round lengthwise. (i.e. Poison/Burn/Bleed)
+class StatusRound : public Status
 {
 protected:
-	static const StatusType TYPE = STATUS_DAMAGE_PREVENTION;
+	static const StatusType TYPE = STATUS_ROUND;
+public:
+	StatusRound(const string & name, StatusBenefit benefit, Unit* target)
+		: Status(name, benefit, TYPE, target)
+	{}
 	
+	// The most standard status effect, occurs in round lengths, super base inherits this
+	// for its versatility in other effects
+	//virtual void onRound() = 0;
+
+	~StatusRound();
+};
+
+// This deals with Status Effects that have effects that do something at the moment of creation or disappearance
+// (i.e. Doom III, Unit dies after it expires)
+// (i.e. Attribute modifiers, modifies stats and then restores them on expiration, specifically targeting Unit variables)
+class StatusSpawnKill : public Status
+{
+protected:
+	static const StatusType TYPE = STATUS_SPAWN_KILL;
+public:
+	StatusSpawnKill(const string & name, StatusBenefit benefit, Unit* target)
+		: Status(name, benefit, TYPE, target)
+	{}
+	
+	//virtual void onSpawn() = 0;
+	//virtual void onKill() = 0;
+
+	~StatusSpawnKill() {}
+};
+
+// This deals with the triggers before damage is about to be applied. (i.e. Damage Prevention)
+class StatusPreDamage : public Status
+{
+protected:
+	static const StatusType TYPE = STATUS_PRE_DAMAGE;
+public:
+	StatusPreDamage(const string & name, StatusBenefit benefit, Unit* target)
+		: Status(name, benefit, TYPE, target)
+	{}
+
+	//virtual void onPreDamage(Damage* applier) = 0;
+
+	~StatusPreDamage() {}
+};
+
+// This deals with the triggers after damage is applied. (i.e. Heal half of damage taken)
+class StatusPostDamage : public Status
+{
+protected:
+	static const StatusType TYPE = STATUS_POST_DAMAGE;
+public:
+	StatusPostDamage(const string & name, StatusBenefit benefit, Unit* target)
+		: Status(name, benefit, TYPE, target)
+	{}
+
+	//virtual void onPostDamage(Damage* applier) = 0;
+
+	~StatusPostDamage() {}
+};
+
+// This deals with the triggers before a chosen targets are selected
+// (i.e. Targeter is forced to deal with a prioritized taunting target before any other candidates)
+class StatusPreTarget : public Status
+{
+protected:
+	static const StatusType TYPE = STATUS_PRE_TARGET;
+public:
+	StatusPreTarget(const string & name, StatusBenefit benefit, Unit* target)
+		: Status(name, benefit, TYPE, target)
+	{}
+
+	//virtual void onPreTarget(Targeter* system) = 0;
+
+	~StatusPreTarget() {}
+};
+
+// This deals with that triggers when a Unit was just selected as a target (primary or secondary)
+// (i.e. Bard removes itself as a target for the first time cause it's so friendly)
+class StatusPostTarget : public Status
+{
+protected:
+	static const StatusType TYPE = STATUS_POST_TARGET;
+public:
+	StatusPostTarget(const string & name, StatusBenefit benefit, Unit* target)
+		: Status(name, benefit, TYPE, target)
+	{}
+
+	//virtual void onPostTarget(Targeter* system) = 0;
+
+	~StatusPostTarget() {}
+};
+
+class StatusBlock : public StatusPreDamage
+{
+private:
 	bool limited; // If set, amount will drop on use and expire at 0. Otherwise, amount will not drop
 	int amount;
-	vector<DamageType> preventedTypes;
 public:
-	StatusDamagePrevention(const string & name, StatusBenefit benefit, Unit* target, bool limited, int amount, const vector<DamageType> & preventedTypes)
-		: Status(name, benefit, TYPE, target), limited(limited), amount(amount), preventedTypes(preventedTypes)
+	StatusBlock(Unit* target, bool limited, int amount)
+		: StatusPreDamage("Block", BUFF, target), limited(limited), amount(amount)
 	{}
 	
-	// Functions to use Status Effect
+	// Helper Functions
 	virtual bool hasExpired() const;
-	int applyDamagePrevention(int appliedDamage, vector<DamageType> appliedTypes);
+	void applyDamagePrevention(Damage* applier);
+	
+	// Main Function
+	virtual void onPreDamage(Damage* applier);
 	
 	// Set Status Specific Variables
+	void setLimited(bool value) { limited = value; }
 	void setAmount(int value) { amount = value; }
-	void setPreventedTypes(const vector<DamageType> & value) { preventedTypes = value; }
 
-	~StatusDamagePrevention() {}
+	~StatusBlock() {}
 };
 
-class StatusDamageOverTime : public Status
+class StatusPoison : public StatusRound
 {
 protected:
-	static const StatusType TYPE = STATUS_DAMAGE_OVER_TIME;
-
 	int amount;
-	vector<DamageType> damageTypes;
 public:
-	StatusDamageOverTime(const string & name, StatusBenefit benefit, Unit* target, int amount, const vector<DamageType> & damageTypes)
-		: Status(name, benefit, TYPE, target), amount(amount), damageTypes(damageTypes)
+	StatusPoison(Unit* target, int amount)
+		: StatusRound("Poison", DEBUFF, target), amount(amount)
 	{}
 	
-	// Functions to use Status Effect
-	virtual void processRound();
+	// Helper Functions
 	void applyTimedDamage();
 	
+	// Main Function
+	virtual void onRound();
+	
 	// Set Status Specific Variables
 	void setAmount(int value) { amount = value; }
-	void setDamageTypes(const vector<DamageType> & value) { damageTypes = value; }
 
-	~StatusDamageOverTime() {}
+	~StatusPoison() {}
 };
 
-class StatusTaunt : public Status
+class StatusTaunt : public StatusPreTarget
 {
 protected:
-	static const StatusType TYPE = STATUS_TAUNT;
-
 	Unit* focus; 
 public:
-	StatusTaunt(const string & name, StatusBenefit benefit, Unit* target, Unit* focus)
-		: Status(name, benefit, TYPE, target), focus(focus)
+	StatusTaunt(Unit* target, Unit* focus)
+		: StatusPreTarget("Taunt", NEUTRAL, target), focus(focus)
 	{}
 	
-	// Functions to use Status Effect
-	Unit* getFocus() const { return focus; }
+	// Helper Functions
+	void addToPriorityList(Targeter* system) const;
 	
+	// Main Function
+	virtual void onPreTarget(Targeter* system);
+
 	// Set Status Specific Variables
 	void setFocus(Unit* value) { focus = value; }
 
 	~StatusTaunt();
 };
 
-class StatusAttackBonus : public Status
+class StatusBattleShout : public StatusSpawnKill
 {
 protected:
-	static const StatusType TYPE = STATUS_ATTACK_BONUS;
-
 	int amount;
 public:
-	StatusAttackBonus(const string & name, StatusBenefit benefit, Unit* target, int amount)
-		: Status(name, benefit, TYPE, target), amount(amount)
+	StatusBattleShout(Unit* target, int amount)
+		: StatusSpawnKill("Battle Shout", BUFF, target), amount(amount)
 	{}
 
-	// Functions to use Status Effect
-	virtual void init();
-	virtual void end();
+	// Helper Functions
+	
+	// Main Function
+	virtual void onSpawn();
+	virtual void onKill();
 	
 	// Set Status Specific Variables
 	void setAmount(int value) { amount = value; }
 
-	~StatusAttackBonus() {}
+	~StatusBattleShout() {}
 };
 
+/*
 class StatusAttackResponse : public Status
 {
 protected:
 	static const StatusType TYPE = STATUS_ABILITY_RESPONSE;
 	
-	Ability* ability;
+	Skill skill;
 	bool preemptive; // If set, respond to the enemy ability before it applies to you
 	bool limited; // If set, will expire based on number of uses
 	int amount;
 public:
-	StatusAttackResponse(const string & name, StatusBenefit benefit, Unit* target, Ability* ability, bool preemptive, bool limited, int amount)
-		: Status(name, benefit, TYPE, target), ability(ability), preemptive(preemptive), limited(limited), amount(amount)
+	StatusAttackResponse(const string & name, StatusBenefit benefit, Unit* target, Skill skill, bool preemptive, bool limited, int amount)
+		: Status(name, benefit, TYPE, target), skill(skill), preemptive(preemptive), limited(limited), amount(amount)
 	{}
 	
 	// Functions to use Status Effect
 	virtual bool hasExpired() const;
-	int applyAbility(Unit* caster, Battle* battle);
+	void applyAbility(Unit* caster, Battle* battle);
 
 	// Set Status Specific Variables
-	void setAbility(Ability* value) { ability = value; }
+	void setSkill(Skill value) { skill = value; }
 	void setPreemptive(bool value) { preemptive = value; }
 	void setLimited(bool value) { limited = value; }
 	void setAmount(int value) { amount = value; }
 
 	~StatusAttackResponse() {}
 };
+*/
 
 // Keeps track of ongoing Status Effects, also allows multiple status effects to be associated under one name
 class Effect
@@ -247,13 +356,13 @@ public:
 	void processRound() {
 		for (int i = 0; i < status.size(); ++i) {
 			// Process the Status effect
-			status[i]->processRound();
+			status[i]->onRound();
 
 			// Flag certain status effects to be cleaned at the end if it is expired
 			if (status[i]->hasExpired())
 			{
 				// Sets the clean flag and on End effects
-				status[i]->end();
+				status[i]->onKill();
 				
 				// Remove Status buff/debuff link from target
 				Unit* target = status[i]->getTarget();
@@ -288,6 +397,8 @@ public:
 	void end() {
 		clean = true;
 	}
+
+	~Effect() {}
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include "unit.h"
 
 #include <algorithm>
+#include "status.h"
 
 void Unit::carryOverCharacterStatistics()
 {

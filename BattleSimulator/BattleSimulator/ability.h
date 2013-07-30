@@ -6,6 +6,12 @@
 #include "unit.h"
 #include "battle.h"
 
+// Functions to deal with the ability list
+static Ability* abilities[NUMBER_OF_SKILLS];
+void initAbilityList();
+void setAbility(Skill skill);
+Ability* getAbility(Skill skill);
+
 // Base class for abilities
 class Ability
 {
@@ -42,6 +48,7 @@ public:
 	virtual void action(Unit* current, Unit* previous, Battle* battle) {}
 	~NoStandardSkill() {}
 };
+
 class NoResponseSkill : public Ability
 {
 protected:
