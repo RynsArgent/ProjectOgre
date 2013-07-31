@@ -65,22 +65,9 @@ void HundredBlades::action(Unit* current, Unit* previous, Battle* battle)
 	int numTimes = rand() % 3 + 1;
 	for (int i = 0; i < numTimes; ++i)
 	{
-		int adjacencyRange = 1;
-		int xmin = current->getGridX() - adjacencyRange;
-		int xmax = current->getGridX() + adjacencyRange;
-		vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax);
-		while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
-		{
-			++adjacencyRange;
-			xmin = current->getGridX() - adjacencyRange;
-			xmax = current->getGridX() + adjacencyRange;
-			vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin);
-			vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmax);
-			for (int i = 0; i < uLeft.size(); ++i)
-				targets.push_back(uLeft[i]);
-			for (int i = 0; i < uRight.size(); ++i)
-				targets.push_back(uRight[i]);
-		} 
+		int rowRange = 1;
+		int initialColumnRange = 1;
+		vector<Unit*> targets = Targeter::searchForFrontTargets(current, previous, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
 	
 		if (targets.size() > 0)
 		{
@@ -138,22 +125,9 @@ void Strike::action(Unit* current, Unit* previous, Battle* battle)
 	Group* allyGroup = battle->getAllyGroup(current->getGrid());
 	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 	
-	int adjacencyRange = 1;
-	int xmin = current->getGridX() - adjacencyRange;
-	int xmax = current->getGridX() + adjacencyRange;
-	vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax);
-	while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
-	{
-		++adjacencyRange;
-		xmin = current->getGridX() - adjacencyRange;
-		xmax = current->getGridX() + adjacencyRange;
-		vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin);
-		vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmax);
-		for (int i = 0; i < uLeft.size(); ++i)
-			targets.push_back(uLeft[i]);
-		for (int i = 0; i < uRight.size(); ++i)
-			targets.push_back(uRight[i]);
-	} 
+	int rowRange = 1;
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, previous, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
 	
 	if (targets.size() > 0)
 	{
@@ -214,22 +188,8 @@ void Shoot::action(Unit* current, Unit* previous, Battle* battle)
 	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 	
 	int rowRange = 2;
-	int adjacencyRange = 1;
-	int xmin = current->getGridX() - adjacencyRange;
-	int xmax = current->getGridX() + adjacencyRange;
-	vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax, rowRange);
-	while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
-	{
-		++adjacencyRange;
-		xmin = current->getGridX() - adjacencyRange;
-		xmax = current->getGridX() + adjacencyRange;
-		vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin, rowRange);
-		vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmin, rowRange);
-		for (int i = 0; i < uLeft.size(); ++i)
-			targets.push_back(uLeft[i]);
-		for (int i = 0; i < uRight.size(); ++i)
-			targets.push_back(uRight[i]);
-	} 
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, previous, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
 	
 	if (targets.size() > 0)
 	{

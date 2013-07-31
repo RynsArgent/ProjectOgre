@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include "character.h"
+#include <vector>
 
 class Unit
 {

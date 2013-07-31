@@ -56,7 +56,7 @@ public:
 	}
 
 	bool hasUnitAt(int x, int y) const {
-		return grid[x][y] != NULL;
+		return grid[x][y] != NULL && grid[x][y]->isAvailable();
 	}
 
 	Unit* getUnitAt(int x, int y) const {
@@ -75,9 +75,9 @@ public:
 	void cleanDead();
 	
 	bool groupIsAvailable() const;
-	bool groupIsDead() const;
 	bool withinColumnRange(int x, int xmin, int xmax) const;
 
+	// NOTE: The functions below returns only available units
 	// Returns units of this group based on function request
 	vector<Unit*> allyUnits() const;
 	vector<Unit*> allyUnitsAt(int xmin, int xmax, int ymin, int ymax) const;

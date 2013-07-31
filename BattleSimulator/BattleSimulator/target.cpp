@@ -1,6 +1,7 @@
 #include "target.h"
 
 #include "unit.h"
+#include "group.h"
 #include "status.h"
 
 // Comparator functions to determine strongest/weakest unit
@@ -11,7 +12,29 @@ bool compareLifePreferMore(Unit* lhs, Unit* rhs) {
 	return lhs->getCurrentHealth() > rhs->getCurrentHealth();
 }
 
-void Targeter::set(int n) {
+vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Unit* previous, Battle* battle, Group* allyGroup, Group* enemyGroup, int startingAdjacencyRange, int rowRange)
+{
+	int adjacencyRange = 1;
+	int xmin = current->getGridX() - adjacencyRange;
+	int xmax = current->getGridX() + adjacencyRange;
+	vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax, rowRange);
+	while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
+	{
+		++adjacencyRange;
+		xmin = current->getGridX() - adjacencyRange;
+		xmax = current->getGridX() + adjacencyRange;
+		vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin, rowRange);
+		vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmin, rowRange);
+		for (int i = 0; i < uLeft.size(); ++i)
+			targets.push_back(uLeft[i]);
+		for (int i = 0; i < uRight.size(); ++i)
+			targets.push_back(uRight[i]);
+	} 
+	return targets;
+}
+
+void Targeter::set(int n) 
+{
 	chosen.clear();
 
 	// OnPreTarget Methods

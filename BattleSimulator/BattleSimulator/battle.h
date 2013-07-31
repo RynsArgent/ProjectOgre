@@ -47,7 +47,6 @@ public:
 	
 	void print() const;
 
-
 	~Battle() {}
 
 	friend class Ability;
