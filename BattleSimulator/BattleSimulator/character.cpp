@@ -8,7 +8,7 @@ Character::Character(const string & name, int health, int physicalAttack, int ma
 	basePhysicalDefense(physicalDefense), baseFireDefense(fireDefense), baseWaterDefense(waterDefense),
 	baseEarthDefense(earthDefense), baseIceDefense(iceDefense), baseLightningDefense(lightningDefense),
 	baseSize(size), favoredElement(favoredElement), backSkills(), midSkills(), frontSkills(), baseUpkeep(upkeep),
-	backSkill(NO_SKILL), midSkill(NO_SKILL), frontSkill(NO_SKILL)
+	backSkill(NO_STANDARD_SKILL), midSkill(NO_STANDARD_SKILL), frontSkill(NO_STANDARD_SKILL)
 {
 }
 

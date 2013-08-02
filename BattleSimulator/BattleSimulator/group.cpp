@@ -176,30 +176,24 @@ void Group::turnToFace(Facing face)
 
 void Group::cleanDead()
 {
-	vector<Unit*> units = allyUnits();
-	for (int i = 0; i < units.size(); ++i) {
-		if (units[i]->isDead()) {
-			int x = units[i]->getGridX();
-			int y = units[i]->getGridY();
-			grid[x][y] = NULL;
-			dead.push_back(units[i]);
+	for (int x = 0; x < width; ++x)
+		for (int y = 0; y < height; ++y)
+		{
+			Unit* unit = grid[x][y];
+			if (unit != NULL && unit->isDead())
+			{
+				int x = unit->getGridX();
+				int y = unit->getGridY();
+				grid[x][y] = NULL;
+				dead.push_back(unit);
+			}
 		}
-	}
 }
 
 bool Group::groupIsAvailable() const
 {
 	vector<Unit*> units = allyUnits();
-	for (int i = 0; i < units.size(); ++i)
-		if (units[i]->isAvailable())
-			return true;
-	return false;
-}
-
-bool Group::groupIsDead() const
-{
-	vector<Unit*> units = allyUnits();
-	return units.size() <= 0;
+	return units.size() > 0;
 }
 
 bool Group::withinColumnRange(int x, int xmin, int xmax) const

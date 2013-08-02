@@ -2,266 +2,210 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include "target.h"
 #include "damage.h"
 
-bool compareLifePreferLess(Unit* lhs, Unit* rhs) {
-	return lhs->getCurrentHealth() < rhs->getCurrentHealth();
-}
-bool compareLifePreferMore(Unit* lhs, Unit* rhs) {
-	return lhs->getCurrentHealth() > rhs->getCurrentHealth();
+// Load only abilities that are used for each battle, functions below are associated to loading and accessing abilities
+// The following are definitions to define the ability list
+void initAbilityList()
+{
+	for (int i = 0; i < NUMBER_OF_SKILLS; ++i)
+		abilities[i] = NULL;
 }
 
-void HundredBlades::action(Unit* caster, Battle* battle)
+void setAbility(Skill skill)
 {
-	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
-	Group* enemyGroup = battle->getEnemyGroup(caster->getGrid());
+	switch (skill)
+	{
+	case NO_STANDARD_SKILL:
+		abilities[skill] = new NoStandardSkill();
+		break;
+	case NO_RESPONSE_SKILL:
+		abilities[skill] = new NoResponseSkill();
+		break;
+	case HUNDRED_BLADES:
+		abilities[skill] = new HundredBlades();
+		break;
+	case BLOCK:
+		abilities[skill] = new Block();
+		break;
+	case STRIKE:
+		abilities[skill] = new Strike();
+		break;
+	case TAUNT:
+		abilities[skill] = new Taunt();
+		break;
+	case BATTLE_SHOUT:
+		abilities[skill] = new BattleShout();
+		break;
+	case SHOOT:
+		abilities[skill] = new Shoot();
+		break;
+	default:
+		abilities[skill] = new NoStandardSkill();
+		break;
+	}
+}
+
+Ability* getAbility(Skill skill)
+{
+	if (abilities[skill] == NULL)
+		setAbility(skill);
+	
+	return abilities[skill];
+}
+
+// The following are definitions of specific abilities
+
+void HundredBlades::action(Unit* current, Unit* previous, Battle* battle)
+{
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 
 	int numTimes = rand() % 3 + 1;
 	for (int i = 0; i < numTimes; ++i)
 	{
-		int adjacencyRange = 1;
-		int xmin = caster->getGridX() - adjacencyRange;
-		int xmax = caster->getGridX() + adjacencyRange;
-		vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax);
-		while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
-		{
-			++adjacencyRange;
-			xmin = caster->getGridX() - adjacencyRange;
-			xmax = caster->getGridX() + adjacencyRange;
-			vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin);
-			vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmax);
-			for (int i = 0; i < uLeft.size(); ++i)
-				targets.push_back(uLeft[i]);
-			for (int i = 0; i < uRight.size(); ++i)
-				targets.push_back(uRight[i]);
-		} 
+		int rowRange = 1;
+		int initialColumnRange = 1;
+		vector<Unit*> targets = Targeter::searchForFrontTargets(current, previous, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
 	
 		if (targets.size() > 0)
 		{
-			Unit* target = NULL;
-			int randIndex = rand() % targets.size();
-			target = targets[randIndex];
+			Targeter* system = new Targeter(current, targets, TARGET_RANDOM, TARGET_UNSAFE, true);
+			system->set(1);
 
-			Damage(this, caster->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL).apply(target);
-			cout << caster->getName() << " uses Hundred Blades on " << target->getName() << endl;
+			if (system->chosen.size() > 0) {
+				Unit* target = system->chosen[0];
+				Damage* damage = new Damage(this, current->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL);
+				damage->apply(target);
+				delete damage;
+				cout << current->getName() << " uses Hundred Blades on " << target->getName() << endl;
+			}
+			delete system;
 		}
 		else
-			cout << caster->getName() << " cannot use Hundred Blades" << endl;
+			cout << current->getName() << " cannot use Hundred Blades" << endl;
 	}
 }
 
-void Block::action(Unit* caster, Battle* battle)
+void Block::action(Unit* current, Unit* previous, Battle* battle)
 {
-	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
 
 	int minx = 0;
 	int maxx = allyGroup->getWidth() - 1;
-	int miny = min(allyGroup->getHeight() - 1, caster->getGridY() + 1);
+	int miny = min(allyGroup->getHeight() - 1, current->getGridY() + 1);
 	int maxy = allyGroup->getHeight() - 1;
 	
 	vector<Unit*> targets = allyGroup->allyUnitsAt(minx, maxx, miny, maxy);
 	
 	if (targets.size() > 0)
 	{
-		int targetIndex = rand() % targets.size();
-		Unit* target = targets[targetIndex];
+		Targeter* system = new Targeter(current, targets, TARGET_RANDOM, TARGET_SAFE, true);
+		system->set(1);
 
-		string name = "Block";
-		Effect *effect = new Effect(name, caster);
-		vector<DamageType> types;
-		types.push_back(DAMAGE_PHYSICAL);
-		Status *status = new StatusDamagePrevention(name, BUFF, target, 3, types);
-		status->setTimed(true);
-		status->setTimer(1);
-		status->init();
-		effect->addStatus(status);
-		cout << caster->getName() << " uses Block on " << target->getName() << endl;
+		if (system->chosen.size() > 0) {
+			Unit* target = system->chosen[0];
+
+			Effect *effect = new Effect("Block", current);
+			Status *status = new StatusBlock(target, true, 3);
+			status->setTimed(true, 1);
+			status->onSpawn();
+			effect->addStatus(status);
+			cout << current->getName() << " uses Block on " << target->getName() << endl;
+		}
+		delete system;
 	}
 	else
-		cout << caster->getName() << " cannot use Block" << endl;
+		cout << current->getName() << " cannot use Block" << endl;
 }
 
-void Strike::action(Unit* caster, Battle* battle)
+void Strike::action(Unit* current, Unit* previous, Battle* battle)
 {
-	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
-	Group* enemyGroup = battle->getEnemyGroup(caster->getGrid());
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 	
-	int adjacencyRange = 1;
-	int xmin = caster->getGridX() - adjacencyRange;
-	int xmax = caster->getGridX() + adjacencyRange;
-	vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax);
-	while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
-	{
-		++adjacencyRange;
-		xmin = caster->getGridX() - adjacencyRange;
-		xmax = caster->getGridX() + adjacencyRange;
-		vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin);
-		vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmax);
-		for (int i = 0; i < uLeft.size(); ++i)
-			targets.push_back(uLeft[i]);
-		for (int i = 0; i < uRight.size(); ++i)
-			targets.push_back(uRight[i]);
-	} 
+	int rowRange = 1;
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, previous, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
 	
 	if (targets.size() > 0)
 	{
-		Unit* target = NULL;
-		switch (allyGroup->getTargetOrder())
-		{
-		case TARGET_RANDOM:
-			{
-				int randIndex = rand() % targets.size();
-				target = targets[randIndex];
-				break;
-			}
-		case TARGET_WEAKEST:
-			{
-				sort(targets.begin(), targets.end(), compareLifePreferLess);
-				target = targets[0];
-				break;
-			}
-		case TARGET_STRONGEST:
-			{
-				sort(targets.begin(), targets.end(), compareLifePreferMore);
-				target = targets[0];
-				break;
-			}
-		}
+		Targeter* system = new Targeter(current, targets, TARGET_RANDOM, TARGET_UNSAFE, true);
+		system->set(1);
 
-		for (int i = caster->getCurrentStatus().size() - 1; i >= 0; --i)
-		{
-			Status* status = caster->getCurrentStatus()[i];
-			if (status->getType() == STATUS_TAUNT)
-			{
-				Unit* focus = dynamic_cast<StatusTaunt*>(status)->getFocus();
-			
-				vector<Unit*> uCol = enemyGroup->allyUnitsFurthestInFront(focus->getGridX(), focus->getGridX());
-				int xminmod = enemyGroup->getWidth() - xmax - 1;
-				int xmaxmod = enemyGroup->getWidth() - xmin - 1;
-				if ((uCol.size() > 0 && find(uCol.begin(), uCol.end(), focus) != uCol.end()) && // Front row reachability test
-					enemyGroup->withinColumnRange(focus->getGridX(), xminmod, xmaxmod)) // Column range test
-				{
-					target = focus;
-					break;
-				}
-			}
-		}
+		if (system->chosen.size() > 0) {
+			Unit* target = system->chosen[0];
+			Damage* damage = new Damage(this, current->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL);
+			damage->apply(target);
+			delete damage;
 		
-		Damage(this, caster->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL).apply(target);
-		cout << caster->getName() << " uses Strike on " << target->getName() << endl;
+			cout << current->getName() << " uses Strike on " << target->getName() << endl;
+		}
+		delete system;
 	}
 	else
-		cout << caster->getName() << " cannot use Strike" << endl;
+		cout << current->getName() << " cannot use Strike" << endl;
 }
 
-void Taunt::action(Unit* caster, Battle* battle)
+void Taunt::action(Unit* current, Unit* previous, Battle* battle)
 {
-	Group* enemyGroup = battle->getEnemyGroup(caster->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 	
 	vector<Unit*> targets = enemyGroup->allyUnits();
-	string name = "Taunt";
-	Effect *effect = new Effect(name, caster);
+	Effect *effect = new Effect("Taunt", current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status *status = new StatusTaunt(name, NEUTRAL, targets[i], caster);
-		status->setTimed(true);
-		status->setTimer(1);
-		status->init();
+		Status *status = new StatusTaunt(targets[i], current);
+		status->setTimed(true, 1);
+		status->onSpawn();
 		effect->addStatus(status);
 	}
-	cout << caster->getName() << " uses Taunt" << endl;
+	cout << current->getName() << " uses Taunt" << endl;
 }
 
-void BattleShout::action(Unit* caster, Battle* battle)
+void BattleShout::action(Unit* current, Unit* previous, Battle* battle)
 {
-	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
 	
 	vector<Unit*> targets = allyGroup->allyUnits();
-	string name = "Battle Shout";
-	Effect *effect = new Effect(name, caster);
+	Effect *effect = new Effect("Battle Shout", current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status *status = new StatusAttackBonus(name, BUFF, targets[i], 1);
-		status->setTimed(true);
-		status->setTimer(1);
-		status->init();
+		Status *status = new StatusBattleShout(targets[i], 1);
+		status->setTimed(true, 1);
+		status->onSpawn();
 		effect->addStatus(status);
 	}
-	cout << caster->getName() << " uses Battle Shout" << endl;
+	cout << current->getName() << " uses Battle Shout" << endl;
 }
 
 ///////// SCOUT
 
-void Shoot::action(Unit* caster, Battle* battle)
+void Shoot::action(Unit* current, Unit* previous, Battle* battle)
 {
-	Group* allyGroup = battle->getAllyGroup(caster->getGrid());
-	Group* enemyGroup = battle->getEnemyGroup(caster->getGrid());
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 	
 	int rowRange = 2;
-	int adjacencyRange = 1;
-	int xmin = caster->getGridX() - adjacencyRange;
-	int xmax = caster->getGridX() + adjacencyRange;
-	vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax, rowRange);
-	while (targets.size() <= 0 && (xmin >= 0 || xmax < enemyGroup->getWidth() - 1))
-	{
-		++adjacencyRange;
-		xmin = caster->getGridX() - adjacencyRange;
-		xmax = caster->getGridX() + adjacencyRange;
-		vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin, rowRange);
-		vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmin, rowRange);
-		for (int i = 0; i < uLeft.size(); ++i)
-			targets.push_back(uLeft[i]);
-		for (int i = 0; i < uRight.size(); ++i)
-			targets.push_back(uRight[i]);
-	} 
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, previous, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
 	
 	if (targets.size() > 0)
 	{
-		Unit* target = NULL;
-		switch (allyGroup->getTargetOrder())
-		{
-		case TARGET_RANDOM:
-			{
-				int randIndex = rand() % targets.size();
-				target = targets[randIndex];
-				break;
-			}
-		case TARGET_WEAKEST:
-			{
-				sort(targets.begin(), targets.end(), compareLifePreferLess);
-				target = targets[0];
-				break;
-			}
-		case TARGET_STRONGEST:
-			{
-				sort(targets.begin(), targets.end(), compareLifePreferMore);
-				target = targets[0];
-				break;
-			}
-		}
-
-		for (int i = caster->getCurrentStatus().size() - 1; i >= 0; --i)
-		{
-			Status* status = caster->getCurrentStatus()[i];
-			if (status->getType() == STATUS_TAUNT)
-			{
-				Unit* focus = dynamic_cast<StatusTaunt*>(status)->getFocus();
-			
-				vector<Unit*> uCol = enemyGroup->allyUnitsFurthestInFront(focus->getGridX(), focus->getGridX(), rowRange);
-				int xminmod = enemyGroup->getWidth() - xmax - 1;
-				int xmaxmod = enemyGroup->getWidth() - xmin - 1;
-				if ((uCol.size() > 0 && find(uCol.begin(), uCol.end(), focus) != uCol.end()) && // Front row reachability test
-					enemyGroup->withinColumnRange(focus->getGridX(), xminmod, xmaxmod)) // Column range test
-				{
-					target = focus;
-					break;
-				}
-			}
-		}
+		Targeter* system = new Targeter(current, targets, TARGET_RANDOM, TARGET_UNSAFE, true);
+		system->set(1);
 		
-		Damage(this, caster->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL).apply(target);
-		cout << caster->getName() << " uses Shoot on " << target->getName() << endl;
+		if (system->chosen.size() > 0) {
+			Unit* target = system->chosen[0];
+			Damage* damage = new Damage(this, current->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL);
+			damage->apply(target);
+			delete damage;
+		
+			cout << current->getName() << " uses Shoot on " << target->getName() << endl;
+		}
+		delete system;
 	}
 	else
-		cout << caster->getName() << " cannot use Shoot" << endl;
+		cout << current->getName() << " cannot use Shoot" << endl;
 }

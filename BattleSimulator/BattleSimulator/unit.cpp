@@ -1,6 +1,7 @@
 #include "unit.h"
 
 #include <algorithm>
+#include "status.h"
 
 void Unit::carryOverCharacterStatistics()
 {
@@ -26,7 +27,7 @@ void Unit::carryOverCharacterStatistics()
 }
 
 Unit::Unit(Character* character, int gid, int x, int y)
-	: character(character), backSkill(NO_SKILL), midSkill(NO_SKILL), frontSkill(NO_SKILL), 
+	: character(character), backSkill(NO_STANDARD_SKILL), midSkill(NO_STANDARD_SKILL), frontSkill(NO_STANDARD_SKILL), 
 	gid(gid), gridX(x), gridY(y), currentEffects(), currentStatus()
 {
 	carryOverCharacterStatistics();

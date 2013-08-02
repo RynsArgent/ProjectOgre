@@ -35,16 +35,15 @@ void initialize() {
 		MIDDLE	[0,1] [1,1] [2,1]
 		BACK	[0,2] [1,2] [2,2]
 		
-		        100Bl 100Bl 100Bl
-		        Strik shoot Strik
-		              
+		        100Bl       100Bl
+		        Shoot       Shoot
+					  Taunt       
 	*/
 	formA->setCharacterAt(0, 0, new Fighter("fighter1A"), HUNDRED_BLADES, STRIKE, TAUNT);
-	formA->setCharacterAt(1, 0, new Fighter("fighter2A"), HUNDRED_BLADES, STRIKE, TAUNT);
-	formA->setCharacterAt(2, 0, new Fighter("fighter3A"), HUNDRED_BLADES, STRIKE, TAUNT);
-	formA->setCharacterAt(0, 1, new Fighter("fighter4A"), HUNDRED_BLADES, STRIKE, TAUNT);
-	formA->setCharacterAt(2, 1, new Fighter("fighter5A"), HUNDRED_BLADES, STRIKE, TAUNT);
-	formA->setCharacterAt(1, 1, new Scout("scout1A"), SHOOT, SHOOT, SCOPE);
+	formA->setCharacterAt(2, 0, new Fighter("fighter2A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	formA->setCharacterAt(1, 2, new Fighter("fighter3A"), HUNDRED_BLADES, STRIKE, TAUNT);
+	formA->setCharacterAt(0, 1, new Scout("scout1A"), SHOOT, SHOOT, SCOPE);
+	formA->setCharacterAt(2, 1, new Scout("scout2A"), SHOOT, SHOOT, SCOPE);
 	formA->setTargetOrder(TARGET_RANDOM);
 	groupA = new Group(formA);
 
@@ -65,7 +64,7 @@ void initialize() {
 	formB->setCharacterAt(1, 1, new Fighter("fighter3B"), BLOCK, STRIKE, TAUNT);
 	formB->setCharacterAt(1, 2, new Fighter("fighter4B"), BLOCK, BLOCK, BATTLE_SHOUT);
 	formB->setCharacterAt(0, 1, new Scout("scout1B"), SHOOT, SHOOT, SCOPE);
-	formB->setCharacterAt(2, 1, new Scout("scout12"), SHOOT, SHOOT, SCOPE);
+	formB->setCharacterAt(2, 1, new Scout("scout2B"), SHOOT, SHOOT, SCOPE);
 	formB->setTargetOrder(TARGET_RANDOM);
 	groupB = new Group(formB);
 

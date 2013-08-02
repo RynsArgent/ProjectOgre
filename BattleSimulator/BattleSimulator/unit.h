@@ -4,9 +4,7 @@
 #include "pch.h"
 
 #include "character.h"
-
-class Effect;
-class Status;
+#include <vector>
 
 class Unit
 {
@@ -247,7 +245,5 @@ public:
 	friend class Status;
 	friend class Group;
 };
-
-#include "status.h"
 
 #endif
