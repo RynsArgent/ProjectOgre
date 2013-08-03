@@ -185,9 +185,9 @@ public:
 class Fighter : public Character
 {
 protected:
-	const static int BASE_HEALTH = 10;
-	const static int BASE_PHYSICAL_ATTACK = 3;
-	const static int BASE_MAGIC_ATTACK = 3;
+	const static int BASE_HEALTH = 100;
+	const static int BASE_PHYSICAL_ATTACK = 30;
+	const static int BASE_MAGIC_ATTACK = 10;
 	const static int BASE_SPEED = 3;
 	
 	const static int BASE_PHYSICAL_DEFENSE = 0;
@@ -207,9 +207,9 @@ public:
 class Scout : public Character
 {
 protected:
-	const static int BASE_HEALTH = 8;
-	const static int BASE_PHYSICAL_ATTACK = 2;
-	const static int BASE_MAGIC_ATTACK = 2;
+	const static int BASE_HEALTH = 80;
+	const static int BASE_PHYSICAL_ATTACK = 20;
+	const static int BASE_MAGIC_ATTACK = 10;
 	const static int BASE_SPEED = 5;
 	
 	const static int BASE_PHYSICAL_DEFENSE = 0;

@@ -15,6 +15,7 @@ private:
 	int roundNumber;
 	int turnIndex;
 	vector<Unit*> unitOrder;
+	vector<Ability*> actionStack;
 
 	bool isOver;
 public:

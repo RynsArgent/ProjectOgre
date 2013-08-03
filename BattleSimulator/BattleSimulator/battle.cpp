@@ -11,11 +11,8 @@ bool compareSpeed(Unit* lhs, Unit* rhs) {
 }
 
 Battle::Battle(Group* group1, Group* group2)
-	: group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), isOver(false)
+	: group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), actionStack(), isOver(false)
 {
-	// Clear the ability array to null values
-	initAbilityList();
-
 	group1->turnToFace(FACING_FORWARD);
 	group2->turnToFace(FACING_FORWARD);
 
@@ -76,18 +73,19 @@ void Battle::executeTurn()
 		switch (row)
 		{
 		case 2:
-			ability = getAbility(unit->getFrontSkill());
+			ability = Ability::getAbility(unit->getFrontSkill());
 			break;
 		case 1:
-			ability = getAbility(unit->getMidSkill());
+			ability = Ability::getAbility(unit->getMidSkill());
 			break;
 		case 0:
-			ability = getAbility(unit->getBackSkill());
+			ability = Ability::getAbility(unit->getBackSkill());
 			break;
 		default:
-			ability = getAbility(NO_STANDARD_SKILL);
+			ability = Ability::getAbility(NO_STANDARD_SKILL);
 			break;
 		}
+		actionStack.push_back(ability);
 		ability->action(unit, NULL, this);
 	}
 
@@ -97,6 +95,11 @@ void Battle::executeTurn()
 
 	// Increment to the next turn
 	++turnIndex;
+
+	// Clean up the action stack
+	for (int i = 0; i < actionStack.size(); ++i)
+		delete actionStack[i];
+	actionStack.clear();
 
 	// Determine whether an end result has occurred
 	if (!group1->groupIsAvailable() || !group2->groupIsAvailable())

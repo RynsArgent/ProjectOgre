@@ -5,54 +5,29 @@
 #include "target.h"
 #include "damage.h"
 
-// Load only abilities that are used for each battle, functions below are associated to loading and accessing abilities
-// The following are definitions to define the ability list
-void initAbilityList()
-{
-	for (int i = 0; i < NUMBER_OF_SKILLS; ++i)
-		abilities[i] = NULL;
-}
-
-void setAbility(Skill skill)
+Ability* Ability::getAbility(Skill skill)
 {
 	switch (skill)
 	{
 	case NO_STANDARD_SKILL:
-		abilities[skill] = new NoStandardSkill();
-		break;
+		return new NoStandardSkill();
 	case NO_RESPONSE_SKILL:
-		abilities[skill] = new NoResponseSkill();
-		break;
+		return new NoResponseSkill();
 	case HUNDRED_BLADES:
-		abilities[skill] = new HundredBlades();
-		break;
+		return new HundredBlades();
 	case BLOCK:
-		abilities[skill] = new Block();
-		break;
+		return new Block();
 	case STRIKE:
-		abilities[skill] = new Strike();
-		break;
+		return new Strike();
 	case TAUNT:
-		abilities[skill] = new Taunt();
-		break;
+		return new Taunt();
 	case BATTLE_SHOUT:
-		abilities[skill] = new BattleShout();
-		break;
+		return new BattleShout();
 	case SHOOT:
-		abilities[skill] = new Shoot();
-		break;
+		return new Shoot();
 	default:
-		abilities[skill] = new NoStandardSkill();
-		break;
+		return new NoStandardSkill();
 	}
-}
-
-Ability* getAbility(Skill skill)
-{
-	if (abilities[skill] == NULL)
-		setAbility(skill);
-	
-	return abilities[skill];
 }
 
 // The following are definitions of specific abilities
@@ -76,8 +51,8 @@ void HundredBlades::action(Unit* current, Unit* previous, Battle* battle)
 
 			if (system->chosen.size() > 0) {
 				Unit* target = system->chosen[0];
-				Damage* damage = new Damage(this, current->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL);
-				damage->apply(target);
+				Damage* damage = new Damage(this, current, target, Damage::getDamageValue(DAMAGE_LOW, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+				damage->apply();
 				delete damage;
 				cout << current->getName() << " uses Hundred Blades on " << target->getName() << endl;
 			}
@@ -107,8 +82,9 @@ void Block::action(Unit* current, Unit* previous, Battle* battle)
 		if (system->chosen.size() > 0) {
 			Unit* target = system->chosen[0];
 
-			Effect *effect = new Effect("Block", current);
-			Status *status = new StatusBlock(target, true, 3);
+			string name = "Block";
+			Effect *effect = new Effect(name, current);
+			Status *status = new StatusBlock(effect, name, target, true, 30);
 			status->setTimed(true, 1);
 			status->onSpawn();
 			effect->addStatus(status);
@@ -136,8 +112,8 @@ void Strike::action(Unit* current, Unit* previous, Battle* battle)
 
 		if (system->chosen.size() > 0) {
 			Unit* target = system->chosen[0];
-			Damage* damage = new Damage(this, current->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL);
-			damage->apply(target);
+			Damage* damage = new Damage(this, current, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+			damage->apply();
 			delete damage;
 		
 			cout << current->getName() << " uses Strike on " << target->getName() << endl;
@@ -153,10 +129,11 @@ void Taunt::action(Unit* current, Unit* previous, Battle* battle)
 	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 	
 	vector<Unit*> targets = enemyGroup->allyUnits();
-	Effect *effect = new Effect("Taunt", current);
+	string name = "Taunt";
+	Effect *effect = new Effect(name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status *status = new StatusTaunt(targets[i], current);
+		Status *status = new StatusTaunt(effect, name, targets[i], current);
 		status->setTimed(true, 1);
 		status->onSpawn();
 		effect->addStatus(status);
@@ -169,10 +146,11 @@ void BattleShout::action(Unit* current, Unit* previous, Battle* battle)
 	Group* allyGroup = battle->getAllyGroup(current->getGrid());
 	
 	vector<Unit*> targets = allyGroup->allyUnits();
-	Effect *effect = new Effect("Battle Shout", current);
+	string name = "Battle Shout";
+	Effect *effect = new Effect(name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status *status = new StatusBattleShout(targets[i], 1);
+		Status *status = new StatusBattleShout(effect, name, targets[i], 10);
 		status->setTimed(true, 1);
 		status->onSpawn();
 		effect->addStatus(status);
@@ -198,8 +176,8 @@ void Shoot::action(Unit* current, Unit* previous, Battle* battle)
 		
 		if (system->chosen.size() > 0) {
 			Unit* target = system->chosen[0];
-			Damage* damage = new Damage(this, current->getCurrentPhysicalAttack(), DAMAGE_PHYSICAL);
-			damage->apply(target);
+			Damage* damage = new Damage(this, current, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+			damage->apply();
 			delete damage;
 		
 			cout << current->getName() << " uses Shoot on " << target->getName() << endl;
