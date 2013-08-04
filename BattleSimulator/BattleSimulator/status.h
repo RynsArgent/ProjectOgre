@@ -9,12 +9,12 @@
 class Status
 {
 protected:
+	Effect* effect;
 	string name;
-	StatusType type;
 	StatusBenefit benefit;
 	Unit* target;
 	
-	// unremovable, stackable, and linked are unimplemented
+	// unremovable, stacwwwwwwkable, and linked are unimplemented
 	bool unremovable;
 	bool stackable; 
 
@@ -24,11 +24,15 @@ protected:
 
 	bool clean; // Used for efficient memory cleaning
 public:
-	Status(const string & name = "", StatusBenefit benefit = NEUTRAL, StatusType type = STATUS_NONE, Unit* target = NULL)
-		: name(name), benefit(benefit), type(type), target(target),
+	Status(Effect* effect, const string & name, StatusBenefit benefit = NEUTRAL, Unit* target = NULL)
+		: effect(effect), name(name), benefit(benefit), target(target),
 		unremovable(false), stackable(false), timed(false), timer(0), linked(false), clean(false)
 	{
 		if (target != NULL) target->currentStatus.push_back(this);
+	}
+
+	Effect* getEffect() const {
+		return effect;
 	}
 
 	string getName() const {
@@ -37,10 +41,6 @@ public:
 
 	StatusBenefit getBenefit() const {
 		return benefit;
-	}
-	
-	StatusType getType() const {
-		return type;
 	}
 	
 	Unit* getTarget() const {
@@ -100,124 +100,41 @@ public:
 	// the functions they need
 	virtual bool hasExpired() const;
 
+	// This deals with Status Effects that have effects that do something at the moment of creation or disappearance
+	// (i.e. Doom III, Unit dies after it expires)
+	// (i.e. Attribute modifiers, modifies stats and then restores them on expiration, specifically targeting Unit variables)
 	virtual void onSpawn();
-	virtual void onRound();
 	virtual void onKill();
-	virtual void onPreDamage(Damage* applier);
-	virtual void onPostDamage(Damage* applier);
+	// This deals with Status Effects that occur every round lengthwise. (i.e. Poison/Burn/Bleed)
+	virtual void onRound();
+	// This deals with the triggers before damage is about to be applied. (i.e. Damage Prevention)
+	virtual void onPreApplyDamage(Damage* applier);
+	// This deals with the triggers after damage is applied. (i.e. Extra damage against beasts)
+	virtual void onPostApplyDamage(Damage* applier);
+	// This deals with the triggers before damage is about to be applied. (i.e. Damage dealt heals attacker)
+	virtual void onPreReceiveDamage(Damage* applier);
+	// This deals with the triggers after damage is applied. (i.e. Heal half of damage taken)
+	virtual void onPostReceiveDamage(Damage* applier);
+	// This deals with the triggers before a chosen targets are selected
+	// (i.e. Targeter is forced to deal with a prioritized taunting target before any other candidates)
 	virtual void onPreTarget(Targeter* system);
+	// This deals with that triggers when a Unit was just selected as a target (primary or secondary)
+	// (i.e. Bard removes itself as a target for the first time cause it's so friendly)
 	virtual void onPostTarget(Targeter* system);
 
 	~Status() {}
-
+	
 	friend class Effect;
 };
 
-// This deals with Status Effects that occur every round lengthwise. (i.e. Poison/Burn/Bleed)
-class StatusRound : public Status
-{
-protected:
-	static const StatusType TYPE = STATUS_ROUND;
-public:
-	StatusRound(const string & name, StatusBenefit benefit, Unit* target)
-		: Status(name, benefit, TYPE, target)
-	{}
-	
-	// The most standard status effect, occurs in round lengths, super base inherits this
-	// for its versatility in other effects
-	//virtual void onRound() = 0;
-
-	~StatusRound();
-};
-
-// This deals with Status Effects that have effects that do something at the moment of creation or disappearance
-// (i.e. Doom III, Unit dies after it expires)
-// (i.e. Attribute modifiers, modifies stats and then restores them on expiration, specifically targeting Unit variables)
-class StatusSpawnKill : public Status
-{
-protected:
-	static const StatusType TYPE = STATUS_SPAWN_KILL;
-public:
-	StatusSpawnKill(const string & name, StatusBenefit benefit, Unit* target)
-		: Status(name, benefit, TYPE, target)
-	{}
-	
-	//virtual void onSpawn() = 0;
-	//virtual void onKill() = 0;
-
-	~StatusSpawnKill() {}
-};
-
-// This deals with the triggers before damage is about to be applied. (i.e. Damage Prevention)
-class StatusPreDamage : public Status
-{
-protected:
-	static const StatusType TYPE = STATUS_PRE_DAMAGE;
-public:
-	StatusPreDamage(const string & name, StatusBenefit benefit, Unit* target)
-		: Status(name, benefit, TYPE, target)
-	{}
-
-	//virtual void onPreDamage(Damage* applier) = 0;
-
-	~StatusPreDamage() {}
-};
-
-// This deals with the triggers after damage is applied. (i.e. Heal half of damage taken)
-class StatusPostDamage : public Status
-{
-protected:
-	static const StatusType TYPE = STATUS_POST_DAMAGE;
-public:
-	StatusPostDamage(const string & name, StatusBenefit benefit, Unit* target)
-		: Status(name, benefit, TYPE, target)
-	{}
-
-	//virtual void onPostDamage(Damage* applier) = 0;
-
-	~StatusPostDamage() {}
-};
-
-// This deals with the triggers before a chosen targets are selected
-// (i.e. Targeter is forced to deal with a prioritized taunting target before any other candidates)
-class StatusPreTarget : public Status
-{
-protected:
-	static const StatusType TYPE = STATUS_PRE_TARGET;
-public:
-	StatusPreTarget(const string & name, StatusBenefit benefit, Unit* target)
-		: Status(name, benefit, TYPE, target)
-	{}
-
-	//virtual void onPreTarget(Targeter* system) = 0;
-
-	~StatusPreTarget() {}
-};
-
-// This deals with that triggers when a Unit was just selected as a target (primary or secondary)
-// (i.e. Bard removes itself as a target for the first time cause it's so friendly)
-class StatusPostTarget : public Status
-{
-protected:
-	static const StatusType TYPE = STATUS_POST_TARGET;
-public:
-	StatusPostTarget(const string & name, StatusBenefit benefit, Unit* target)
-		: Status(name, benefit, TYPE, target)
-	{}
-
-	//virtual void onPostTarget(Targeter* system) = 0;
-
-	~StatusPostTarget() {}
-};
-
-class StatusBlock : public StatusPreDamage
+class StatusBlock : public Status
 {
 private:
 	bool limited; // If set, amount will drop on use and expire at 0. Otherwise, amount will not drop
 	int amount;
 public:
-	StatusBlock(Unit* target, bool limited, int amount)
-		: StatusPreDamage("Block", BUFF, target), limited(limited), amount(amount)
+	StatusBlock(Effect* effect, const string & name, Unit* target, bool limited, int amount)
+		: Status(effect, name, BUFF, target), limited(limited), amount(amount)
 	{}
 	
 	// Helper Functions
@@ -225,7 +142,7 @@ public:
 	void applyDamagePrevention(Damage* applier);
 	
 	// Main Function
-	virtual void onPreDamage(Damage* applier);
+	virtual void onPreReceiveDamage(Damage* applier);
 	
 	// Set Status Specific Variables
 	void setLimited(bool value) { limited = value; }
@@ -234,13 +151,13 @@ public:
 	~StatusBlock() {}
 };
 
-class StatusPoison : public StatusRound
+class StatusPoison : public Status
 {
 protected:
 	int amount;
 public:
-	StatusPoison(Unit* target, int amount)
-		: StatusRound("Poison", DEBUFF, target), amount(amount)
+	StatusPoison(Effect* effect, const string & name, Unit* target, int amount)
+		: Status(effect, name, DEBUFF, target), amount(amount)
 	{}
 	
 	// Helper Functions
@@ -255,13 +172,13 @@ public:
 	~StatusPoison() {}
 };
 
-class StatusTaunt : public StatusPreTarget
+class StatusTaunt : public Status
 {
 protected:
 	Unit* focus; 
 public:
-	StatusTaunt(Unit* target, Unit* focus)
-		: StatusPreTarget("Taunt", NEUTRAL, target), focus(focus)
+	StatusTaunt(Effect* effect, const string & name, Unit* target, Unit* focus)
+		: Status(effect, name, NEUTRAL, target), focus(focus)
 	{}
 	
 	// Helper Functions
@@ -276,13 +193,13 @@ public:
 	~StatusTaunt();
 };
 
-class StatusBattleShout : public StatusSpawnKill
+class StatusBattleShout : public Status
 {
 protected:
 	int amount;
 public:
-	StatusBattleShout(Unit* target, int amount)
-		: StatusSpawnKill("Battle Shout", BUFF, target), amount(amount)
+	StatusBattleShout(Effect* effect, const string & name, Unit* target, int amount)
+		: Status(effect, name, BUFF, target), amount(amount)
 	{}
 
 	// Helper Functions

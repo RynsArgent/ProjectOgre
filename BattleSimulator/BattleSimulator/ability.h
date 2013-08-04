@@ -6,12 +6,6 @@
 #include "unit.h"
 #include "battle.h"
 
-// Functions to deal with the ability list
-static Ability* abilities[NUMBER_OF_SKILLS];
-void initAbilityList();
-void setAbility(Skill skill);
-Ability* getAbility(Skill skill);
-
 // Base class for abilities
 class Ability
 {
@@ -21,12 +15,22 @@ protected:
 	bool respondable; // Determines whether this ability can be followed with a counterattack
 	bool interruptible; // Determines whether an ability can be cancelled
 	int cost; // Can perhaps later be AP cost
+
+	// Runtime variables that can be changed during the execution of an ability
+	bool cancelled;
 public:
+	static Ability* getAbility(Skill skill);
+
 	Ability(AbilityAction act, AbilityType type, bool respondable, bool interruptible, int cost)
 		: act(act), type(type), respondable(respondable), interruptible(interruptible), cost(cost)
-	{}
+	{
+		init();
+	}
 
 	// Most abilities will have their logic implemented in this function
+	virtual void init() {
+		cancelled = false;
+	}
 	virtual void action(Unit* current, Unit* previous, Battle* battle) = 0;
 
 	AbilityAction getActionType() const { return act; }

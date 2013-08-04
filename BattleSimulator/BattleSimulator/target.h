@@ -27,8 +27,6 @@ struct Targeter
 	// The static functions below are common in abilities and are provided for code reuse. (Search for front targets, back targets, ect)
 	static vector<Unit*> searchForFrontTargets(Unit* current, Unit* previous, Battle* battle, Group* allyGroup, Group* enemyGroup, int startingAdjacencyRange, int rowRange);
 	
-	
-
 	void set(int n = 1);
 
 	~Targeter() {}

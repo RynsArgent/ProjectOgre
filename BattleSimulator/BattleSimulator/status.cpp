@@ -22,11 +22,19 @@ void Status::onKill()
 	clean = true;
 }
 
-void Status::onPreDamage(Damage* applier)
+void Status::onPreApplyDamage(Damage* applier)
 {
 }
 
-void Status::onPostDamage(Damage* applier)
+void Status::onPostApplyDamage(Damage* applier)
+{
+}
+
+void Status::onPreReceiveDamage(Damage* applier)
+{
+}
+
+void Status::onPostReceiveDamage(Damage* applier)
 {
 }
 
@@ -61,11 +69,11 @@ void StatusBlock::applyDamagePrevention(Damage* applier)
 		amount = currentPrevention;
 }
 	
-void StatusBlock::onPreDamage(Damage* applier)
+void StatusBlock::onPreReceiveDamage(Damage* applier)
 {
 	if (hasExpired())
 		return;
-	Status::onPreDamage(applier);
+	Status::onPreReceiveDamage(applier);
 	
 	applyDamagePrevention(applier);
 	
@@ -75,8 +83,8 @@ void StatusBlock::onPreDamage(Damage* applier)
 
 void StatusPoison::applyTimedDamage()
 {
-	Damage* damage = new Damage(this, 1, DAMAGE_EARTH);
-	damage->apply(target);
+	Damage* damage = new Damage(this, NULL, target, 10, DAMAGE_EARTH);
+	damage->apply();
 	delete damage;
 	/*
 	// Has a nice idea for divided damage, however poison is one type
