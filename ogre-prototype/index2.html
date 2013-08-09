@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title></title>
+	
+	<!-- Load socket.io client side contents -->
+	<script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="js/client.game.js"></script>
+	<script type="text/javascript" src="js/client.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/game.css" />
+</head>
+<body>
+    <div id="viewport_container">
+	    <canvas id="bg"></canvas>
+	    <canvas id="st"></canvas>
+	    <canvas id="main"></canvas>
+	    <canvas id="fg"></canvas>
+	</div>
+	<div id="log_container">
+		<h3>LOGS</h3>
+		<p>Scroll X: <span id="scrollx">0</span></p>
+		<p>Scroll Y: <span id="scrolly">0</span></p>
+		<ul id="log"></ul>
+	</div>
+	<div id="tools_container">
+		<h3>Tools</h3>
+		<p>Use the WASD keys to scroll</p>
+	</div>
+	
+</body>
+</html>
