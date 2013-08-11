@@ -1,9 +1,27 @@
 html { margin: 0; padding: 0; width: 100%; height: 100% }
 body { margin: 0; padding: 0; height: 100% }
 
+div#frontPage {
+    margin: 0;
+    padding: 0;
+    
+    width: 100%;
+    height: 100%
+}
+
+div#gamePage {
+    margin: 0;
+    padding: 0;
+    
+    width: 100%;
+    height: 100%
+}
+
 div#viewport_container {
 	margin: 0;
 	padding: 0;
+	
+	position: relative;
 	
 	float: left;
 	width: 50%:
@@ -15,6 +33,17 @@ canvas#viewport {
 	padding: 0;
 	
 	float: left
+}
+
+canvas#bg, canvas#st, canvas#main, canvas#fg {
+	margin: 0;
+	padding: 0;
+	
+	position: absolute;
+	left: 0;
+	top: 0;
+	
+	z-index: 1;
 }
 
 div#log_container {

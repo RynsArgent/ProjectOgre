@@ -3,33 +3,43 @@
 <head>
 	<meta charset="UTF-8" />
 	<title></title>
-	
+	<link rel="stylesheet" type="text/css" href="lib/jquery-ui-1.10.3/themes/base/jquery-ui.min.css" />
+	<link rel="stylesheet" type="text/css" href="css/game.css" />
+		
 	<!-- Load socket.io client side contents -->
 	<script src="/socket.io/socket.io.js"></script>
-
-	<!-- temporary externally generated map -->
-	<!-- script type="text/javascript" src="resources/tmp.map.js"></script -->
-	<script type="text/javascript" src="resources/tmp.map.1.js"></script>
-	<!-- script type="text/javascript" src="resources/tmp.map.2.js"></script -->
-	<!---------------------------------------------------------------->
-	
-	<script type="text/javascript" src="js/game-engine.js"></script>
-	<script type="text/javascript" src="js/client-engine.js"></script>
-	
-	<link rel="stylesheet" type="text/css" href="css/game.css" />
+	<script src="lib/jquery-1.10.2.js"></script>
+	<script src="lib/jquery-ui-1.10.3/jquery-ui.min.js"></script>
 </head>
 <body>
-	<canvas id="viewport"></canvas>
-	<div id="log_container">
-		<h3>LOGS</h3>
-		<p>Scroll X: <span id="scrollx">0</span></p>
-		<p>Scroll Y: <span id="scrolly">0</span></p>
-		<ul id="log"></ul>
-	</div>
-	<div id="tools_container">
-		<h3>Tools</h3>
-		<p>Use the WASD keys to scroll</p>
-	</div>
+    <div id="frontPage">
+        <form id="login">
+            <p>Username: <input id="username" type="text" name="username" value="" /></p>
+            <p><input id="enterBtn" type="button" value="Enter" /></p>
+        </form>
+    </div><!-- end frontPage -->
+    <div id="gamePage" style="display:none">
+        <div id="viewport_container">
+	        <canvas id="bg"></canvas>
+	        <canvas id="st"></canvas>
+	        <canvas id="main"></canvas>
+	        <canvas id="fg"></canvas>
+	    </div>
+	    <div id="log_container">
+		    <h3>LOGS</h3>
+		    <p>Scroll X: <span id="scrollx">0</span></p>
+		    <p>Scroll Y: <span id="scrolly">0</span></p>
+		    <ul id="log"></ul>
+	    </div>
+	    <div id="tools_container">
+		    <h3>Tools</h3>
+		    <p>Use the WASD keys to scroll</p>
+	    </div>
+	</div><!-- end gamePage -->
 	
+	<!-- Game Relevant Code -->
+    <script type="text/javascript" src="js/client.js"></script>
+    <script type="text/javascript" src="js/client.game.js"></script>
+	<!------------------------>
 </body>
 </html>

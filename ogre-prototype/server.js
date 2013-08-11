@@ -1,11 +1,19 @@
 var
-    gameport    = process.env.PORT || 4004,
+    gameport    =   process.env.PORT || 4004,
 
-    io          = require('socket.io'),
-    express     = require('express'),
+    io          =   require('socket.io'),
+    express     =   require('express'),
 
     verbose	    =   true,
-    app         =   express.createServer();
+    app         =   express.createServer()
+
+    gameServer =   require('./js/server.game.js');
+
+/* Temporary game server code */
+//game_server = require('./js/server.game.js');
+//game_server.createGame();
+//console.log( 'Game server initialized: ' + game_server.game_count + ' game running' );
+/* -------------------------- */
 
 /* Express Server Set Up */
 
@@ -18,12 +26,23 @@ var
 // Tell the server to listen for incoming connections
 app.listen(gameport);
 
+app.use(express.bodyParser());
+
 // Log something so we know that it succeeded.
 console.log('\t :: Express :: Listening on port ' + gameport);
 
 // By default, we forward the / path to index.html automatically
 app.get('/', function( req, res ) {
-    res.sendfile('index2.html', { root:__dirname });
+    res.sendfile('index.html', { root:__dirname });
+});
+
+app.post('/login', function( req, res ) {
+    console.log('\t :: Express :: user: ' + req.body.username + ' requests login');
+    gameServer.onRequestLogin(req.body.username, function(result) {
+        console.log('\t :: gameServer :: ' + result.result + ' ~ ' + result.msg);
+        
+        res.send(JSON.stringify(result));
+    });
 });
 
 // This handler will listen for requests on /*, any file from the root of our server.
@@ -56,12 +75,6 @@ sio.configure(function() {
     });
 });
 
-/* Temporary game server code */
-game_server = require('./js/server.game.js');
-//game_server.createGame();
-//console.log( 'Game server initialized: ' + game_server.game_count + ' game running' );
-/* -------------------------- */
-
 sio.sockets.on('connection', function(client) {
     // assign a userid to new client
     client.userid = 'Player-' + Math.floor(Math.random() * 100);
@@ -71,7 +84,7 @@ sio.sockets.on('connection', function(client) {
     //client.broadcast.emit('playerjoined', { id: client.userid});
     // call game_server
 //    game_server.onPlayerConnected( client );
-    game_server.onPlayerConnect( client );
+    gameServer.onPlayerConnect( client );
     console.log('\t :: socket.io :: player ' + client.userid + ' connected');
 
     // Handle some messages that clients send
@@ -87,7 +100,7 @@ sio.sockets.on('connection', function(client) {
     // handle disconnect
     client.on('disconnect', function() {
         console.log('\t :: socket.io :: player ' + client.userid + ' disconnected');
-        game_server.onPlayerDisconnect(client);
+        gameServer.onPlayerDisconnect(client);
         //game_server.onPlayerDisconnected(client);
     });
 });
