@@ -36,14 +36,14 @@ app.get('/', function( req, res ) {
     res.sendfile('index.html', { root:__dirname });
 });
 
-app.post('/login', function( req, res ) {
-    console.log('\t :: Express :: user: ' + req.body.username + ' requests login');
-    gameServer.onRequestLogin(req.body.username, function(result) {
+/*app.post('/login', function( req, res ) {
+    console.log('\t :: Express :: user: ' + req.body.username + ' requests login :: ip ' + req.connection.remoteAddress);
+    gameServer.onRequestLogin(req, function(result) {
         console.log('\t :: gameServer :: ' + result.result + ' ~ ' + result.msg);
         
         res.send(JSON.stringify(result));
     });
-});
+});*/
 
 // This handler will listen for requests on /*, any file from the root of our server.
 // See expressjs documentation for more info on routing
@@ -78,14 +78,23 @@ sio.configure(function() {
 sio.sockets.on('connection', function(client) {
     // assign a userid to new client
     client.userid = 'Player-' + Math.floor(Math.random() * 100);
+    console.log('\t :: socket.io :: player ' + client.userid + ' connected');
 
     // Tell the player they connected
     //client.emit('onconnected', { id: client.userid });
     //client.broadcast.emit('playerjoined', { id: client.userid});
     // call game_server
 //    game_server.onPlayerConnected( client );
-    gameServer.onPlayerConnect( client );
-    console.log('\t :: socket.io :: player ' + client.userid + ' connected');
+    gameServer.onPlayerConnect( client, function (data) {
+        client.emit("onconnected", data);
+    });
+
+    client.on('requestlogin', function (username) {
+        client.username = username;
+        gameServer.onRequestLogin(client, function (data) {
+            client.emit('onloggedin', data);
+        });
+    });
 
     // Handle some messages that clients send
 //    client.on('message', function(msg) {

@@ -5,53 +5,30 @@ var game_server = module.exports = (function () {
         onPlayerDisconnect,
         tick,
         update,
-        players = [];
-
+        players = {};
+        
     // define privileged functions
     return {
-        onPlayerConnect : function (client, data) {
-            console.log( " game_server.onPlayerConnect :: " + client.userid );
+        onPlayerConnect : function (client, callback) {
+            console.log( "\t :: game_server.onPlayerConnect :: " + client.userid );
+            console.log( "\t\t" + client.handshake.address.address + " : " + client.handshake.address.port );
+            var address = client.handshake.address;
+            
+            if (players[client.userid] !== undefined) {
+                players[client.userid] = client;
+            }
+            callback({userid : client.userid, userip : address.address});
         },
 
         onPlayerDisconnect : function (client, data) {
-            console.log( "game_server.onPlayerDisconnect :: " + client.userid );
+            console.log( "\t :: game_server.onPlayerDisconnect :: " + client.userid );
         },
 
-        onRequestLogin : function (username, callback) {
-            var i, player;
-            
-            // Make sure the username isn't already in use
-            for(i = 0; i < players.length; i += 1) {
-                if(players[i].username === username) {
-                    callback({ result : "error", msg : "This name is already in use" });
-                    return;
-                }
+        onRequestLogin : function (client, callback) {
+            if (players[client.userid] !== undefined) {
+                players[client.userid] = client;
             }
-            
-            player = (function (username) {
-                var client;
-                
-                return {
-                    username : function () {
-                        return username;
-                    },
-
-                    setUsername : function (name) {
-                        username = name;
-                    },
-                    
-                    client : function () {
-                        return client;
-                    },
-                    
-                    setClient : function (cli) {
-                        client = cli;
-                    }
-                };
-            }());
-            
-            players.push(player);
-            callback({ result : "success", msg : "Connected as " + username });
+            callback({status : "success", msg : client.userid + " logged in as " + client.username + " from " + client.handshake.address.address});
         }
     };
 }());

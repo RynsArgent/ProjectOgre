@@ -6,11 +6,13 @@ var client = function (game) {
     // and are placed in a game by the server. The server sends us a message for that.
     socket.on('connect', function() {
 	    // TODO: handle this case - probably should set a state to CONNECTING
-	    game.onConnecting();
+	    //game.onConnecting();
     });
 
     // Handle when we connect to the server, showing state and storing id's.
-    socket.on('onconnected', game.onConnected());
+    socket.on('onconnected', function (data) {
+        game.onConnected(data);
+    });
 
     // Sent when we are disconnected (network, server down, etc)
     //socket.on('ondisconnected', game_client.onDisconnect());
@@ -31,4 +33,10 @@ var client = function (game) {
     socket.on('playerjoined', game.onPlayerJoin());
 
     socket.on('playerleave', game.onPlayerLeave());
+    
+    return {
+        requestLogin : function () {
+        
+        }
+    }
 }
