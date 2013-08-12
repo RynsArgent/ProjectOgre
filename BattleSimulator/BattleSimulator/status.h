@@ -14,19 +14,18 @@ protected:
 	StatusBenefit benefit;
 	Unit* target;
 	
-	// unremovable, stacwwwwwwkable, and linked are unimplemented
-	bool unremovable;
+    // unimplemented
+    bool dispellable;
 	bool stackable; 
 
 	bool timed;
 	int timer;
-	bool linked; // For when a buff/debuff has multiple status effects, if one gets removed, if linked, it removed the other linked effects
 
 	bool clean; // Used for efficient memory cleaning
 public:
 	Status(Effect* effect, const string & name, StatusBenefit benefit = NEUTRAL, Unit* target = NULL)
 		: effect(effect), name(name), benefit(benefit), target(target),
-		unremovable(false), stackable(false), timed(false), timer(0), linked(false), clean(false)
+		dispellable(true), stackable(false), timed(false), timer(0), clean(false)
 	{
 		if (target != NULL) target->currentStatus.push_back(this);
 	}
@@ -47,12 +46,12 @@ public:
 		return target;
 	}
 	
-	void setUnremovable(bool value) {
-		unremovable = value;
+	void setDispellable(bool value) {
+		dispellable = value;
 	}
 
-	bool isUnremovable() const {
-		return unremovable;
+	bool isDispellable() const {
+		return dispellable;
 	}
 
 	void setStackable(bool value) {
@@ -83,15 +82,7 @@ public:
 	int getTimer() const {
 		return timer;
 	}
-	
-	void setLinked(bool value) {
-		linked = value;
-	}
-
-	int isLinked() const {
-		return linked;
-	}
-
+    
 	bool needsCleaning() const {
 		return clean;
 	}
@@ -105,26 +96,134 @@ public:
 	// (i.e. Attribute modifiers, modifies stats and then restores them on expiration, specifically targeting Unit variables)
 	virtual void onSpawn();
 	virtual void onKill();
+    
 	// This deals with Status Effects that occur every round lengthwise. (i.e. Poison/Burn/Bleed)
 	virtual void onRound();
+    
 	// This deals with the triggers before damage is about to be applied. (i.e. Damage Prevention)
 	virtual void onPreApplyDamage(Damage* applier);
+    
 	// This deals with the triggers after damage is applied. (i.e. Extra damage against beasts)
 	virtual void onPostApplyDamage(Damage* applier);
+    
 	// This deals with the triggers before damage is about to be applied. (i.e. Damage dealt heals attacker)
 	virtual void onPreReceiveDamage(Damage* applier);
+    
 	// This deals with the triggers after damage is applied. (i.e. Heal half of damage taken)
 	virtual void onPostReceiveDamage(Damage* applier);
-	// This deals with the triggers before a chosen targets are selected
-	// (i.e. Targeter is forced to deal with a prioritized taunting target before any other candidates)
-	virtual void onPreTarget(Targeter* system);
-	// This deals with that triggers when a Unit was just selected as a target (primary or secondary)
+    
+	// This deals with the triggers when candidate units are found.
+    // Targets are not exactly chosen yet.
+    // (i.e. Confused target also adds all ally units as candidates and set to TARGET_RANDOM)
+    // (i.e. Taunted unit adds taunters in candidate list to the priority list)
+	virtual void onPreFindTarget(Targeter* system);
+    
+    // This deals with the triggers when chosen units are selected from
+    // the candidate list
+    // (i.e. Stun chosen target moment it is selected)
+    virtual void onPostFindTarget(Targeter* system);
+    
+    // This deals with the triggers when a unit becomes a candidate target.
+    // (i.e. Bard removes itself from the candidate list cause it does jack)
+	virtual void onPreBecomeTarget(Targeter* system);
+    
+	// This deals with the triggers when a Unit is selected as a chosen target
 	// (i.e. Bard removes itself as a target for the first time cause it's so friendly)
-	virtual void onPostTarget(Targeter* system);
-
+	virtual void onPostBecomeTarget(Targeter* system);
+    
+    // This deals with executing the status effects that need to be checked after triggers.
+    // (i.e. cancel the ability if a unit is stunned (beginning, midway, end)
+    // This is mostly for status effects that render a unit unable to act.
+    virtual void onCheckpoint(Ability* ability);
+    
 	~Status() {}
 	
 	friend class Effect;
+};
+
+class StatusStun : public Status
+{
+private:
+    
+public:
+    StatusStun(Effect* effect, const string & name, Unit* target)
+        : Status(effect, name, DEBUFF, target)
+    {}
+    
+	// Main Function
+	virtual void onCheckpoint(Ability* ability);
+    
+    ~StatusStun() {}
+};
+
+
+class StatusSleep : public Status
+{
+private:
+    
+public:
+    StatusSleep(Effect* effect, const string & name, Unit* target)
+    : Status(effect, name, DEBUFF, target)
+    { onSpawn(); }
+    
+	// Main Function
+	virtual void onPostReceiveDamage(Damage* applier);
+	virtual void onCheckpoint(Ability* ability);
+    
+    ~StatusSleep() {}
+};
+
+class StatusFlee : public Status
+{
+private:
+    
+public:
+    StatusFlee(Effect* effect, const string & name, Unit* target)
+    : Status(effect, name, DEBUFF, target)
+    { onSpawn(); }
+    
+	// Main Function
+	virtual void onSpawn();
+	virtual void onCheckpoint(Ability* ability);
+    virtual void onKill();
+    
+    ~StatusFlee() {}
+};
+
+class StatusConfusion : public Status
+{
+private:
+    
+public:
+    StatusConfusion(Effect* effect, const string & name, Unit* target)
+    : Status(effect, name, DEBUFF, target)
+    { onSpawn(); }
+    
+	// Main Function
+	virtual void onPreFindTarget(Targeter* system);
+    
+    ~StatusConfusion() {}
+};
+
+class StatusPoison : public Status
+{
+protected:
+	int amount;
+public:
+	StatusPoison(Effect* effect, const string & name, Unit* target, int amount)
+    : Status(effect, name, DEBUFF, target), amount(amount)
+	{ onSpawn(); }
+	
+	// Helper Functions
+	void applyTimedDamage();
+	
+	// Main Function
+	virtual void onRound();
+	
+	// Set Status Specific Variables
+	void setAmount(int value) { amount = value; }
+    
+	~StatusPoison() {}
 };
 
 class StatusBlock : public Status
@@ -135,7 +234,7 @@ private:
 public:
 	StatusBlock(Effect* effect, const string & name, Unit* target, bool limited, int amount)
 		: Status(effect, name, BUFF, target), limited(limited), amount(amount)
-	{}
+	{ onSpawn(); }
 	
 	// Helper Functions
 	virtual bool hasExpired() const;
@@ -151,27 +250,6 @@ public:
 	~StatusBlock() {}
 };
 
-class StatusPoison : public Status
-{
-protected:
-	int amount;
-public:
-	StatusPoison(Effect* effect, const string & name, Unit* target, int amount)
-		: Status(effect, name, DEBUFF, target), amount(amount)
-	{}
-	
-	// Helper Functions
-	void applyTimedDamage();
-	
-	// Main Function
-	virtual void onRound();
-	
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
-
-	~StatusPoison() {}
-};
-
 class StatusTaunt : public Status
 {
 protected:
@@ -179,13 +257,13 @@ protected:
 public:
 	StatusTaunt(Effect* effect, const string & name, Unit* target, Unit* focus)
 		: Status(effect, name, NEUTRAL, target), focus(focus)
-	{}
+	{ onSpawn(); }
 	
 	// Helper Functions
 	void addToPriorityList(Targeter* system) const;
 	
 	// Main Function
-	virtual void onPreTarget(Targeter* system);
+	virtual void onPreFindTarget(Targeter* system);
 
 	// Set Status Specific Variables
 	void setFocus(Unit* value) { focus = value; }
@@ -200,7 +278,7 @@ protected:
 public:
 	StatusBattleShout(Effect* effect, const string & name, Unit* target, int amount)
 		: Status(effect, name, BUFF, target), amount(amount)
-	{}
+	{ onSpawn(); }
 
 	// Helper Functions
 	
@@ -227,7 +305,7 @@ protected:
 public:
 	StatusAttackResponse(const string & name, StatusBenefit benefit, Unit* target, Skill skill, bool preemptive, bool limited, int amount)
 		: Status(name, benefit, TYPE, target), skill(skill), preemptive(preemptive), limited(limited), amount(amount)
-	{}
+	{ onSpawn(); }
 	
 	// Functions to use Status Effect
 	virtual bool hasExpired() const;
@@ -248,33 +326,41 @@ class Effect
 {
 private:
 	string name;
-	Unit* origin;
-
+	Unit* trigger; // Unit that processes Effects on its turn
+    Battle* battle;
 	vector<Status*> status;
-
-	bool clean; // Used for efficient memory cleaning
+    
+	bool clean; // Used for efficient cleaning
 public:
-	Effect(const string & name = "", Unit* origin = NULL) 
-		: name(name), origin(origin), status(), clean(false)
+	Effect(const string & name = "", Unit* trigger = NULL, Battle* battle = NULL)
+    : name(name), trigger(trigger), battle(battle), status(), clean(false)
 	{
-		if (origin != NULL) origin->currentEffects.push_back(this);
+		if (trigger != NULL) trigger->currentEffects.push_back(this);
 	}
-
+    
 	string getName() const {
 		return name;
 	}
-
+    
+    Unit* getTrigger() const {
+        return trigger;
+    }
+    
+    Battle* getBattle() const {
+        return battle;
+    }
+    
 	void addStatus(Status* stat) {
 		status.push_back(stat);
 	}
-
+    
 	// Each ongoing status effect is processed every round starting from the origin.
 	// For examples, most effects are timed and will be updated here.
 	void processRound() {
 		for (int i = 0; i < status.size(); ++i) {
 			// Process the Status effect
 			status[i]->onRound();
-
+            
 			// Flag certain status effects to be cleaned at the end if it is expired
 			if (status[i]->hasExpired())
 			{
@@ -288,7 +374,7 @@ public:
 				}
 			}
 		}
-
+        
 		// Clean up all expired status effects
 		vector<Status*> nstatus(status.size());
 		int c = 0;
@@ -301,20 +387,20 @@ public:
 		}
 		nstatus.resize(c);
 		status = nstatus;
-
+        
 		// If there are no more ongoing status effects, set container's clean flag
 		if (status.size() <= 0)
 			end();
 	}
-
+    
 	bool needsCleaning() const {
 		return clean;
 	}
-
+    
 	void end() {
 		clean = true;
 	}
-
+    
 	~Effect() {}
 };
 

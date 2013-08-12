@@ -3,39 +3,52 @@
 
 #include "pch.h"
 
-#include "unit.h"
-#include "battle.h"
+#include "action.h"
 
 // Base class for abilities
-class Ability
+class Ability : public Action
 {
 protected:
+    string name;
 	AbilityAction act; // Action type, standard/response skill
 	AbilityType type; // Defines the category an ability belongs to
 	bool respondable; // Determines whether this ability can be followed with a counterattack
 	bool interruptible; // Determines whether an ability can be cancelled
 	int cost; // Can perhaps later be AP cost
-
-	// Runtime variables that can be changed during the execution of an ability
+    
+	// Variables that depend on the unit during the execution of an ability
 	bool cancelled;
 public:
 	static Ability* getAbility(Skill skill);
-
-	Ability(AbilityAction act, AbilityType type, bool respondable, bool interruptible, int cost)
-		: act(act), type(type), respondable(respondable), interruptible(interruptible), cost(cost)
+    
+	Ability(const string & name, AbilityAction act, AbilityType type, bool respondable, bool interruptible, int cost)
+    : Action(), name(name), act(act), type(type), respondable(respondable), interruptible(interruptible), cost(cost)
 	{
 		init();
 	}
-
+    
 	// Most abilities will have their logic implemented in this function
 	virtual void init() {
 		cancelled = false;
 	}
-	virtual void action(Unit* current, Unit* previous, Battle* battle) = 0;
-
+    
+	virtual void action(Unit* current, Battle* battle) {
+        this->source = current;
+        this->battle = battle;
+    };
+    
+    string getName() const { return name; }
+    bool isRespondable() const { return respondable; }
+    bool isInterruptible() const { return interruptible; }
+    bool isCancelled() const { return cancelled; }
+    void setCancelled(bool value) { cancelled = value; }
+    bool checkpoint(Unit* current);
+    
 	AbilityAction getActionType() const { return act; }
 	AbilityType getAbilityType() const { return type; }
-
+    
+    virtual void print() const;
+    
 	~Ability() {}
 };
 
@@ -48,7 +61,7 @@ protected:
 	static const bool INTERRUPTIBLE = false;
 	static const int COST = 0;
 public:
-	NoStandardSkill() : Ability(ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	NoStandardSkill() : Ability("No Standard Skill", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Unit* current, Unit* previous, Battle* battle) {}
 	~NoStandardSkill() {}
 };
@@ -62,7 +75,7 @@ protected:
 	static const bool INTERRUPTIBLE = false;
 	static const int COST = 0;
 public:
-	NoResponseSkill() : Ability(ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	NoResponseSkill() : Ability("No Response SKill", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Unit* current, Unit* previous, Battle* battle) {}
 	~NoResponseSkill() {}
 };
@@ -76,8 +89,8 @@ protected:
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	HundredBlades() : Ability(ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
-	virtual void action(Unit* current, Unit* previous, Battle* battle);
+	HundredBlades() : Ability("Hundred Blades", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Unit* current, Battle* battle);
 	~HundredBlades() {}
 };
 
@@ -90,8 +103,8 @@ protected:
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	Block() : Ability(ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
-	virtual void action(Unit* current, Unit* previous, Battle* battle);
+	Block() : Ability("Block", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Unit* current, Battle* battle);
 	~Block() {}
 };
 
@@ -104,8 +117,8 @@ protected:
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	Strike() : Ability(ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
-	virtual void action(Unit* current, Unit* previous, Battle* battle);
+	Strike() : Ability("Strike", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Unit* current, Battle* battle);
 	~Strike() {}
 };
 
@@ -118,8 +131,8 @@ protected:
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	Taunt() : Ability(ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
-	virtual void action(Unit* current, Unit* previous, Battle* battle);
+	Taunt() : Ability("Taunt", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Unit* current, Battle* battle);
 	~Taunt() {}
 };
 
@@ -132,8 +145,8 @@ protected:
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	BattleShout() : Ability(ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
-	virtual void action(Unit* current, Unit* previous, Battle* battle);
+	BattleShout() : Ability("Battle Shout", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Unit* current, Battle* battle);
 	~BattleShout() {}
 };
 
@@ -148,8 +161,8 @@ protected:
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	Shoot() : Ability(ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
-	virtual void action(Unit* current, Unit* previous, Battle* battle);
+	Shoot() : Ability("Shoot", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Unit* current, Battle* battle);
 	~Shoot() {}
 };
 

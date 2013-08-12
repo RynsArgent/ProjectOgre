@@ -12,9 +12,9 @@ bool compareLifePreferMore(Unit* lhs, Unit* rhs) {
 	return lhs->getCurrentHealth() > rhs->getCurrentHealth();
 }
 
-vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Unit* previous, Battle* battle, Group* allyGroup, Group* enemyGroup, int startingAdjacencyRange, int rowRange)
+vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Battle* battle, Group* allyGroup, Group* enemyGroup, int startingAdjacencyRange, int rowRange)
 {
-	int adjacencyRange = 1;
+	int adjacencyRange = startingAdjacencyRange;
 	int xmin = current->getGridX() - adjacencyRange;
 	int xmax = current->getGridX() + adjacencyRange;
 	vector<Unit*> targets = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmax, rowRange);
@@ -24,7 +24,7 @@ vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Unit* previous, Bat
 		xmin = current->getGridX() - adjacencyRange;
 		xmax = current->getGridX() + adjacencyRange;
 		vector<Unit*> uLeft = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmin, xmin, rowRange);
-		vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmin, rowRange);
+		vector<Unit*> uRight = allyGroup->enemyUnitsFurthestInFront(enemyGroup, xmax, xmax, rowRange);
 		for (int i = 0; i < uLeft.size(); ++i)
 			targets.push_back(uLeft[i]);
 		for (int i = 0; i < uRight.size(); ++i)
@@ -36,18 +36,27 @@ vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Unit* previous, Bat
 void Targeter::set(int n) 
 {
 	chosen.clear();
-
+    
 	// OnPreTarget Methods
-	for (int i = 0; i < caster->getCurrentStatus().size(); ++i)
+    for (int i = 0; i < candidates.size(); ++i)
+    {
+        for (int j = 0; j < candidates[i]->getCurrentStatus().size(); ++j)
+        {
+            Status* status = candidates[i]->getCurrentStatus()[j];
+            status->onPreBecomeTarget(this);
+        }
+    }
+	for (int i = 0; i < source->getCurrentStatus().size(); ++i)
 	{
-		Status* status = caster->getCurrentStatus()[i];
-		status->onPreTarget(this);
+		Status* status = source->getCurrentStatus()[i];
+		status->onPreFindTarget(this);
 	}
 
 	vector<Unit*> cand = candidates;
 	vector<int> prio = priorities;
 
-	for (int i = 0; i < n && i < prio.size(); ++i) {
+    int ni = 0;
+	for (; ni < n && ni < prio.size() && method != TARGET_CONFUSED; ++ni) {
 		int randIndex = rand() % prio.size();
 		int candIndex = prio[randIndex];
 		chosen.push_back(cand[candIndex]);
@@ -59,9 +68,19 @@ void Targeter::set(int n)
 
 	switch (method)
 	{
+    case TARGET_CONFUSED:
+        {
+			for (; ni < n && cand.size() > 0; ++ni) {
+				int randIndex = rand() % cand.size();
+				chosen.push_back(cand[randIndex]);
+				cand[randIndex] = cand[cand.size() - 1];
+				cand.pop_back();
+			}
+			break;
+        }
 	case TARGET_RANDOM:
 		{
-			for (int i = 0; i < n && cand.size() > 0; ++i) {
+			for (; ni < n && cand.size() > 0; ++ni) {
 				int randIndex = rand() % cand.size();
 				chosen.push_back(cand[randIndex]);
 				cand[randIndex] = cand[cand.size() - 1];
@@ -72,23 +91,39 @@ void Targeter::set(int n)
 	case TARGET_WEAKEST:
 		{
 			sort(cand.begin(), cand.end(), compareLifePreferLess);
-			for (int i = 0; i < n && i < cand.size(); ++i)
-				chosen.push_back(cand[i]);
+			for (; ni < n && cand.size() > 0; ++ni)
+				chosen.push_back(cand[ni]);
 			break;
 		}
 	case TARGET_STRONGEST:
 		{
 			sort(cand.begin(), cand.end(), compareLifePreferMore);
-			for (int i = 0; i < n && i < cand.size(); ++i)
-				chosen.push_back(cand[i]);
+			for (; ni < n && cand.size() > 0; ++ni)
+				chosen.push_back(cand[ni]);
 			break;
 		}
 	}
-
-	// OnPostTarget Methods
-	for (int i = 0; i < caster->getCurrentStatus().size(); ++i)
+            
+    // OnPostTarget Methods
+	for (int i = 0; i < source->getCurrentStatus().size(); ++i)
 	{
-		Status* status = caster->getCurrentStatus()[i];
-		status->onPostTarget(this);
+		Status* status = source->getCurrentStatus()[i];
+		status->onPostFindTarget(this);
 	}
+    for (int i = 0; i < candidates.size(); ++i)
+    {
+        for (int j = 0; j < candidates[i]->getCurrentStatus().size(); ++j)
+        {
+            Status* status = candidates[i]->getCurrentStatus()[j];
+            status->onPostBecomeTarget(this);
+        }
+    }
+}
+
+void Targeter::print() const
+{
+    cout << "Targeted: ";
+    for (int i = 0; i < chosen.size(); ++i)
+        cout << chosen[i]->getName() << " ";
+    cout << endl;
 }

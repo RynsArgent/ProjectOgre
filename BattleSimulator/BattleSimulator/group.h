@@ -6,6 +6,7 @@
 #include <vector>
 #include "unit.h"
 #include "formation.h"
+#include "gridpoint.h"
 
 // Should not be associated with Battle group simulator, but here for now. Used to determine facing
 enum Direction { DIRECTION_NONE, DIRECTION_NORTH, DIRECTION_EAST, DIRECTION_SOUTH, DIRECTION_WEST };
@@ -58,15 +59,34 @@ public:
 	bool hasUnitAt(int x, int y) const {
 		return grid[x][y] != NULL && grid[x][y]->isAvailable();
 	}
-
+    bool hasUnitAt(const GridPoint & p) const {
+		return grid[p.x][p.y] != NULL && grid[p.x][p.y]->isAvailable();
+	}
+    
 	Unit* getUnitAt(int x, int y) const {
 		return grid[x][y];
+	}
+	Unit* getUnitAt(const GridPoint & p) const {
+		return grid[p.x][p.y];
 	}
 	
 	void setUnitAt(int x, int y, Unit* unit) {
 		grid[x][y] = unit;
 	}
+	void setUnitAt(const GridPoint & p, Unit* unit) {
+		grid[p.x][p.y] = unit;
+	}
 	
+    vector<GridPoint> getAvailablePoints() const {
+        vector<GridPoint> ret;
+        for (int x = 0; x < width; ++x)
+            for (int y = 0; y < height; ++y)
+            {
+                if (!hasUnitAt(x, y))
+                    ret.push_back(GridPoint(x, y));
+            }
+        return ret;
+    }
 	Facing getFacing() const {
 		return facing;
 	}
@@ -76,7 +96,7 @@ public:
 	
 	bool groupIsAvailable() const;
 	bool withinColumnRange(int x, int xmin, int xmax) const;
-
+    
 	// NOTE: The functions below returns only available units
 	// Returns units of this group based on function request
 	vector<Unit*> allyUnits() const;

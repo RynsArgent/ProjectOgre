@@ -3,7 +3,7 @@
 
 #include "pch.h"
 
-#include "unit.h"
+#include "gridpoint.h"
 #include "group.h"
 
 class Battle
@@ -15,7 +15,7 @@ private:
 	int roundNumber;
 	int turnIndex;
 	vector<Unit*> unitOrder;
-	vector<Ability*> actionStack;
+	vector<Action*> actionStack;
 
 	bool isOver;
 public:
@@ -43,7 +43,8 @@ public:
 	void initializeUnits();
 	void newUnitOrder();
 	void executeTurn();
-
+    void addToActionStack(Action* action);
+    
 	void simulate();
 	
 	void print() const;

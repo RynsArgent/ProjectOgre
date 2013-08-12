@@ -18,8 +18,8 @@
 #include "group.h"
 #include "battle.h"
 
-const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 400;
+const int WINDOW_HEIGHT = 300;
 
 Formation* formA = new Formation();
 Formation* formB = new Formation();
@@ -127,6 +127,5 @@ void GLprocessMouse(int button, int state, int x, int y)
 	if (state == GLUT_DOWN)
 	{
 		battle->executeTurn();
-		battle->print();
 	}
 }

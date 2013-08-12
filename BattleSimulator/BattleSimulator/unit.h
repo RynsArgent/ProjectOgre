@@ -36,7 +36,9 @@ private:
 	Skill frontSkill;
 
 	int gid;
-	int gridX;
+	int formX; // Formation Position
+	int formY;
+	int gridX; // Actual Positions in battles
 	int gridY;
 
 	vector<Effect*> currentEffects;
@@ -188,6 +190,22 @@ public:
 		return gid;
 	}
 
+	int getFormX() const {
+		return formX;
+	}
+    
+	void setOnFormX(int x) {
+		formX = x;
+	}
+    
+	int getFormY() const {
+		return formY;
+	}
+    
+	void setOnFormY(int y) {
+		formY = y;
+	}
+    
 	int getGridX() const {
 		return gridX;
 	}

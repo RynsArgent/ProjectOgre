@@ -11,21 +11,30 @@ enum AbilityAction { ACTION_STANDARD, ACTION_RESPONSE };
 enum DamageRating { DAMAGE_NONE, DAMAGE_MINOR, DAMAGE_LOW, DAMAGE_MEDIUM, DAMAGE_HIGH, DAMAGE_MASSIVE };
 enum DamageType { DAMAGE_TYPELESS, DAMAGE_PHYSICAL, DAMAGE_FIRE, DAMAGE_WATER, DAMAGE_EARTH, DAMAGE_ICE, DAMAGE_LIGHTNING, DAMAGE_HEALING };
 enum StatusBenefit { NEUTRAL, BUFF, DEBUFF };
-enum TargetType { TARGET_RANDOM, TARGET_WEAKEST, TARGET_STRONGEST };
+enum TargetGroup { TARGET_ENEMIES, TARGET_ALLIES, TARGET_BOTH };
+enum TargetType { TARGET_CONFUSED, TARGET_RANDOM, TARGET_WEAKEST, TARGET_STRONGEST };
 enum TargetBenefit { TARGET_UNKNOWN, TARGET_SAFE, TARGET_UNSAFE };
 
 enum Skill { NO_STANDARD_SKILL, NO_RESPONSE_SKILL, HUNDRED_BLADES, BLOCK, STRIKE, TAUNT, BATTLE_SHOUT, SHOOT, FOREWARN, SCOPE, TANGLE_TRAP };
 #define NUMBER_OF_SKILLS 10
 
+string toStringAT(AbilityType val); 
+string toStringDT(DamageType val);
+string toStringET(ElementType val);
+
 class Character;
 class Unit;
+class Action;
 struct Damage;
 class Effect;
 class Status;
 struct Targeter;
 class Ability;
+struct GridPoint;
 class Formation;
 class Group;
 class Battle;
+
+
 
 #endif

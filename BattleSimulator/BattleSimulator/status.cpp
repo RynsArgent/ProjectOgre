@@ -1,10 +1,13 @@
 #include "status.h"
 
+#include <cstdlib>
+#include "ability.h"
 #include "damage.h"
 #include "target.h"
+#include "battle.h"
 
 bool Status::hasExpired() const {
-	return (timed && timer <= 0);
+	return clean || (timed && timer <= 0);
 }
 
 void Status::onSpawn()
@@ -20,6 +23,7 @@ void Status::onRound()
 void Status::onKill() 
 {
 	clean = true;
+    name = "-----";
 }
 
 void Status::onPreApplyDamage(Damage* applier)
@@ -38,12 +42,145 @@ void Status::onPostReceiveDamage(Damage* applier)
 {
 }
 
-void Status::onPreTarget(Targeter* system)
+void Status::onPreFindTarget(Targeter* system)
 {
 }
 
-void Status::onPostTarget(Targeter* system)
+void Status::onPostFindTarget(Targeter* system)
 {
+}
+
+void Status::onPreBecomeTarget(Targeter* system)
+{
+}
+
+void Status::onPostBecomeTarget(Targeter* system)
+{
+}
+
+void Status::onCheckpoint(Ability* ability)
+{
+}
+
+void StatusStun::onCheckpoint(Ability* ability)
+{
+    if (hasExpired())
+        return;
+    Status::onCheckpoint(ability);
+    
+    if (ability->isInterruptible())
+        ability->setCancelled(true);
+}
+
+void StatusSleep::onPostReceiveDamage(Damage* damage)
+{
+    if (hasExpired())
+        return;
+    
+    if (damage->final > 0)
+        onKill();
+}
+
+void StatusSleep::onCheckpoint(Ability* ability)
+{
+    if (hasExpired())
+        return;
+    Status::onCheckpoint(ability);
+    
+    if (ability->isInterruptible())
+        ability->setCancelled(true);
+}
+
+void StatusFlee::onSpawn()
+{
+    Status::onSpawn();
+    if (GridPoint(target->getGridX(), target->getGridY()) != GridPoint(-1, -1))
+    {
+        Battle* battle = effect->getBattle();
+        Group* allyGroup = battle->getAllyGroup(target->getGrid());
+        allyGroup->setUnitAt(target->getGridX(), target->getGridY(), NULL);
+    }
+    target->setOnGridX(-1);
+    target->setOnGridY(-1);
+}
+
+void StatusFlee::onCheckpoint(Ability* ability)
+{
+    if (hasExpired())
+        return;
+    Status::onCheckpoint(ability);
+    
+    if (ability->isInterruptible())
+        ability->setCancelled(true);
+}
+
+void StatusFlee::onKill()
+{
+    Status::onKill();
+    if (GridPoint(target->getGridX(), target->getGridY()) == GridPoint(-1, -1))
+    {
+        Battle* battle = effect->getBattle();
+        Group* allyGroup = battle->getAllyGroup(target->getGrid());
+        GridPoint place = GridPoint(target->getFormX(), target->getFormY());
+        
+        if (allyGroup->hasUnitAt(place))
+        {
+            vector<GridPoint> possible = allyGroup->getAvailablePoints();
+            int r = rand() % possible.size();
+            place = possible[r];
+        }
+        allyGroup->setUnitAt(place, target);
+        target->setOnGridX(place.x);
+        target->setOnGridY(place.y);
+    }
+}
+
+void StatusConfusion::onPreFindTarget(Targeter* system)
+{
+    if (hasExpired())
+        return;
+    Status::onPreFindTarget(system);
+    
+    if (system->method != TARGET_CONFUSED)
+    {
+        vector<Unit*> units;
+        if (system->group == TARGET_ENEMIES)
+            units = system->getBattle()->getAllyGroup(system->getSource()->getGrid())->allyUnits();
+        else if (system->group == TARGET_ALLIES)
+            units = system->getBattle()->getEnemyGroup(system->getSource()->getGrid())->allyUnits();
+        for (int i = 0; i < units.size(); ++i)
+            system->candidates.push_back(units[i]);
+    }
+    system->group = TARGET_BOTH;
+    system->method = TARGET_CONFUSED;
+}
+
+void StatusPoison::applyTimedDamage()
+{
+	Damage* damage = new Damage(this, target, 10, DAMAGE_EARTH);
+    effect->getBattle()->addToActionStack(damage);
+	damage->apply();
+	/*
+     // Has a nice idea for divided damage, however poison is one type
+     int dividedAmount = amount / damageTypes.size();
+     int dividedRemainder = amount % damageTypes.size();
+     for (int i = 0; i < damageTypes.size(); ++i)
+     {
+     if (i < dividedRemainder)
+     Damage(this, dividedAmount + 1, damageTypes[i]).apply(target);
+     else
+     Damage(this, dividedAmount, damageTypes[i]).apply(target);
+     }
+     */
+}
+
+void StatusPoison::onRound()
+{
+	if (hasExpired())
+		return;
+	Status::onRound();
+    
+	applyTimedDamage();
 }
 
 bool StatusBlock::hasExpired() const
@@ -76,40 +213,6 @@ void StatusBlock::onPreReceiveDamage(Damage* applier)
 	Status::onPreReceiveDamage(applier);
 	
 	applyDamagePrevention(applier);
-	
-	if (hasExpired())
-		name = "-----";
-}
-
-void StatusPoison::applyTimedDamage()
-{
-	Damage* damage = new Damage(this, NULL, target, 10, DAMAGE_EARTH);
-	damage->apply();
-	delete damage;
-	/*
-	// Has a nice idea for divided damage, however poison is one type
-	int dividedAmount = amount / damageTypes.size();
-	int dividedRemainder = amount % damageTypes.size();
-	for (int i = 0; i < damageTypes.size(); ++i)
-	{
-		if (i < dividedRemainder)
-			Damage(this, dividedAmount + 1, damageTypes[i]).apply(target);
-		else
-			Damage(this, dividedAmount, damageTypes[i]).apply(target);
-	}
-	*/
-}
-
-void StatusPoison::onRound()
-{
-	if (hasExpired())
-		return;
-	Status::onRound();
-
-	applyTimedDamage();
-
-	if (hasExpired())
-		name = "-----";
 }
 
 void StatusTaunt::addToPriorityList(Targeter* system) const
@@ -120,16 +223,13 @@ void StatusTaunt::addToPriorityList(Targeter* system) const
 	}
 }
 
-void StatusTaunt::onPreTarget(Targeter* system)
+void StatusTaunt::onPreFindTarget(Targeter* system)
 {
 	if (hasExpired())
 		return;
-	Status::onPreTarget(system);
+	Status::onPreFindTarget(system);
 	
 	addToPriorityList(system);
-
-	if (hasExpired())
-		name = "-----";
 }
 
 void StatusBattleShout::onSpawn()

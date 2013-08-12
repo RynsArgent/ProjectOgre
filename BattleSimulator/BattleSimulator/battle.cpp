@@ -85,8 +85,8 @@ void Battle::executeTurn()
 			ability = Ability::getAbility(NO_STANDARD_SKILL);
 			break;
 		}
-		actionStack.push_back(ability);
-		ability->action(unit, NULL, this);
+        addToActionStack(ability);
+		ability->action(unit, this);
 	}
 
 	// Clean up any units that have died
@@ -95,18 +95,25 @@ void Battle::executeTurn()
 
 	// Increment to the next turn
 	++turnIndex;
-
+    
+	// Determine whether an end result has occurred
+	if (!group1->groupIsAvailable() || !group2->groupIsAvailable())
+		isOver = true;
+    
+    if (actionStack.size() > 0)
+        print();
+    
 	// Clean up the action stack
 	for (int i = 0; i < actionStack.size(); ++i)
 		delete actionStack[i];
 	actionStack.clear();
-
-	// Determine whether an end result has occurred
-	if (!group1->groupIsAvailable() || !group2->groupIsAvailable())
-		isOver = true;
 	
 	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
 	sort(unitOrder.begin() + turnIndex, unitOrder.end(), compareSpeed);
+}
+
+void Battle::addToActionStack(Action* action) {
+    actionStack.push_back(action);
 }
 
 void Battle::simulate()
@@ -121,6 +128,9 @@ void Battle::print() const
 {
 	cout << "Round Number: " << roundNumber << endl;
 
+    for (int i = 0; i < actionStack.size(); ++i)
+        actionStack[i]->print();
+    
 	cout << "Battle Map: " << endl;
 	group2->printGroup(true);
 	cout << endl;
