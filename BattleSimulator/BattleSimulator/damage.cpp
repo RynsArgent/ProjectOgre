@@ -1,8 +1,10 @@
 #include "damage.h"
 
+#include "unit.h"
+#include "ability.h"
 #include "status.h"
 
-void DamageNode::modify(Unit* applier, Unit* target)
+void DamageNode::modify(Unit* target)
 {
 	int totalDamage = amount;
 	switch (type)
@@ -30,10 +32,10 @@ void DamageNode::modify(Unit* applier, Unit* target)
 	}
 
 	if (next)
-		next->modify(applier, target);
+		next->modify(target);
 }
 
-int DamageNode::apply(Unit* applier, Unit* target)
+int DamageNode::apply(Unit* target)
 {
 	final = amount;
 	
@@ -45,18 +47,35 @@ int DamageNode::apply(Unit* applier, Unit* target)
 	
 	int totalDamage = final;
 	if (next)
-		totalDamage += next->apply(applier, target);
+		totalDamage += next->apply(target);
 
 	return totalDamage;
+}
+
+void Damage::init()
+{
+    if (ability) {
+        source = ability->getSource();
+        battle = ability->getBattle();
+    } else if (status) {
+        source = NULL;
+        battle = status->getEffect()->getBattle();
+    }
 }
 
 void Damage::apply()
 {
 	final = 0; // Init calculated damage to 0
 	
-	head->modify(applier, target);
+	head->modify(target);
 
 	// Pre Damage Effects
+    Unit* applier = NULL;
+    if (ability != NULL && ability->getSource() != NULL)
+        applier = ability->getSource();
+    //else if (status != NULL && status->getSource() != NULL)
+    //    applier = status->getSource();
+    
 	if (applier != NULL) {
 		for (int i = 0; i < applier->getCurrentStatus().size(); ++i)
 		{
@@ -72,21 +91,28 @@ void Damage::apply()
 
 	// Apply the final damage
 	if (head)
-		final += head->apply(applier, target);
+		final += head->apply(target);
 
 	// Post Damage Effects
+	for (int i = 0; i < target->getCurrentStatus().size(); ++i)
+	{
+		Status* status = target->getCurrentStatus()[i];
+		status->onPostReceiveDamage(this);
+	}
 	if (applier != NULL) {
 		for (int i = 0; i < applier->getCurrentStatus().size(); ++i)
 		{
 			Status* status = applier->getCurrentStatus()[i];
-			status->onPostReceiveDamage(this);
+			status->onPreApplyDamage(this);
 		}
 	}
-	for (int i = 0; i < target->getCurrentStatus().size(); ++i)
-	{
-		Status* status = target->getCurrentStatus()[i];
-		status->onPostApplyDamage(this);
-	}
+}
+
+void Damage::print() const
+{
+    cout << "Damage";
+    head->print();
+    cout << " to " << target->getName() << endl;
 }
 
 int Damage::findNumMatching(const vector<DamageType> & types1, const vector<DamageType> & types2)

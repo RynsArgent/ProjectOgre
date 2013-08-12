@@ -5,6 +5,7 @@
 
 #include <vector>
 #include "character.h"
+#include "gridpoint.h"
 
 class Formation
 {
@@ -31,18 +32,25 @@ public:
 	Character* getCharacterAt(int x, int y) const {
 		return grid[x][y];
 	}
-
-	void setCharacterAt(int x, int y, Character* character) {
-		grid[x][y] = character;
+    
+	Character* getCharacterAt(const GridPoint & p) const {
+		return grid[p.x][p.y];
 	}
-	
+    
 	void setCharacterAt(int x, int y, Character* character, Skill backSkill, Skill midSkill, Skill frontSkill) {
 		grid[x][y] = character;
 		character->setBackSkill(backSkill);
 		character->setMidSkill(midSkill);
 		character->setFrontSkill(frontSkill);
 	}
-
+    
+	void setCharacterAt(const GridPoint & p, Character* character, Skill backSkill, Skill midSkill, Skill frontSkill) {
+		grid[p.x][p.y] = character;
+		character->setBackSkill(backSkill);
+		character->setMidSkill(midSkill);
+		character->setFrontSkill(frontSkill);
+	}
+    
 	void setTargetOrder(TargetType targetOrder) {
 		this->targetOrder = targetOrder;
 	}

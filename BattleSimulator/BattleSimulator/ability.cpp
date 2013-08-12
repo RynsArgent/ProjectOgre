@@ -2,13 +2,16 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include "unit.h"
 #include "target.h"
 #include "damage.h"
+#include "status.h"
+#include "battle.h"
 
 Ability* Ability::getAbility(Skill skill)
 {
 	switch (skill)
-	{
+	{   
 	case NO_STANDARD_SKILL:
 		return new NoStandardSkill();
 	case NO_RESPONSE_SKILL:
@@ -30,43 +33,63 @@ Ability* Ability::getAbility(Skill skill)
 	}
 }
 
+// Executed after certain triggers during the execution of a single ability,
+// true means that the ability can continue as planned.
+bool Ability::checkpoint(Unit* current)
+{
+    for (int i = 0; i < current->getCurrentStatus().size(); ++i)
+        current->getCurrentStatus()[i]->onCheckpoint(this);
+    return isCancelled();
+}
+
+void Ability::print() const
+{
+    cout << "Ability " << getName() << " from " << source->getName() << endl;
+}
+
 // The following are definitions of specific abilities
 
-void HundredBlades::action(Unit* current, Unit* previous, Battle* battle)
+void HundredBlades::action(Unit* current, Battle* battle)
 {
+    Ability::action(current, battle);
+    
 	Group* allyGroup = battle->getAllyGroup(current->getGrid());
 	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 
-	int numTimes = rand() % 3 + 1;
+	int numTimes = rand() % 3 + 2;
 	for (int i = 0; i < numTimes; ++i)
 	{
+        if (checkpoint(current)) return;
+        
 		int rowRange = 1;
 		int initialColumnRange = 1;
-		vector<Unit*> targets = Targeter::searchForFrontTargets(current, previous, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+		vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
 	
 		if (targets.size() > 0)
 		{
-			Targeter* system = new Targeter(current, targets, TARGET_RANDOM, TARGET_UNSAFE, true);
+			Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, TARGET_UNSAFE, true);
+            battle->addToActionStack(system);
 			system->set(1);
+            if (checkpoint(current)) return;
 
 			if (system->chosen.size() > 0) {
 				Unit* target = system->chosen[0];
-				Damage* damage = new Damage(this, current, target, Damage::getDamageValue(DAMAGE_LOW, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+				Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_LOW, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+                battle->addToActionStack(damage);
 				damage->apply();
-				delete damage;
-				cout << current->getName() << " uses Hundred Blades on " << target->getName() << endl;
 			}
-			delete system;
 		}
-		else
-			cout << current->getName() << " cannot use Hundred Blades" << endl;
 	}
 }
 
-void Block::action(Unit* current, Unit* previous, Battle* battle)
+void Block::action(Unit* current, Battle* battle)
 {
+    Ability::action(current, battle);
+    
 	Group* allyGroup = battle->getAllyGroup(current->getGrid());
-
+    
+    if (checkpoint(current)) return;
+    
 	int minx = 0;
 	int maxx = allyGroup->getWidth() - 1;
 	int miny = min(allyGroup->getHeight() - 1, current->getGridY() + 1);
@@ -76,114 +99,122 @@ void Block::action(Unit* current, Unit* previous, Battle* battle)
 	
 	if (targets.size() > 0)
 	{
-		Targeter* system = new Targeter(current, targets, TARGET_RANDOM, TARGET_SAFE, true);
+		Targeter* system = new Targeter(current, battle, targets, TARGET_ALLIES, TARGET_RANDOM, TARGET_SAFE, true);
+        battle->addToActionStack(system);
 		system->set(1);
+        if (checkpoint(current)) return;
 
 		if (system->chosen.size() > 0) {
 			Unit* target = system->chosen[0];
 
 			string name = "Block";
-			Effect *effect = new Effect(name, current);
-			Status *status = new StatusBlock(effect, name, target, true, 30);
+			Effect* effect = new Effect(name, current, battle);
+			//Status* status = new StatusBlock(effect, name, target, true, 30);
+			Status* status = new StatusFlee(effect, name, target);
 			status->setTimed(true, 1);
-			status->onSpawn();
 			effect->addStatus(status);
-			cout << current->getName() << " uses Block on " << target->getName() << endl;
 		}
-		delete system;
 	}
-	else
-		cout << current->getName() << " cannot use Block" << endl;
 }
 
-void Strike::action(Unit* current, Unit* previous, Battle* battle)
+void Strike::action(Unit* current, Battle* battle)
 {
+    Ability::action(current, battle);
+    
 	Group* allyGroup = battle->getAllyGroup(current->getGrid());
 	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 	
+    if (checkpoint(current)) return;
+    
 	int rowRange = 1;
 	int initialColumnRange = 1;
-	vector<Unit*> targets = Targeter::searchForFrontTargets(current, previous, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
 	
 	if (targets.size() > 0)
 	{
-		Targeter* system = new Targeter(current, targets, TARGET_RANDOM, TARGET_UNSAFE, true);
+		Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, TARGET_UNSAFE, true);
+        battle->addToActionStack(system);
 		system->set(1);
+        if (checkpoint(current)) return;
 
 		if (system->chosen.size() > 0) {
 			Unit* target = system->chosen[0];
-			Damage* damage = new Damage(this, current, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+            battle->addToActionStack(damage);
 			damage->apply();
-			delete damage;
-		
-			cout << current->getName() << " uses Strike on " << target->getName() << endl;
 		}
-		delete system;
 	}
-	else
-		cout << current->getName() << " cannot use Strike" << endl;
 }
 
-void Taunt::action(Unit* current, Unit* previous, Battle* battle)
+void Taunt::action(Unit* current, Battle* battle)
 {
+    Ability::action(current, battle);
+    
 	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+    
+    if (checkpoint(current)) return;
 	
 	vector<Unit*> targets = enemyGroup->allyUnits();
 	string name = "Taunt";
-	Effect *effect = new Effect(name, current);
+	Effect* effect = new Effect(name, current, battle);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status *status = new StatusTaunt(effect, name, targets[i], current);
+		Status* status = new StatusTaunt(effect, name, targets[i], current);
 		status->setTimed(true, 1);
-		status->onSpawn();
 		effect->addStatus(status);
 	}
-	cout << current->getName() << " uses Taunt" << endl;
 }
 
-void BattleShout::action(Unit* current, Unit* previous, Battle* battle)
+void BattleShout::action(Unit* current, Battle* battle)
 {
+    Ability::action(current, battle);
+    
 	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+    
+    if (checkpoint(current)) return;
 	
 	vector<Unit*> targets = allyGroup->allyUnits();
 	string name = "Battle Shout";
-	Effect *effect = new Effect(name, current);
+	Effect* effect = new Effect(name, current, battle);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status *status = new StatusBattleShout(effect, name, targets[i], 10);
+		Status* status = new StatusBattleShout(effect, name, targets[i], 10);
+		//Status* status = new StatusConfusion(effect, "Confusion", targets[i]);
+		//Status* status = new StatusStun(effect, "Stun", targets[i]);
+		//Status* status = new StatusSleep(effect, "Sleep", targets[i]);
+		//Status* status = new StatusFlee(effect, "Flee", targets[i]);
 		status->setTimed(true, 1);
-		status->onSpawn();
 		effect->addStatus(status);
 	}
-	cout << current->getName() << " uses Battle Shout" << endl;
 }
 
 ///////// SCOUT
 
-void Shoot::action(Unit* current, Unit* previous, Battle* battle)
+void Shoot::action(Unit* current, Battle* battle)
 {
+    Ability::action(current, battle);
+    
 	Group* allyGroup = battle->getAllyGroup(current->getGrid());
 	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+    
+    if (checkpoint(current)) return;
 	
 	int rowRange = 2;
 	int initialColumnRange = 1;
-	vector<Unit*> targets = Targeter::searchForFrontTargets(current, previous, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
 	
 	if (targets.size() > 0)
 	{
-		Targeter* system = new Targeter(current, targets, TARGET_RANDOM, TARGET_UNSAFE, true);
+		Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, TARGET_UNSAFE, true);
+        battle->addToActionStack(system);
 		system->set(1);
-		
+        if (checkpoint(current)) return;
+        
 		if (system->chosen.size() > 0) {
 			Unit* target = system->chosen[0];
-			Damage* damage = new Damage(this, current, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+            battle->addToActionStack(damage);
 			damage->apply();
-			delete damage;
-		
-			cout << current->getName() << " uses Shoot on " << target->getName() << endl;
 		}
-		delete system;
 	}
-	else
-		cout << current->getName() << " cannot use Shoot" << endl;
 }

@@ -3,9 +3,8 @@
 
 #include "pch.h"
 
-#include "unit.h"
-#include "ability.h"
-#include "status.h"
+#include <vector>
+#include "action.h"
 
 struct DamageNode
 {
@@ -20,8 +19,8 @@ struct DamageNode
 		: start(amount), amount(amount), final(0), type(type), next(next)
 	{}
 
-	void modify(Unit* applier, Unit* target);
-	int apply(Unit* applier, Unit* target);
+	void modify(Unit* target);
+	int apply(Unit* target);
 
 	void clean() {
 		if (next) { 
@@ -31,35 +30,43 @@ struct DamageNode
 		next = NULL;
 	}
 
+    void print() {
+        cout << " " << toStringDT(type) << " " << final << " (" << start << " original)";
+        if (next) next->print();
+    }
+    
 	~DamageNode() {}
 };
 
-struct Damage
+struct Damage : public Action
 {
 	// Reference to the ability or status effect that causes this damage. Useful for damage prevention effects
 	// that or more specific than the standard damage reductions (i.e. Only prevent ranged damage)
 	Ability* ability;
 	Status* status;
 
-	Unit* applier;
-	Unit* target;
-
+    Unit* target;
+    
 	DamageNode* head;
 	DamageNode* tail;
 	
 	int start; // Final calculated damage
 	int final; // Final calculated damage
 
-	Damage(Ability* aref, Unit* applier, Unit* target, int amount, DamageType type = DAMAGE_TYPELESS) 
-		: ability(aref), status(NULL), applier(applier), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
+	Damage(Ability* aref, Unit* target, int amount, DamageType type = DAMAGE_TYPELESS) 
+		: Action() ,ability(aref), status(NULL), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
 	{
+        init();
+    }
+
+	Damage(Status* sref, Unit* target, int amount, DamageType type = DAMAGE_TYPELESS)
+		: Action(), ability(NULL), status(sref), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
+	{
+        init();
 	}
 
-	Damage(Status* sref, Unit* applier, Unit* target, int amount, DamageType type = DAMAGE_TYPELESS)
-		: ability(NULL), status(sref), applier(applier), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
-	{
-	}
-
+    void init();
+    
 	void add(int amount, DamageType type = DAMAGE_TYPELESS) {
 		tail->next = new DamageNode(amount, type);
 		tail = tail->next;
@@ -74,6 +81,8 @@ struct Damage
 		tail = NULL;
 	}
 
+    virtual void print() const;
+    
 	~Damage() {
 		clean();
 	}
