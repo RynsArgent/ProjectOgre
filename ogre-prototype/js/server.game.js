@@ -28,7 +28,11 @@ var game_server = module.exports = (function () {
             if (players[client.userid] !== undefined) {
                 players[client.userid] = client;
             }
-            callback({status : "success", msg : client.userid + " logged in as " + client.username + " from " + client.handshake.address.address});
+            callback({
+                status : "success", 
+                msg : client.userid + " logged in as " + client.username + " from " + client.handshake.address.address,
+                username : client.username
+            });
         }
     };
 }());
