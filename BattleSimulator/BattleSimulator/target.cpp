@@ -78,6 +78,16 @@ void Targeter::set(int n)
 			}
 			break;
         }
+    case TARGET_CHARMED:
+        {
+			for (; ni < n && cand.size() > 0; ++ni) {
+				int randIndex = rand() % cand.size();
+				chosen.push_back(cand[randIndex]);
+				cand[randIndex] = cand[cand.size() - 1];
+				cand.pop_back();
+			}
+			break;
+        }
 	case TARGET_RANDOM:
 		{
 			for (; ni < n && cand.size() > 0; ++ni) {

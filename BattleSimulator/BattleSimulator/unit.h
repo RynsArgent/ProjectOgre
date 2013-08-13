@@ -31,9 +31,11 @@ private:
 	
 	ElementType currentElement;
 	
+	Skill basicSkill;
 	Skill backSkill;
 	Skill midSkill;
 	Skill frontSkill;
+	Skill currentSkill;
 
 	int gid;
 	int formX; // Formation Position
@@ -49,6 +51,7 @@ public:
 	Unit(Character* character, int gid, int x, int y);
 
 	void applyCharacterSkillSets() {
+		basicSkill = character->getBasicSkill();
 		backSkill = character->getBackSkill();
 		midSkill = character->getMidSkill();
 		frontSkill = character->getFrontSkill();
@@ -162,6 +165,14 @@ public:
 		currentInitiative = initiative;
 	}
 
+	Skill getBasicSkill() const {
+		return basicSkill;
+	}
+	
+	void setBasicSkill(Skill value) {
+		basicSkill = value;
+	}
+
 	Skill getBackSkill() const {
 		return backSkill;
 	}
@@ -184,6 +195,14 @@ public:
 
 	void setFrontSkill(Skill value) {
 		frontSkill = value;
+	}
+
+	Skill getCurrentSkill() const {
+		return currentSkill;
+	}
+
+	void setCurrentSkill(Skill value) {
+		currentSkill = value;
 	}
 
 	int getGrid() const {

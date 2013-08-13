@@ -135,6 +135,9 @@ public:
     // (i.e. cancel the ability if a unit is stunned (beginning, midway, end)
     // This is mostly for status effects that render a unit unable to act.
     virtual void onCheckpoint(Ability* ability);
+
+	// This deals with selecting which ability to use
+    virtual void onSelectAbility(Unit* caster);
     
 	~Status() {}
 	
@@ -201,8 +204,26 @@ public:
     
 	// Main Function
 	virtual void onPreFindTarget(Targeter* system);
+    virtual void onSelectAbility(Unit* caster);
     
     ~StatusConfusion() {}
+};
+
+class StatusCharm : public Status
+{
+private:
+    
+public:
+    StatusCharm(Effect* effect, const string & name, Unit* target)
+    : Status(effect, name, DEBUFF, target)
+    { onSpawn(); }
+    
+	// Main Function
+	virtual void onPostReceiveDamage(Damage* applier);
+	virtual void onPreFindTarget(Targeter* system);
+    virtual void onSelectAbility(Unit* caster);
+    
+    ~StatusCharm() {}
 };
 
 class StatusPoison : public Status

@@ -27,7 +27,8 @@ void Unit::carryOverCharacterStatistics()
 }
 
 Unit::Unit(Character* character, int gid, int x, int y)
-	: character(character), backSkill(NO_STANDARD_SKILL), midSkill(NO_STANDARD_SKILL), frontSkill(NO_STANDARD_SKILL), 
+	: character(character), 
+	basicSkill(NO_STANDARD_SKILL), backSkill(NO_STANDARD_SKILL), midSkill(NO_STANDARD_SKILL), frontSkill(NO_STANDARD_SKILL), currentSkill(NO_STANDARD_SKILL),
 	gid(gid), formX(x), formY(y), gridX(x), gridY(y), currentEffects(), currentStatus()
 {
 	carryOverCharacterStatistics();

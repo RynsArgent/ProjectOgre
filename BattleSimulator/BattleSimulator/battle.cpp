@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include "status.h"
 #include "ability.h"
 
 // Used to determine unit order, faster units are sorted to the front of the list
@@ -67,24 +68,33 @@ void Battle::executeTurn()
 	// Perform the unit ability based on its position
 	if (unit->isAvailable())
 	{
-		int row = unit->getGridY();
+		unit->setCurrentSkill(NO_STANDARD_SKILL);
 
-		Ability* ability = NULL;
-		switch (row)
-		{
-		case 2:
-			ability = Ability::getAbility(unit->getFrontSkill());
-			break;
-		case 1:
-			ability = Ability::getAbility(unit->getMidSkill());
-			break;
-		case 0:
-			ability = Ability::getAbility(unit->getBackSkill());
-			break;
-		default:
-			ability = Ability::getAbility(NO_STANDARD_SKILL);
-			break;
+		// Activate any status effects that occur on preparing for abilities
+		for (int i = 0; i < unit->getCurrentStatus().size(); ++i) {
+			unit->getCurrentStatus()[i]->onSelectAbility(unit);
 		}
+
+		// Assign the associated row ability of the current unit if no
+		// ability is forced yet.
+		if (unit->getCurrentSkill() == NO_STANDARD_SKILL) {
+			int row = unit->getGridY();
+			switch (row)
+			{
+			case 2:
+				unit->setCurrentSkill(unit->getFrontSkill());
+				break;
+			case 1:
+				unit->setCurrentSkill(unit->getMidSkill());
+				break;
+			case 0:
+				unit->setCurrentSkill(unit->getBackSkill());
+				break;
+			}
+		}
+
+		// Execute the ability
+		Ability* ability = Ability::getAbility(unit->getCurrentSkill());
         addToActionStack(ability);
 		ability->action(unit, this);
 	}

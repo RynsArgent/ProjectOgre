@@ -52,6 +52,12 @@ int DamageNode::apply(Unit* target)
 	return totalDamage;
 }
 
+void DamageNode::print() const 
+{
+    cout << " " << toStringDT(type) << " " << final << " (" << start << ")";
+    if (next) next->print();
+}
+
 void Damage::init()
 {
     if (ability) {

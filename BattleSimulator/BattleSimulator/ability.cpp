@@ -67,7 +67,7 @@ void HundredBlades::action(Unit* current, Battle* battle)
 	
 		if (targets.size() > 0)
 		{
-			Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, TARGET_UNSAFE, true);
+			Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
             battle->addToActionStack(system);
 			system->set(1);
             if (checkpoint(current)) return;
@@ -99,7 +99,7 @@ void Block::action(Unit* current, Battle* battle)
 	
 	if (targets.size() > 0)
 	{
-		Targeter* system = new Targeter(current, battle, targets, TARGET_ALLIES, TARGET_RANDOM, TARGET_SAFE, true);
+		Targeter* system = new Targeter(current, battle, targets, TARGET_ALLIES, TARGET_RANDOM, true);
         battle->addToActionStack(system);
 		system->set(1);
         if (checkpoint(current)) return;
@@ -109,8 +109,8 @@ void Block::action(Unit* current, Battle* battle)
 
 			string name = "Block";
 			Effect* effect = new Effect(name, current, battle);
-			//Status* status = new StatusBlock(effect, name, target, true, 30);
-			Status* status = new StatusFlee(effect, name, target);
+			Status* status = new StatusBlock(effect, name, target, true, 30);
+			//Status* status = new StatusFlee(effect, "Flee", target);
 			status->setTimed(true, 1);
 			effect->addStatus(status);
 		}
@@ -132,7 +132,7 @@ void Strike::action(Unit* current, Battle* battle)
 	
 	if (targets.size() > 0)
 	{
-		Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, TARGET_UNSAFE, true);
+		Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
         battle->addToActionStack(system);
 		system->set(1);
         if (checkpoint(current)) return;
@@ -178,8 +178,9 @@ void BattleShout::action(Unit* current, Battle* battle)
 	Effect* effect = new Effect(name, current, battle);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status* status = new StatusBattleShout(effect, name, targets[i], 10);
+		//Status* status = new StatusBattleShout(effect, name, targets[i], 10);
 		//Status* status = new StatusConfusion(effect, "Confusion", targets[i]);
+		Status* status = new StatusCharm(effect, "Charm", targets[i]);
 		//Status* status = new StatusStun(effect, "Stun", targets[i]);
 		//Status* status = new StatusSleep(effect, "Sleep", targets[i]);
 		//Status* status = new StatusFlee(effect, "Flee", targets[i]);
@@ -205,7 +206,7 @@ void Shoot::action(Unit* current, Battle* battle)
 	
 	if (targets.size() > 0)
 	{
-		Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, TARGET_UNSAFE, true);
+		Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
         battle->addToActionStack(system);
 		system->set(1);
         if (checkpoint(current)) return;

@@ -1,25 +1,5 @@
 #include "pch.h"
 
-string toStringET(ElementType val)
-{
-    switch (val) {
-        case ELEMENT_NONE:
-            return "None";
-        case ELEMENT_PHYSICAL:
-            return "Physical";
-        case ELEMENT_FIRE:
-            return "Fire";
-        case ELEMENT_WATER:
-            return "Water";
-        case ELEMENT_EARTH:
-            return "Earth";
-        case ELEMENT_ICE:
-            return "Ice";
-        case ELEMENT_LIGHTNING:
-            return "Lightning";
-    }
-}
-
 string toStringAT(AbilityType val)
 {
     switch (val) {
@@ -50,6 +30,26 @@ string toStringDT(DamageType val)
         case DAMAGE_ICE:
             return "Ice";
         case DAMAGE_LIGHTNING:
+            return "Lightning";
+    }
+}
+
+string toStringET(ElementType val)
+{
+    switch (val) {
+        case ELEMENT_NONE:
+            return "None";
+        case ELEMENT_PHYSICAL:
+            return "Physical";
+        case ELEMENT_FIRE:
+            return "Fire";
+        case ELEMENT_WATER:
+            return "Water";
+        case ELEMENT_EARTH:
+            return "Earth";
+        case ELEMENT_ICE:
+            return "Ice";
+        case ELEMENT_LIGHTNING:
             return "Lightning";
     }
 }

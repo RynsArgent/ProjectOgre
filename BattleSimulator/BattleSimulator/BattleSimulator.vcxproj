@@ -76,22 +76,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ability.cpp" />
+    <ClCompile Include="action.cpp" />
     <ClCompile Include="battle.cpp" />
     <ClCompile Include="character.cpp" />
     <ClCompile Include="damage.cpp" />
     <ClCompile Include="formation.cpp" />
+    <ClCompile Include="gridpoint.cpp" />
     <ClCompile Include="group.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="pch.cpp" />
     <ClCompile Include="status.cpp" />
     <ClCompile Include="target.cpp" />
     <ClCompile Include="unit.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ability.h" />
+    <ClInclude Include="action.h" />
     <ClInclude Include="battle.h" />
     <ClInclude Include="character.h" />
     <ClInclude Include="damage.h" />
     <ClInclude Include="formation.h" />
+    <ClInclude Include="gridpoint.h" />
     <ClInclude Include="group.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="status.h" />

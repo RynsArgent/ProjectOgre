@@ -30,10 +30,7 @@ struct DamageNode
 		next = NULL;
 	}
 
-    void print() {
-        cout << " " << toStringDT(type) << " " << final << " (" << start << " original)";
-        if (next) next->print();
-    }
+    void print() const;
     
 	~DamageNode() {}
 };

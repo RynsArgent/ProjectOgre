@@ -59,7 +59,6 @@ void initialize() {
 	*/
 
 	formB->setCharacterAt(0, 0, new Fighter("fighter1B"), BLOCK, STRIKE, TAUNT);
-	//formB->setCharacterAt(1, 0, new Fighter("fighter4B"), BLOCK, BLOCK, BATTLE_SHOUT);
 	formB->setCharacterAt(2, 0, new Fighter("fighter2B"), BLOCK, STRIKE, TAUNT);
 	formB->setCharacterAt(1, 1, new Fighter("fighter3B"), BLOCK, STRIKE, TAUNT);
 	formB->setCharacterAt(1, 2, new Fighter("fighter4B"), BLOCK, BLOCK, BATTLE_SHOUT);

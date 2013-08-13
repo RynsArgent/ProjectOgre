@@ -62,6 +62,10 @@ void Status::onCheckpoint(Ability* ability)
 {
 }
 
+void Status::onSelectAbility(Unit* caster)
+{
+}
+
 void StatusStun::onCheckpoint(Ability* ability)
 {
     if (hasExpired())
@@ -72,12 +76,12 @@ void StatusStun::onCheckpoint(Ability* ability)
         ability->setCancelled(true);
 }
 
-void StatusSleep::onPostReceiveDamage(Damage* damage)
+void StatusSleep::onPostReceiveDamage(Damage* applier)
 {
     if (hasExpired())
         return;
     
-    if (damage->final > 0)
+    if (applier->final > 0)
         onKill();
 }
 
@@ -129,7 +133,7 @@ void StatusFlee::onKill()
             int r = rand() % possible.size();
             place = possible[r];
         }
-        allyGroup->setUnitAt(place, target);
+        allyGroup->setUnitAt(place, target);	
         target->setOnGridX(place.x);
         target->setOnGridY(place.y);
     }
@@ -142,17 +146,67 @@ void StatusConfusion::onPreFindTarget(Targeter* system)
     Status::onPreFindTarget(system);
     
     if (system->method != TARGET_CONFUSED)
-    {
+    {                 
+		system->candidates = system->base;
+
         vector<Unit*> units;
         if (system->group == TARGET_ENEMIES)
             units = system->getBattle()->getAllyGroup(system->getSource()->getGrid())->allyUnits();
         else if (system->group == TARGET_ALLIES)
             units = system->getBattle()->getEnemyGroup(system->getSource()->getGrid())->allyUnits();
+
         for (int i = 0; i < units.size(); ++i)
             system->candidates.push_back(units[i]);
+
+		system->method = TARGET_CONFUSED;
     }
-    system->group = TARGET_BOTH;
-    system->method = TARGET_CONFUSED;
+}
+
+void StatusConfusion::onSelectAbility(Unit* caster)
+{
+    if (hasExpired())
+        return;
+	Status::onSelectAbility(caster);
+
+	if (caster->getCurrentSkill() == NO_STANDARD_SKILL)
+		caster->setCurrentSkill(caster->getBasicSkill());
+}
+
+void StatusCharm::onPostReceiveDamage(Damage* applier)
+{
+    if (hasExpired())
+        return;
+	Status::onPostReceiveDamage(applier);
+	
+    if (applier->final > 0)
+        onKill();
+}
+
+void StatusCharm::onPreFindTarget(Targeter* system)
+{
+    if (hasExpired())
+        return;
+    Status::onPreFindTarget(system);
+    
+    if (system->method != TARGET_CONFUSED && system->method != TARGET_CHARMED) 
+    {
+        if (system->group == TARGET_ENEMIES)
+            system->candidates = system->getBattle()->getAllyGroup(system->getSource()->getGrid())->allyUnits();
+        else if (system->group == TARGET_ALLIES)
+            system->candidates = system->getBattle()->getEnemyGroup(system->getSource()->getGrid())->allyUnits();
+
+		system->method = TARGET_CHARMED;
+    }
+}
+
+void StatusCharm::onSelectAbility(Unit* caster)
+{
+    if (hasExpired())
+        return;
+	Status::onSelectAbility(caster);
+
+	if (caster->getCurrentSkill() == NO_STANDARD_SKILL)
+		caster->setCurrentSkill(caster->getBasicSkill());
 }
 
 void StatusPoison::applyTimedDamage()

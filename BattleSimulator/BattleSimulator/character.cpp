@@ -24,6 +24,7 @@ Fighter::Fighter(const string & name, ElementType favoredElement, int upkeep)
 	midSkills.push_back(BLOCK);
 	frontSkills.push_back(HUNDRED_BLADES);
 	frontSkills.push_back(BLOCK);
+	basicSkill = STRIKE;
 }
 
 Scout::Scout(const string & name, ElementType favoredElement, int upkeep)
@@ -38,4 +39,5 @@ Scout::Scout(const string & name, ElementType favoredElement, int upkeep)
 	midSkills.push_back(SCOPE);
 	frontSkills.push_back(TANGLE_TRAP);
 	frontSkills.push_back(SCOPE);
+	basicSkill = SHOOT;
 }

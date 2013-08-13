@@ -32,6 +32,7 @@ protected:
 	std::vector<Skill> backSkills;
 	std::vector<Skill> midSkills;
 	std::vector<Skill> frontSkills;
+	Skill basicSkill;
 	Skill backSkill;
 	Skill midSkill;
 	Skill frontSkill;
@@ -147,6 +148,14 @@ public:
 		this->favoredElement = favoredElement;
 	}
 
+	Skill getBasicSkill() const {
+		return basicSkill;
+	}
+	
+	void setBasicSkill(Skill value) {
+		basicSkill = value;
+	}
+
 	Skill getBackSkill() const {
 		return backSkill;
 	}
@@ -196,7 +205,7 @@ protected:
 	const static int BASE_EARTH_DEFENSE = 0;
 	const static int BASE_ICE_DEFENSE = 0;
 	const static int BASE_LIGHTNING_DEFENSE = 0;
-	
+
 	const static int BASE_SIZE = 1;
 public:
 	Fighter(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
