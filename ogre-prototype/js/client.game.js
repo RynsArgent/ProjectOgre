@@ -26,13 +26,13 @@ jQuery(document).ready(function () {
             mainCanvas,
             fgCanvas;
             
-            bgCanvas = jQuery("#bg");
-            stCanvas = jQuery("#st");
-            mainCanvas = jQuery("#main");
-            fgCanvas = jQuery("#fg");
+            bgCanvas = jQuery("#bg").get(0);
+            stCanvas = jQuery("#st").get(0);
+            mainCanvas = jQuery("#main").get(0);
+            fgCanvas = jQuery("#fg").get(0);
             
-            jQuery("#viewport_container").width = document.body.clientWidth;
-            jQuery("#viewport_container").height = document.body.clientHeight;
+            jQuery("#viewport_container").get(0).width = document.body.clientWidth;
+            jQuery("#viewport_container").get(0).height = document.body.clientHeight;
             
             bgCanvas.width = document.body.clientWidth;
             bgCanvas.height = document.body.clientHeight;
