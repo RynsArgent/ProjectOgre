@@ -6,26 +6,38 @@
 #include <algorithm>
 #include "unit.h"
 
+// All Status Effects share this result object when merging data
+// The value variables are ambiguous and can be used for anything 
+// and are specified based on the derived class
+struct StatusMergeResult
+{
+	int timer;
+	int val1;
+	int val2;
+	int val3;
+
+	StatusMergeResult() : timer(0), val1(0), val2(0), val3(0) {}
+};
+
 class Status
 {
 protected:
 	Effect* effect;
-	string name;
+	string subname;
 	StatusBenefit benefit;
 	Unit* target;
 	
     // unimplemented
     bool dispellable;
-	bool stackable; 
 
 	bool timed;
 	int timer;
 
 	bool clean; // Used for efficient memory cleaning
 public:
-	Status(Effect* effect, const string & name, StatusBenefit benefit = NEUTRAL, Unit* target = NULL)
-		: effect(effect), name(name), benefit(benefit), target(target),
-		dispellable(true), stackable(false), timed(false), timer(0), clean(false)
+	Status(Effect* effect, const string & subname, StatusBenefit benefit = NEUTRAL, Unit* target = NULL)
+		: effect(effect), subname(subname), benefit(benefit), target(target),
+		dispellable(true), timed(false), timer(0), clean(false)
 	{
 		if (target != NULL) target->currentStatus.push_back(this);
 	}
@@ -34,8 +46,8 @@ public:
 		return effect;
 	}
 
-	string getName() const {
-		return name;
+	string getSubname() const {
+		return subname;
 	}
 
 	StatusBenefit getBenefit() const {
@@ -52,14 +64,6 @@ public:
 
 	bool isDispellable() const {
 		return dispellable;
-	}
-
-	void setStackable(bool value) {
-		stackable = value;
-	}
-
-	bool isStackable() const {
-		return stackable;
 	}
 	
 	void setTimed(bool value1, int value2) {
@@ -87,13 +91,25 @@ public:
 		return clean;
 	}
 
+
 	// Base function that at its most basic updates the timer, Status Effects will extend
 	// the functions they need
 	virtual bool hasExpired() const;
 
+	
+	// This merges by "Effect trigger unit" Statuses, If different
+	// Poison trigger Status are applied for example, this is not used.
+	//
+	// Note: Instead of stacking, resetting the buff can be done by not using
+	//		StatusMergeResults
+	virtual void onMerge(const StatusMergeResult & mergeResult) = 0;
+
 	// This deals with Status Effects that have effects that do something at the moment of creation or disappearance
 	// (i.e. Doom III, Unit dies after it expires)
 	// (i.e. Attribute modifiers, modifies stats and then restores them on expiration, specifically targeting Unit variables)
+	//
+	// Note: In order to support merging (stacking), onSpawn() must be implemented being called in the merging process as well
+	//		onKill() must be implemented not being called in the merging process and handling 2 or more stacks in the final end process.
 	virtual void onSpawn();
 	virtual void onKill();
     
@@ -149,13 +165,14 @@ class StatusStun : public Status
 private:
     
 public:
-    StatusStun(Effect* effect, const string & name, Unit* target)
-        : Status(effect, name, DEBUFF, target)
+    StatusStun(Effect* effect, const string & subname, Unit* target)
+        : Status(effect, subname, DEBUFF, target)
     {}
     
 	// Main Function
+	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onCheckpoint(Ability* ability);
-    
+	
     ~StatusStun() {}
 };
 
@@ -165,11 +182,12 @@ class StatusSleep : public Status
 private:
     
 public:
-    StatusSleep(Effect* effect, const string & name, Unit* target)
-    : Status(effect, name, DEBUFF, target)
+    StatusSleep(Effect* effect, const string & subname, Unit* target)
+    : Status(effect, subname, DEBUFF, target)
     { onSpawn(); }
     
 	// Main Function
+	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onCheckpoint(Ability* ability);
     
@@ -181,15 +199,16 @@ class StatusFlee : public Status
 private:
     
 public:
-    StatusFlee(Effect* effect, const string & name, Unit* target)
-    : Status(effect, name, DEBUFF, target)
+    StatusFlee(Effect* effect, const string & subname, Unit* target)
+    : Status(effect, subname, DEBUFF, target)
     { onSpawn(); }
     
 	// Main Function
+	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onSpawn();
 	virtual void onCheckpoint(Ability* ability);
     virtual void onKill();
-    
+
     ~StatusFlee() {}
 };
 
@@ -198,14 +217,15 @@ class StatusConfusion : public Status
 private:
     
 public:
-    StatusConfusion(Effect* effect, const string & name, Unit* target)
-    : Status(effect, name, DEBUFF, target)
+    StatusConfusion(Effect* effect, const string & subname, Unit* target)
+    : Status(effect, subname, DEBUFF, target)
     { onSpawn(); }
     
 	// Main Function
+	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPreFindTarget(Targeter* system);
     virtual void onSelectAbility(Unit* caster);
-    
+
     ~StatusConfusion() {}
 };
 
@@ -214,15 +234,16 @@ class StatusCharm : public Status
 private:
     
 public:
-    StatusCharm(Effect* effect, const string & name, Unit* target)
-    : Status(effect, name, DEBUFF, target)
+    StatusCharm(Effect* effect, const string & subname, Unit* target)
+    : Status(effect, subname, DEBUFF, target)
     { onSpawn(); }
     
 	// Main Function
+	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onPreFindTarget(Targeter* system);
     virtual void onSelectAbility(Unit* caster);
-    
+
     ~StatusCharm() {}
 };
 
@@ -231,16 +252,17 @@ class StatusPoison : public Status
 protected:
 	int amount;
 public:
-	StatusPoison(Effect* effect, const string & name, Unit* target, int amount)
-    : Status(effect, name, DEBUFF, target), amount(amount)
+	StatusPoison(Effect* effect, const string & subname, Unit* target, int amount)
+    : Status(effect, subname, DEBUFF, target), amount(amount)
 	{ onSpawn(); }
 	
 	// Helper Functions
 	void applyTimedDamage();
 	
 	// Main Function
+	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onRound();
-	
+
 	// Set Status Specific Variables
 	void setAmount(int value) { amount = value; }
     
@@ -253,8 +275,8 @@ private:
 	bool limited; // If set, amount will drop on use and expire at 0. Otherwise, amount will not drop
 	int amount;
 public:
-	StatusBlock(Effect* effect, const string & name, Unit* target, bool limited, int amount)
-		: Status(effect, name, BUFF, target), limited(limited), amount(amount)
+	StatusBlock(Effect* effect, const string & subname, Unit* target, bool limited, int amount)
+		: Status(effect, subname, BUFF, target), limited(limited), amount(amount)
 	{ onSpawn(); }
 	
 	// Helper Functions
@@ -262,8 +284,9 @@ public:
 	void applyDamagePrevention(Damage* applier);
 	
 	// Main Function
+	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPreReceiveDamage(Damage* applier);
-	
+
 	// Set Status Specific Variables
 	void setLimited(bool value) { limited = value; }
 	void setAmount(int value) { amount = value; }
@@ -276,14 +299,15 @@ class StatusTaunt : public Status
 protected:
 	Unit* focus; 
 public:
-	StatusTaunt(Effect* effect, const string & name, Unit* target, Unit* focus)
-		: Status(effect, name, NEUTRAL, target), focus(focus)
+	StatusTaunt(Effect* effect, const string & subname, Unit* target, Unit* focus)
+		: Status(effect, subname, NEUTRAL, target), focus(focus)
 	{ onSpawn(); }
 	
 	// Helper Functions
 	void addToPriorityList(Targeter* system) const;
 	
 	// Main Function
+	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPreFindTarget(Targeter* system);
 
 	// Set Status Specific Variables
@@ -297,16 +321,17 @@ class StatusBattleShout : public Status
 protected:
 	int amount;
 public:
-	StatusBattleShout(Effect* effect, const string & name, Unit* target, int amount)
-		: Status(effect, name, BUFF, target), amount(amount)
+	StatusBattleShout(Effect* effect, const string & subname, Unit* target, int amount)
+		: Status(effect, subname, BUFF, target), amount(amount)
 	{ onSpawn(); }
 
 	// Helper Functions
 	
 	// Main Function
+	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onSpawn();
 	virtual void onKill();
-	
+
 	// Set Status Specific Variables
 	void setAmount(int value) { amount = value; }
 
@@ -347,14 +372,16 @@ class Effect
 {
 private:
 	string name;
-	Unit* trigger; // Unit that processes Effects on its turn
     Battle* battle;
 	vector<Status*> status;
+
+	Unit* origin;
+	Unit* trigger; // Unit that processes Effects on its turn
     
 	bool clean; // Used for efficient cleaning
 public:
-	Effect(const string & name = "", Unit* trigger = NULL, Battle* battle = NULL)
-    : name(name), trigger(trigger), battle(battle), status(), clean(false)
+	Effect(const string & name = "", Unit* origin = NULL, Unit* trigger = NULL, Battle* battle = NULL)
+    : name(name), battle(battle), status(), origin(origin), trigger(trigger), clean(false)
 	{
 		if (trigger != NULL) trigger->currentEffects.push_back(this);
 	}
@@ -363,6 +390,10 @@ public:
 		return name;
 	}
     
+    Unit* getOrigin() const {
+        return origin;
+    }
+
     Unit* getTrigger() const {
         return trigger;
     }
@@ -374,7 +405,7 @@ public:
 	void addStatus(Status* stat) {
 		status.push_back(stat);
 	}
-    
+
 	// Each ongoing status effect is processed every round starting from the origin.
 	// For examples, most effects are timed and will be updated here.
 	void processRound() {
@@ -413,7 +444,20 @@ public:
 		if (status.size() <= 0)
 			end();
 	}
-    
+
+	void clear() {
+		for (int i = 0; i < status.size(); ++i) {
+			// Remove Status buf2f/debuff link from target
+			Unit* target = status[i]->getTarget();
+			if (target != NULL) {
+				target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), status[i]));
+			}
+			delete status[i];
+			end();
+		}
+
+	}
+
 	bool needsCleaning() const {
 		return clean;
 	}
@@ -423,6 +467,6 @@ public:
 	}
     
 	~Effect() {}
-};
+};	
 
 #endif

@@ -23,7 +23,7 @@ void Status::onRound()
 void Status::onKill() 
 {
 	clean = true;
-    name = "-----";
+    subname = "-----";
 }
 
 void Status::onPreApplyDamage(Damage* applier)
@@ -66,6 +66,11 @@ void Status::onSelectAbility(Unit* caster)
 {
 }
 
+void StatusStun::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
+}
+
 void StatusStun::onCheckpoint(Ability* ability)
 {
     if (hasExpired())
@@ -74,6 +79,11 @@ void StatusStun::onCheckpoint(Ability* ability)
     
     if (ability->isInterruptible())
         ability->setCancelled(true);
+}
+
+void StatusSleep::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
 }
 
 void StatusSleep::onPostReceiveDamage(Damage* applier)
@@ -93,6 +103,11 @@ void StatusSleep::onCheckpoint(Ability* ability)
     
     if (ability->isInterruptible())
         ability->setCancelled(true);
+}
+
+void StatusFlee::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
 }
 
 void StatusFlee::onSpawn()
@@ -139,6 +154,11 @@ void StatusFlee::onKill()
     }
 }
 
+void StatusConfusion::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
+}
+
 void StatusConfusion::onPreFindTarget(Targeter* system)
 {
     if (hasExpired())
@@ -170,6 +190,11 @@ void StatusConfusion::onSelectAbility(Unit* caster)
 
 	if (caster->getCurrentSkill() == NO_STANDARD_SKILL)
 		caster->setCurrentSkill(caster->getBasicSkill());
+}
+
+void StatusCharm::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
 }
 
 void StatusCharm::onPostReceiveDamage(Damage* applier)
@@ -209,6 +234,11 @@ void StatusCharm::onSelectAbility(Unit* caster)
 		caster->setCurrentSkill(caster->getBasicSkill());
 }
 
+void StatusPoison::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
+}
+
 void StatusPoison::applyTimedDamage()
 {
 	Damage* damage = new Damage(this, target, 10, DAMAGE_EARTH);
@@ -235,6 +265,12 @@ void StatusPoison::onRound()
 	Status::onRound();
     
 	applyTimedDamage();
+}
+
+void StatusBlock::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer = mergeResult.timer;
+	amount = mergeResult.val1;
 }
 
 bool StatusBlock::hasExpired() const
@@ -269,6 +305,11 @@ void StatusBlock::onPreReceiveDamage(Damage* applier)
 	applyDamagePrevention(applier);
 }
 
+void StatusTaunt::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer = mergeResult.timer;
+}
+
 void StatusTaunt::addToPriorityList(Targeter* system) const
 {
 	for (int i = 0; i < system->candidates.size(); ++i) {
@@ -284,6 +325,20 @@ void StatusTaunt::onPreFindTarget(Targeter* system)
 	Status::onPreFindTarget(system);
 	
 	addToPriorityList(system);
+}
+
+void StatusBattleShout::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
+
+	/*
+	// The following shows how to implement stackable damage for Battle Shout with resetting timer
+	timer = mergeResult.timer;
+	int val = target->getCurrentPhysicalAttack();
+	val += mergeResult.val1;
+	amount += mergeResult.val1;
+	target->setCurrentPhysicalAttack(val);
+	*/
 }
 
 void StatusBattleShout::onSpawn()

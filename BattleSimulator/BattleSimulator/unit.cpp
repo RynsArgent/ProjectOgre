@@ -62,13 +62,13 @@ void Unit::cleanEffects()
 void Unit::print() const
 {
 	cout << getName() << " - HP: " << currentHealth << " ";
-	/*
+	/*	
 	cout << " Effects: ";
 	for (int i = 0; i < currentEffects.size(); ++i)
 		cout << currentEffects[i]->getName() << " ";
 	*/
 	cout << " Status: ";
 	for (int i = 0; i < currentStatus.size(); ++i)
-		cout << currentStatus[i]->getName() << " ";
+		cout << currentStatus[i]->getSubname() << " ";
 	cout << endl;
 }
