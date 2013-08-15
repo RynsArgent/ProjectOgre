@@ -39,7 +39,6 @@ public:
 		: effect(effect), subname(subname), benefit(benefit), target(target),
 		dispellable(true), timed(false), timer(0), clean(false)
 	{
-		if (target != NULL) target->currentStatus.push_back(this);
 	}
 
 	Effect* getEffect() const {
@@ -91,17 +90,16 @@ public:
 		return clean;
 	}
 
-
 	// Base function that at its most basic updates the timer, Status Effects will extend
 	// the functions they need
 	virtual bool hasExpired() const;
-
 	
 	// This merges by "Effect trigger unit" Statuses, If different
 	// Poison trigger Status are applied for example, this is not used.
 	//
 	// Note: Instead of stacking, resetting the buff can be done by not using
 	//		StatusMergeResults
+	virtual StatusMergeResult getMergeResult() const = 0;
 	virtual void onMerge(const StatusMergeResult & mergeResult) = 0;
 
 	// This deals with Status Effects that have effects that do something at the moment of creation or disappearance
@@ -170,6 +168,7 @@ public:
     {}
     
 	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onCheckpoint(Ability* ability);
 	
@@ -184,9 +183,10 @@ private:
 public:
     StatusSleep(Effect* effect, const string & subname, Unit* target)
     : Status(effect, subname, DEBUFF, target)
-    { onSpawn(); }
+    {}
     
 	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onCheckpoint(Ability* ability);
@@ -201,9 +201,10 @@ private:
 public:
     StatusFlee(Effect* effect, const string & subname, Unit* target)
     : Status(effect, subname, DEBUFF, target)
-    { onSpawn(); }
+    {}
     
 	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onSpawn();
 	virtual void onCheckpoint(Ability* ability);
@@ -219,9 +220,10 @@ private:
 public:
     StatusConfusion(Effect* effect, const string & subname, Unit* target)
     : Status(effect, subname, DEBUFF, target)
-    { onSpawn(); }
+    {}
     
 	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPreFindTarget(Targeter* system);
     virtual void onSelectAbility(Unit* caster);
@@ -236,9 +238,10 @@ private:
 public:
     StatusCharm(Effect* effect, const string & subname, Unit* target)
     : Status(effect, subname, DEBUFF, target)
-    { onSpawn(); }
+    {}
     
 	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onPreFindTarget(Targeter* system);
@@ -254,12 +257,13 @@ protected:
 public:
 	StatusPoison(Effect* effect, const string & subname, Unit* target, int amount)
     : Status(effect, subname, DEBUFF, target), amount(amount)
-	{ onSpawn(); }
+	{}
 	
 	// Helper Functions
 	void applyTimedDamage();
 	
 	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onRound();
 
@@ -277,13 +281,14 @@ private:
 public:
 	StatusBlock(Effect* effect, const string & subname, Unit* target, bool limited, int amount)
 		: Status(effect, subname, BUFF, target), limited(limited), amount(amount)
-	{ onSpawn(); }
+	{}
 	
 	// Helper Functions
 	virtual bool hasExpired() const;
 	void applyDamagePrevention(Damage* applier);
 	
 	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPreReceiveDamage(Damage* applier);
 
@@ -301,12 +306,13 @@ protected:
 public:
 	StatusTaunt(Effect* effect, const string & subname, Unit* target, Unit* focus)
 		: Status(effect, subname, NEUTRAL, target), focus(focus)
-	{ onSpawn(); }
+	{}
 	
 	// Helper Functions
 	void addToPriorityList(Targeter* system) const;
 	
 	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPreFindTarget(Targeter* system);
 
@@ -323,11 +329,12 @@ protected:
 public:
 	StatusBattleShout(Effect* effect, const string & subname, Unit* target, int amount)
 		: Status(effect, subname, BUFF, target), amount(amount)
-	{ onSpawn(); }
+	{}
 
 	// Helper Functions
 	
 	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onSpawn();
 	virtual void onKill();
@@ -383,9 +390,12 @@ public:
 	Effect(const string & name = "", Unit* origin = NULL, Unit* trigger = NULL, Battle* battle = NULL)
     : name(name), battle(battle), status(), origin(origin), trigger(trigger), clean(false)
 	{
-		if (trigger != NULL) trigger->currentEffects.push_back(this);
 	}
     
+	bool isExpired() const {
+		return clean;
+	}
+
 	string getName() const {
 		return name;
 	}
@@ -444,18 +454,66 @@ public:
 		if (status.size() <= 0)
 			end();
 	}
+	
+	Status* findStatus(const string & value)
+	{
+		for (int i = 0; i < status.size(); ++i) 
+			if (status[i]->getSubname() == value && !status[i]->hasExpired())
+				return status[i];
+		return NULL;
+	}
+	
+	Effect* findEffect(const string & value)
+	{
+		for (int i = 0; i < trigger->getCurrentEffects().size(); ++i) 
+			if (trigger->getCurrentEffects()[i]->getName() == value &&
+				!trigger->getCurrentEffects()[i]->isExpired())
+				return trigger->getCurrentEffects()[i];
+		return NULL;
+	}
 
-	void clear() {
-		for (int i = 0; i < status.size(); ++i) {
-			// Remove Status buf2f/debuff link from target
-			Unit* target = status[i]->getTarget();
-			if (target != NULL) {
-				target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), status[i]));
-			}
-			delete status[i];
-			end();
+	void merge(Status* dominant, Status* recessive) {
+		StatusMergeResult res = recessive->getMergeResult();
+
+		// Do not do onKill(...), for the merged buff should cancel it
+		dominant->onMerge(res);
+	}
+
+	void merge(Effect* old) 
+	{
+		// Inefficient, but manageable for now
+		for (int i = 0; i < status.size(); ++i)
+		{
+			Status* keep = status[i];
+			Status* replace = old->findStatus(keep->getSubname());
+			if (replace != NULL) merge(keep, replace);
 		}
 
+		// Remove all non-matching and matching effects. This works based on the assumption that the effect
+		// will always share the same set of status effects.
+		for (int i = 0; i < old->status.size(); ++i) {
+			Status* recessive = old->status[i];
+			// Remove Status buff/debuff link from target
+			Unit* target = recessive->getTarget();
+			if (target != NULL) {
+				target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), recessive));
+			}
+			delete recessive;
+		}
+		old->status.clear();
+		old->end();
+	}
+
+	void applyEffect()
+	{
+		for (int i = 0; i < status.size(); ++i)
+			status[i]->onSpawn();
+	
+		Effect* match = findEffect(name);
+		if (match != NULL)
+			merge(match);
+
+		if (trigger != NULL) trigger->currentEffects.push_back(this);
 	}
 
 	bool needsCleaning() const {

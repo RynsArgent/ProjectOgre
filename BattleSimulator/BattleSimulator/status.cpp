@@ -12,6 +12,7 @@ bool Status::hasExpired() const {
 
 void Status::onSpawn()
 {
+	if (target != NULL) target->currentStatus.push_back(this);
 }
 
 void Status::onRound() 
@@ -66,6 +67,13 @@ void Status::onSelectAbility(Unit* caster)
 {
 }
 
+StatusMergeResult StatusStun::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
 void StatusStun::onMerge(const StatusMergeResult & mergeResult)
 {
 	timer += mergeResult.timer;
@@ -79,6 +87,14 @@ void StatusStun::onCheckpoint(Ability* ability)
     
     if (ability->isInterruptible())
         ability->setCancelled(true);
+}
+
+
+StatusMergeResult StatusSleep::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
 }
 
 void StatusSleep::onMerge(const StatusMergeResult & mergeResult)
@@ -103,6 +119,13 @@ void StatusSleep::onCheckpoint(Ability* ability)
     
     if (ability->isInterruptible())
         ability->setCancelled(true);
+}
+
+StatusMergeResult StatusFlee::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
 }
 
 void StatusFlee::onMerge(const StatusMergeResult & mergeResult)
@@ -154,6 +177,13 @@ void StatusFlee::onKill()
     }
 }
 
+StatusMergeResult StatusConfusion::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
 void StatusConfusion::onMerge(const StatusMergeResult & mergeResult)
 {
 	timer += mergeResult.timer;
@@ -190,6 +220,13 @@ void StatusConfusion::onSelectAbility(Unit* caster)
 
 	if (caster->getCurrentSkill() == NO_STANDARD_SKILL)
 		caster->setCurrentSkill(caster->getBasicSkill());
+}
+
+StatusMergeResult StatusCharm::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
 }
 
 void StatusCharm::onMerge(const StatusMergeResult & mergeResult)
@@ -234,6 +271,13 @@ void StatusCharm::onSelectAbility(Unit* caster)
 		caster->setCurrentSkill(caster->getBasicSkill());
 }
 
+StatusMergeResult StatusPoison::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
 void StatusPoison::onMerge(const StatusMergeResult & mergeResult)
 {
 	timer += mergeResult.timer;
@@ -241,7 +285,7 @@ void StatusPoison::onMerge(const StatusMergeResult & mergeResult)
 
 void StatusPoison::applyTimedDamage()
 {
-	Damage* damage = new Damage(this, target, 10, DAMAGE_EARTH);
+	Damage* damage = new Damage(this, target, amount, DAMAGE_EARTH);
     effect->getBattle()->addToActionStack(damage);
 	damage->apply();
 	/*
@@ -267,10 +311,14 @@ void StatusPoison::onRound()
 	applyTimedDamage();
 }
 
+StatusMergeResult StatusBlock::getMergeResult() const
+{
+	StatusMergeResult res;
+	return res;
+}
+
 void StatusBlock::onMerge(const StatusMergeResult & mergeResult)
 {
-	timer = mergeResult.timer;
-	amount = mergeResult.val1;
 }
 
 bool StatusBlock::hasExpired() const
@@ -305,6 +353,13 @@ void StatusBlock::onPreReceiveDamage(Damage* applier)
 	applyDamagePrevention(applier);
 }
 
+StatusMergeResult StatusTaunt::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
 void StatusTaunt::onMerge(const StatusMergeResult & mergeResult)
 {
 	timer = mergeResult.timer;
@@ -327,18 +382,16 @@ void StatusTaunt::onPreFindTarget(Targeter* system)
 	addToPriorityList(system);
 }
 
+StatusMergeResult StatusBattleShout::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
 void StatusBattleShout::onMerge(const StatusMergeResult & mergeResult)
 {
 	timer += mergeResult.timer;
-
-	/*
-	// The following shows how to implement stackable damage for Battle Shout with resetting timer
-	timer = mergeResult.timer;
-	int val = target->getCurrentPhysicalAttack();
-	val += mergeResult.val1;
-	amount += mergeResult.val1;
-	target->setCurrentPhysicalAttack(val);
-	*/
 }
 
 void StatusBattleShout::onSpawn()

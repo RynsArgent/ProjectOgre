@@ -111,8 +111,9 @@ void Block::action(Unit* current, Battle* battle)
 			Effect* effect = new Effect(name, current, current, battle);
 			Status* status = new StatusBlock(effect, name, target, true, 30);
 			//Status* status = new StatusFlee(effect, "Flee", target);
-			status->setTimed(true, 1);
+			status->setTimed(true, 3);
 			effect->addStatus(status);
+			effect->applyEffect();
 		}
 	}
 }
@@ -155,6 +156,7 @@ void Taunt::action(Unit* current, Battle* battle)
     if (checkpoint(current)) return;
 	
 	vector<Unit*> targets = enemyGroup->allyUnits();
+	/*
 	string name = "Taunt";
 	Effect* effect = new Effect(name, current, current, battle);
 	for (int i = 0; i < targets.size(); ++i)
@@ -162,6 +164,17 @@ void Taunt::action(Unit* current, Battle* battle)
 		Status* status = new StatusTaunt(effect, name, targets[i], current);
 		status->setTimed(true, 1);
 		effect->addStatus(status);
+	}
+	effect->applyEffect();
+	*/
+	string name = "Poison";
+	for (int i = 0; i < targets.size(); ++i)
+	{
+		Effect* effect = new Effect(name, current, targets[i], battle);
+		Status* status = new StatusPoison(effect, name, targets[i], 10);
+		status->setTimed(true, 1);
+		effect->addStatus(status);
+		effect->applyEffect();
 	}
 }
 
@@ -174,19 +187,20 @@ void BattleShout::action(Unit* current, Battle* battle)
     if (checkpoint(current)) return;
 	
 	vector<Unit*> targets = allyGroup->allyUnits();
-	string name = "Battle Shout";
+	string name = "BattleShout";
 	Effect* effect = new Effect(name, current, current, battle);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		//Status* status = new StatusBattleShout(effect, name, targets[i], 10);
+		Status* status = new StatusBattleShout(effect, name, targets[i], 10);
 		//Status* status = new StatusConfusion(effect, "Confusion", targets[i]);
-		Status* status = new StatusCharm(effect, "Charm", targets[i]);
+		//Status* status = new StatusCharm(effect, "Charm", targets[i]);
 		//Status* status = new StatusStun(effect, "Stun", targets[i]);
 		//Status* status = new StatusSleep(effect, "Sleep", targets[i]);
 		//Status* status = new StatusFlee(effect, "Flee", targets[i]);
 		status->setTimed(true, 1);
 		effect->addStatus(status);
 	}
+	effect->applyEffect();
 }
 
 ///////// SCOUT
