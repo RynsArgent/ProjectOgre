@@ -9,6 +9,9 @@
 class Ability : public Action
 {
 protected:
+    Unit* source;
+    Battle* battle;
+
     string name;
 	AbilityAction act; // Action type, standard/response skill
 	AbilityType type; // Defines the category an ability belongs to
@@ -22,7 +25,7 @@ public:
 	static Ability* getAbility(Skill skill);
     
 	Ability(const string & name, AbilityAction act, AbilityType type, bool respondable, bool interruptible, int cost)
-    : Action(), name(name), act(act), type(type), respondable(respondable), interruptible(interruptible), cost(cost)
+    : Action(), source(NULL), battle(NULL), name(name), act(act), type(type), respondable(respondable), interruptible(interruptible), cost(cost)
 	{
 		init();
 	}
@@ -37,6 +40,8 @@ public:
         this->battle = battle;
     };
     
+	Unit* getSource() const { return source; }
+	Battle* getBattle() const { return battle; }
     string getName() const { return name; }
     bool isRespondable() const { return respondable; }
     bool isInterruptible() const { return interruptible; }

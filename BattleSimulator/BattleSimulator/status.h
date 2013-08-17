@@ -378,20 +378,29 @@ public:
 class Effect
 {
 private:
-	string name;
+	Unit* source;
     Battle* battle;
+
+	string name;
 	vector<Status*> status;
 
-	Unit* origin;
 	Unit* trigger; // Unit that processes Effects on its turn
     
 	bool clean; // Used for efficient cleaning
 public:
-	Effect(const string & name = "", Unit* origin = NULL, Unit* trigger = NULL, Battle* battle = NULL)
-    : name(name), battle(battle), status(), origin(origin), trigger(trigger), clean(false)
+	Effect(Unit* source = NULL, Battle* battle = NULL, const string & name = "", Unit* trigger = NULL)
+    : source(source), battle(battle), name(name), status(), trigger(trigger), clean(false)
 	{
 	}
     
+    Unit* getSource() const {
+        return source;
+    }
+
+    Battle* getBattle() const {
+        return battle;
+    }
+
 	bool isExpired() const {
 		return clean;
 	}
@@ -400,16 +409,8 @@ public:
 		return name;
 	}
     
-    Unit* getOrigin() const {
-        return origin;
-    }
-
     Unit* getTrigger() const {
         return trigger;
-    }
-    
-    Battle* getBattle() const {
-        return battle;
     }
     
 	void addStatus(Status* stat) {

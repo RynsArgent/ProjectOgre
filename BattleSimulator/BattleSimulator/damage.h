@@ -4,7 +4,7 @@
 #include "pch.h"
 
 #include <vector>
-#include "action.h"
+#include "applier.h"
 
 struct DamageNode
 {
@@ -51,18 +51,14 @@ struct Damage : public Action
 	int final; // Final calculated damage
 
 	Damage(Ability* aref, Unit* target, int amount, DamageType type = DAMAGE_TYPELESS) 
-		: Action() ,ability(aref), status(NULL), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
+		: Action(), ability(aref), status(NULL), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
 	{
-        init();
     }
 
 	Damage(Status* sref, Unit* target, int amount, DamageType type = DAMAGE_TYPELESS)
 		: Action(), ability(NULL), status(sref), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
 	{
-        init();
 	}
-
-    void init();
     
 	void add(int amount, DamageType type = DAMAGE_TYPELESS) {
 		tail->next = new DamageNode(amount, type);

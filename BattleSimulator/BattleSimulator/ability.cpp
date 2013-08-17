@@ -108,7 +108,7 @@ void Block::action(Unit* current, Battle* battle)
 			Unit* target = system->chosen[0];
 
 			string name = "Block";
-			Effect* effect = new Effect(name, current, current, battle);
+			Effect* effect = new Effect(current, battle, name, current);
 			Status* status = new StatusBlock(effect, name, target, true, 30);
 			//Status* status = new StatusFlee(effect, "Flee", target);
 			status->setTimed(true, 3);
@@ -170,7 +170,7 @@ void Taunt::action(Unit* current, Battle* battle)
 	string name = "Poison";
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Effect* effect = new Effect(name, current, targets[i], battle);
+		Effect* effect = new Effect(current, battle, name, targets[i]);
 		Status* status = new StatusPoison(effect, name, targets[i], 10);
 		status->setTimed(true, 1);
 		effect->addStatus(status);
@@ -188,7 +188,7 @@ void BattleShout::action(Unit* current, Battle* battle)
 	
 	vector<Unit*> targets = allyGroup->allyUnits();
 	string name = "BattleShout";
-	Effect* effect = new Effect(name, current, current, battle);
+	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
 		Status* status = new StatusBattleShout(effect, name, targets[i], 10);

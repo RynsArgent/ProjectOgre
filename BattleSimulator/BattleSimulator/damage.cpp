@@ -58,17 +58,6 @@ void DamageNode::print() const
     if (next) next->print();
 }
 
-void Damage::init()
-{
-    if (ability) {
-        source = ability->getSource();
-        battle = ability->getBattle();
-    } else if (status) {
-        source = NULL;
-        battle = status->getEffect()->getBattle();
-    }
-}
-
 void Damage::apply()
 {
 	final = 0; // Init calculated damage to 0

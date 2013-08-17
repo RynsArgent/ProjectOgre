@@ -24,6 +24,7 @@ string toStringET(ElementType val);
 class Character;
 class Unit;
 class Action;
+class Applier;
 struct Damage;
 class Effect;
 class Status;

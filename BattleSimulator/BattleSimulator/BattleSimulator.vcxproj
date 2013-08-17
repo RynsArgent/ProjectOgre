@@ -77,6 +77,7 @@
   <ItemGroup>
     <ClCompile Include="ability.cpp" />
     <ClCompile Include="action.cpp" />
+    <ClCompile Include="applier.cpp" />
     <ClCompile Include="battle.cpp" />
     <ClCompile Include="character.cpp" />
     <ClCompile Include="damage.cpp" />
@@ -92,6 +93,7 @@
   <ItemGroup>
     <ClInclude Include="ability.h" />
     <ClInclude Include="action.h" />
+    <ClInclude Include="applier.h" />
     <ClInclude Include="battle.h" />
     <ClInclude Include="character.h" />
     <ClInclude Include="damage.h" />
