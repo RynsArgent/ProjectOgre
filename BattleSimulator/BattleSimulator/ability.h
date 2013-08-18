@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include "action.h"
+#include "event.h"
 #include <vector>
 
 // Base class for abilities
@@ -11,7 +12,6 @@ class Ability : public Action
 {
 protected:
     string name;
-	AbilityAction act; // Action type, standard/response skill
 	AbilityType type; // Defines the category an ability belongs to
 	bool respondable; // Determines whether this ability can be followed with a counterattack
 	bool interruptible; // Determines whether an ability can be cancelled
@@ -20,12 +20,12 @@ protected:
 	// Variables that depend on the unit during the execution of an ability
 	bool cancelled;
 	Targeter* targeter;
-	vector<Applier*> appliers;
+	vector<Event*> events;
 public:
 	static Ability* getAbility(Skill skill);
     
-	Ability(const string & name, AbilityAction act, AbilityType type, bool respondable, bool interruptible, int cost)
-    : Action(), name(name), act(act), type(type), respondable(respondable), interruptible(interruptible), cost(cost), cancelled(false), targeter(NULL), appliers()
+	Ability(const string & name, ActionType act, AbilityType type, bool respondable, bool interruptible, int cost)
+    : Action(name, act), type(type), respondable(respondable), interruptible(interruptible), cost(cost), cancelled(false), targeter(NULL), events()
 	{
 	}
     
@@ -35,49 +35,40 @@ public:
         this->battle = battle;
     };
     
-    string getName() const { return name; }
     bool isRespondable() const { return respondable; }
     bool isInterruptible() const { return interruptible; }
     bool isCancelled() const { return cancelled; }
     void setCancelled(bool value) { cancelled = value; }
 	Targeter* getTargeter() const { return targeter; }
 	void setTargeter(Targeter* value) { targeter = value; }
-	vector<Applier*> getAppliers() { return appliers; }
-	void setAppliers(const vector<Applier*> & value) { appliers = value; }
 
     bool checkpoint(Unit* current);
     
-	AbilityAction getActionType() const { return act; }
 	AbilityType getAbilityType() const { return type; }
     
     virtual void print() const;
     
-	~Ability() 
-	{
-		if (targeter) delete targeter;
-		for (int i = 0; i < appliers.size(); ++i)
-			delete appliers[i];
-	}
+	~Ability();
 };
 
-class NoStandardSkill : public Ability
+class NoSkill : public Ability
 {
 protected:
-	const static AbilityAction ACT = ACTION_STANDARD;
+	static const ActionType ACT = ACTION_NONE;
 	static const AbilityType TYPE = ABILITY_NONE;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	NoStandardSkill() : Ability("No Standard Skill", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	NoSkill() : Ability("No Skill", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Unit* current, Battle* battle) {};
-	~NoStandardSkill() {}
+	~NoSkill() {}
 };
 
 class HundredBlades : public Ability
 {
 protected:
-	const static AbilityAction ACT = ACTION_STANDARD;
+	static const ActionType ACT = ABILITY_STANDARD;
 	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;
@@ -91,7 +82,7 @@ public:
 class Block : public Ability
 {
 protected:
-	const static AbilityAction ACT = ACTION_STANDARD;
+	static const ActionType ACT = ABILITY_STANDARD;
 	static const AbilityType TYPE = ABILITY_SPECIAL;
 	static const bool RESPONDABLE = false;
 	static const bool INTERRUPTIBLE = true;
@@ -105,7 +96,7 @@ public:
 class Strike : public Ability
 {
 protected:
-	const static AbilityAction ACT = ACTION_STANDARD;
+	static const ActionType ACT = ABILITY_STANDARD;
 	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;
@@ -119,7 +110,7 @@ public:
 class Taunt : public Ability
 {
 protected:
-	const static AbilityAction ACT = ACTION_STANDARD;
+	static const ActionType ACT = ABILITY_STANDARD;
 	static const AbilityType TYPE = ABILITY_SPECIAL;
 	static const bool RESPONDABLE = false;
 	static const bool INTERRUPTIBLE = true;
@@ -133,7 +124,7 @@ public:
 class BattleShout : public Ability
 {
 protected:
-	const static AbilityAction ACT = ACTION_STANDARD;
+	static const ActionType ACT = ABILITY_STANDARD;
 	static const AbilityType TYPE = ABILITY_SPECIAL;
 	static const bool RESPONDABLE = false;
 	static const bool INTERRUPTIBLE = true;
@@ -149,7 +140,7 @@ public:
 class Shoot : public Ability
 {
 protected:
-	const static AbilityAction ACT = ACTION_STANDARD;
+	static const ActionType ACT = ABILITY_STANDARD;
 	static const AbilityType TYPE = ABILITY_ATTACK_RANGE;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;

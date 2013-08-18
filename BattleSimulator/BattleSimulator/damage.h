@@ -4,7 +4,6 @@
 #include "pch.h"
 
 #include <vector>
-#include "applier.h"
 
 struct DamageNode
 {
@@ -68,7 +67,7 @@ struct Damage
 		tail = NULL;
 	}
 
-    virtual void print() const;
+    void print() const;
     
 	~Damage() {
 		clean();

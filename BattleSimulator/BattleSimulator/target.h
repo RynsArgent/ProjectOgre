@@ -37,7 +37,7 @@ struct Targeter
 	
 	void set(int n = 1);
     
-    virtual void print() const;
+    void print() const;
 
 	~Targeter() {}
 };

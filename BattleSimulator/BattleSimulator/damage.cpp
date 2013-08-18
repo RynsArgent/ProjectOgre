@@ -54,7 +54,7 @@ int DamageNode::apply(Unit* target)
 
 void DamageNode::print() const 
 {
-    cout << " " << toStringDT(type) << " " << final << " (" << start << ")";
+    cout << " " << final << " (" << start << ") " << toStringDT(type);
     if (next) next->print();
 }
 
@@ -100,9 +100,8 @@ void Damage::apply()
 
 void Damage::print() const
 {
-    cout << "Damage";
     head->print();
-    cout << " to " << target->getName() << endl;
+    cout << " damage to " << target->getName();
 }
 
 int Damage::findNumMatching(const vector<DamageType> & types1, const vector<DamageType> & types2)

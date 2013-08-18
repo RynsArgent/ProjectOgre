@@ -3,26 +3,39 @@
 
 #include "pch.h"
 
+#include <vector>
+
 // Base class for battle events
 class Action
 {
 protected:
+	string name;
+    
+    ActionType action;
+    
     Unit* source;
     Battle* battle;
+    
+	vector<Event*> events;
 public:
-    Action() 
-		: source(NULL), battle(NULL)
+    Action()
+		: name(""), action(ACTION_NONE), source(NULL), battle(NULL), events()
 	{}
-    Action(Unit* source, Battle* battle) 
-		: source(source), battle(battle)
+    Action(const string & name, ActionType action, Unit* source = NULL, Battle* battle = NULL)
+        : name(name), action(action), source(source), battle(battle), events()
 	{}
-
+    
+    string getName() const { return name; }
+	ActionType getAction() const { return action; }
 	Unit* getSource() const { return source; }
 	Battle* getBattle() const { return battle; }
+	vector<Event*> getEvents() { return events; }
+    
+    void addEvent(Event* event);
 
     virtual void print() const = 0;
     
-    ~Action() {}
+    ~Action();
 };
 
 #endif

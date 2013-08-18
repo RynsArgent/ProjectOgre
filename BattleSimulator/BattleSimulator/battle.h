@@ -15,7 +15,7 @@ private:
 	int roundNumber;
 	int turnIndex;
 	vector<Unit*> unitOrder;
-	vector<Action*> actionStack;
+	vector<Event*> eventStack;
 
 	bool isOver;
 public:
@@ -43,7 +43,7 @@ public:
 	void initializeUnits();
 	void newUnitOrder();
 	void executeTurn();
-    void addToActionStack(Action* action);
+    void addToEventStack(Event* event);
     
 	void simulate();
 	

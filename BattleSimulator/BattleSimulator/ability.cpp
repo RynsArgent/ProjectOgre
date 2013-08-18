@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include "applier.h"
 #include "unit.h"
 #include "target.h"
 #include "damage.h"
@@ -14,7 +13,9 @@ Ability* Ability::getAbility(Skill skill)
 	switch (skill)
 	{   
 	case NO_STANDARD_SKILL:
-		return new NoStandardSkill();
+		return new NoSkill();
+    case NO_RESPONSE_SKILL:
+        return new NoSkill();
 	case HUNDRED_BLADES:
 		return new HundredBlades();
 	case BLOCK:
@@ -28,7 +29,7 @@ Ability* Ability::getAbility(Skill skill)
 	case SHOOT:
 		return new Shoot();
 	default:
-		return new NoStandardSkill();
+		return new NoSkill();
 	}
 }
 
@@ -44,6 +45,11 @@ bool Ability::checkpoint(Unit* current)
 void Ability::print() const
 {
     cout << "Ability " << getName() << " from " << source->getName() << endl;
+}
+
+Ability::~Ability()
+{
+    if (targeter) delete targeter;
 }
 
 // The following are definitions of specific abilities
@@ -76,9 +82,8 @@ void HundredBlades::action(Unit* current, Battle* battle)
 
 				Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_LOW, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
 				
-				Applier* applier = new Applier(damage, NULL);
-				applier->apply();
-				appliers.push_back(applier);
+                Event* event = new Event(this, damage, NULL);
+                event->apply();
 			}
 		}
 	}
@@ -116,9 +121,8 @@ void Block::action(Unit* current, Battle* battle)
 			//Status* status = new StatusFlee(effect, "Flee", target);
 			status->setTimed(true, 3);
 			
-			Applier* applier = new Applier(NULL, status);
-			applier->apply();
-			appliers.push_back(applier);
+			Event* event = new Event(this, NULL, status);
+			event->apply();
 			
 			effect->applyEffect();
 		}
@@ -150,9 +154,8 @@ void Strike::action(Unit* current, Battle* battle)
 
 			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
 			
-			Applier* applier = new Applier(damage, NULL);
-			applier->apply();
-			appliers.push_back(applier);
+			Event* event = new Event(this, damage, NULL);
+			event->apply();
 		}
 	}
 }
@@ -188,9 +191,8 @@ void Taunt::action(Unit* current, Battle* battle)
 		Status* status = new StatusPoison(effect, name, targets[i], 10);
 		status->setTimed(true, 1);
 		
-		Applier* applier = new Applier(NULL, status);
-		applier->apply();
-		appliers.push_back(applier);
+        Event* event = new Event(this, NULL, status);
+        event->apply();
 
 		effect->applyEffect();
 	}
@@ -217,9 +219,8 @@ void BattleShout::action(Unit* current, Battle* battle)
 		//Status* status = new StatusFlee(effect, "Flee", targets[i]);
 		status->setTimed(true, 1);
 		
-		Applier* applier = new Applier(NULL, status);
-		applier->apply();
-		appliers.push_back(applier);
+        Event* event = new Event(this, NULL, status);
+        event->apply();
 	}
 	effect->applyEffect();
 }
@@ -251,9 +252,8 @@ void Shoot::action(Unit* current, Battle* battle)
 
 			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
 			
-			Applier* applier = new Applier(damage, NULL);
-			applier->apply();
-			appliers.push_back(applier);
+			Event* event = new Event(this, damage, NULL);
+			event->apply();
 		}
 	}
 }

@@ -12,7 +12,7 @@ bool compareSpeed(Unit* lhs, Unit* rhs) {
 }
 
 Battle::Battle(Group* group1, Group* group2)
-	: group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), actionStack(), isOver(false)
+	: group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), eventStack(), isOver(false)
 {
 	group1->turnToFace(FACING_FORWARD);
 	group2->turnToFace(FACING_FORWARD);
@@ -63,8 +63,8 @@ void Battle::executeTurn()
 	
 	// Process unit ongoing effects
 	unit->processEffects();
-	unit->cleanEffects();
 
+    Ability* ability = NULL;
 	// Perform the unit ability based on its position
 	if (unit->isAvailable())
 	{
@@ -94,36 +94,37 @@ void Battle::executeTurn()
 		}
 
 		// Execute the ability
-		Ability* ability = Ability::getAbility(unit->getCurrentSkill());
-        addToActionStack(ability);
+		ability = Ability::getAbility(unit->getCurrentSkill());
 		ability->action(unit, this);
 	}
-
+    
+    if (eventStack.size() > 0)
+        print();
+    
 	// Clean up any units that have died
 	group1->cleanDead();
 	group2->cleanDead();
-
+    
+	for (int i = 0; i < eventStack.size(); ++i)
+		delete eventStack[i];
+    if (ability) delete ability;
+	eventStack.clear();
+    
+	unit->cleanEffects();
+    
 	// Increment to the next turn
 	++turnIndex;
     
 	// Determine whether an end result has occurred
 	if (!group1->groupIsAvailable() || !group2->groupIsAvailable())
 		isOver = true;
-    
-    if (actionStack.size() > 0)
-        print();
-    
-	// Clean up the action stack
-	for (int i = 0; i < actionStack.size(); ++i)
-		delete actionStack[i];
-	actionStack.clear();
 	
 	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
 	sort(unitOrder.begin() + turnIndex, unitOrder.end(), compareSpeed);
 }
 
-void Battle::addToActionStack(Action* action) {
-    actionStack.push_back(action);
+void Battle::addToEventStack(Event* event) {
+    eventStack.push_back(event);
 }
 
 void Battle::simulate()
@@ -138,8 +139,8 @@ void Battle::print() const
 {
 	cout << "Round Number: " << roundNumber << endl;
 
-    for (int i = 0; i < actionStack.size(); ++i)
-        actionStack[i]->print();
+    for (int i = 0; i < eventStack.size(); ++i)
+        eventStack[i]->print();
     
 	cout << "Battle Map: " << endl;
 	group2->printGroup(true);

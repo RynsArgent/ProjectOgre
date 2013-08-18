@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include "action.h"
+#include "event.h"
 #include "unit.h"
 
 // All Status Effects share this result object when merging data
@@ -73,7 +74,7 @@ public:
 
 	void setTimed(bool value) {
 		timed = value;
-	}
+	}   
 
 	bool isTimed() const {
 		return timed;
@@ -108,7 +109,7 @@ public:
 	// (i.e. Attribute modifiers, modifies stats and then restores them on expiration, specifically targeting Unit variables)
 	//
 	// Note: In order to support merging (stacking), onSpawn() must be implemented being called in the merging process as well
-	//		onKill() must be implemented not being called in the merging process and handling 2 or more stacks in the final end process.
+	//		onKill() must be implemented not being called in the merging process and can handle 2+ stacks in the final end process.
 	virtual void onSpawn();
 	virtual void onKill();
     
@@ -379,26 +380,19 @@ public:
 class Effect : public Action
 {
 private:
-	string name;
 	vector<Status*> status;
 
 	Unit* trigger; // Unit that processes Effects on its turn
-    
-	vector<Applier*> appliers;
 
 	bool clean; // Used for efficient cleaning
 public:
 	Effect(Unit* source = NULL, Battle* battle = NULL, const string & name = "", Unit* trigger = NULL)
-    : Action(source, battle), name(name), status(), trigger(trigger), appliers(), clean(false)
+    : Action(name, EFFECT_TRIGGER, source, battle), status(), trigger(trigger), clean(false)
 	{
 	}
 
 	bool isExpired() const {
 		return clean;
-	}
-
-	string getName() const {
-		return name;
 	}
     
     Unit* getTrigger() const {
@@ -507,18 +501,6 @@ public:
 			merge(match);
 
 		if (trigger != NULL) trigger->currentEffects.push_back(this);
-	}
-
-	void addApplier(Applier* applier)
-	{
-		appliers.push_back(applier);
-	}
-
-	void clearAppliers() 
-	{
-		for (int i = 0; i < appliers.size(); ++i)
-			delete appliers[i];
-		appliers.clear();
 	}
 
 	bool needsCleaning() const {
