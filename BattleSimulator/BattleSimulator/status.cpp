@@ -285,9 +285,12 @@ void StatusPoison::onMerge(const StatusMergeResult & mergeResult)
 
 void StatusPoison::applyTimedDamage()
 {
-	Damage* damage = new Damage(this, target, amount, DAMAGE_EARTH);
-	damage->apply();
-	delete damage;
+	Damage* damage = new Damage(effect, target, amount, DAMAGE_EARTH);
+	
+	Applier* applier = new Applier(damage, NULL);
+	applier->apply();
+	effect->addApplier(applier);
+
 	/*
      // Has a nice idea for divided damage, however poison is one type
      int dividedAmount = amount / damageTypes.size();
@@ -428,3 +431,7 @@ void StatusAttackResponse::applyAbility(Unit* caster, Battle* battle)
 		--amount;
 }
 */
+
+void Effect::print() const
+{
+}

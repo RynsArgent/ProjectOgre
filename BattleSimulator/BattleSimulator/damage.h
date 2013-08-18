@@ -35,12 +35,11 @@ struct DamageNode
 	~DamageNode() {}
 };
 
-struct Damage : public Action
+struct Damage
 {
-	// Reference to the ability or status effect that causes this damage. Useful for damage prevention effects
+	// Reference to the ability or effect that causes this damage. Useful for damage prevention effects
 	// that or more specific than the standard damage reductions (i.e. Only prevent ranged damage)
-	Ability* ability;
-	Status* status;
+	Action* action;
 
     Unit* target;
     
@@ -50,15 +49,10 @@ struct Damage : public Action
 	int start; // Final calculated damage
 	int final; // Final calculated damage
 
-	Damage(Ability* aref, Unit* target, int amount, DamageType type = DAMAGE_TYPELESS) 
-		: Action(), ability(aref), status(NULL), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
+	Damage(Action* aref, Unit* target, int amount, DamageType type = DAMAGE_TYPELESS) 
+		: action(aref), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
 	{
     }
-
-	Damage(Status* sref, Unit* target, int amount, DamageType type = DAMAGE_TYPELESS)
-		: Action(), ability(NULL), status(sref), target(target), head(new DamageNode(amount, type)), tail(head), start(amount), final(0)
-	{
-	}
     
 	void add(int amount, DamageType type = DAMAGE_TYPELESS) {
 		tail->next = new DamageNode(amount, type);

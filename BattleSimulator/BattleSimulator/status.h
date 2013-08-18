@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include <algorithm>
+#include "action.h"
 #include "unit.h"
 
 // All Status Effects share this result object when merging data
@@ -375,31 +376,22 @@ public:
 */
 
 // Keeps track of ongoing Status Effects, also allows multiple status effects to be associated under one name
-class Effect
+class Effect : public Action
 {
 private:
-	Unit* source;
-    Battle* battle;
-
 	string name;
 	vector<Status*> status;
 
 	Unit* trigger; // Unit that processes Effects on its turn
     
+	vector<Applier*> appliers;
+
 	bool clean; // Used for efficient cleaning
 public:
 	Effect(Unit* source = NULL, Battle* battle = NULL, const string & name = "", Unit* trigger = NULL)
-    : source(source), battle(battle), name(name), status(), trigger(trigger), clean(false)
+    : Action(source, battle), name(name), status(), trigger(trigger), appliers(), clean(false)
 	{
 	}
-    
-    Unit* getSource() const {
-        return source;
-    }
-
-    Battle* getBattle() const {
-        return battle;
-    }
 
 	bool isExpired() const {
 		return clean;
@@ -517,6 +509,18 @@ public:
 		if (trigger != NULL) trigger->currentEffects.push_back(this);
 	}
 
+	void addApplier(Applier* applier)
+	{
+		appliers.push_back(applier);
+	}
+
+	void clearAppliers() 
+	{
+		for (int i = 0; i < appliers.size(); ++i)
+			delete appliers[i];
+		appliers.clear();
+	}
+
 	bool needsCleaning() const {
 		return clean;
 	}
@@ -525,6 +529,8 @@ public:
 		clean = true;
 	}
     
+	virtual void print() const;
+
 	~Effect() {}
 };	
 

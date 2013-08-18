@@ -4,14 +4,12 @@
 #include "pch.h"
 
 #include "action.h"
+#include <vector>
 
 // Base class for abilities
 class Ability : public Action
 {
 protected:
-    Unit* source;
-    Battle* battle;
-
     string name;
 	AbilityAction act; // Action type, standard/response skill
 	AbilityType type; // Defines the category an ability belongs to
@@ -21,32 +19,32 @@ protected:
     
 	// Variables that depend on the unit during the execution of an ability
 	bool cancelled;
+	Targeter* targeter;
+	vector<Applier*> appliers;
 public:
 	static Ability* getAbility(Skill skill);
     
 	Ability(const string & name, AbilityAction act, AbilityType type, bool respondable, bool interruptible, int cost)
-    : Action(), source(NULL), battle(NULL), name(name), act(act), type(type), respondable(respondable), interruptible(interruptible), cost(cost)
+    : Action(), name(name), act(act), type(type), respondable(respondable), interruptible(interruptible), cost(cost), cancelled(false), targeter(NULL), appliers()
 	{
-		init();
 	}
     
 	// Most abilities will have their logic implemented in this function
-	virtual void init() {
-		cancelled = false;
-	}
-    
 	virtual void action(Unit* current, Battle* battle) {
         this->source = current;
         this->battle = battle;
     };
     
-	Unit* getSource() const { return source; }
-	Battle* getBattle() const { return battle; }
     string getName() const { return name; }
     bool isRespondable() const { return respondable; }
     bool isInterruptible() const { return interruptible; }
     bool isCancelled() const { return cancelled; }
     void setCancelled(bool value) { cancelled = value; }
+	Targeter* getTargeter() const { return targeter; }
+	void setTargeter(Targeter* value) { targeter = value; }
+	vector<Applier*> getAppliers() { return appliers; }
+	void setAppliers(const vector<Applier*> & value) { appliers = value; }
+
     bool checkpoint(Unit* current);
     
 	AbilityAction getActionType() const { return act; }
@@ -54,7 +52,12 @@ public:
     
     virtual void print() const;
     
-	~Ability() {}
+	~Ability() 
+	{
+		if (targeter) delete targeter;
+		for (int i = 0; i < appliers.size(); ++i)
+			delete appliers[i];
+	}
 };
 
 class NoStandardSkill : public Ability
@@ -62,27 +65,13 @@ class NoStandardSkill : public Ability
 protected:
 	const static AbilityAction ACT = ACTION_STANDARD;
 	static const AbilityType TYPE = ABILITY_NONE;
-	static const bool RESPONDABLE = false;
-	static const bool INTERRUPTIBLE = false;
-	static const int COST = 0;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
 public:
 	NoStandardSkill() : Ability("No Standard Skill", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
-	virtual void action(Unit* current, Unit* previous, Battle* battle) {}
+	virtual void action(Unit* current, Battle* battle) {};
 	~NoStandardSkill() {}
-};
-
-class NoResponseSkill : public Ability
-{
-protected:
-	const static AbilityAction ACT = ACTION_RESPONSE;
-	static const AbilityType TYPE = ABILITY_NONE;
-	static const bool RESPONDABLE = false;
-	static const bool INTERRUPTIBLE = false;
-	static const int COST = 0;
-public:
-	NoResponseSkill() : Ability("No Response SKill", ACT, TYPE, RESPONDABLE, INTERRUPTIBLE, COST) {}
-	virtual void action(Unit* current, Unit* previous, Battle* battle) {}
-	~NoResponseSkill() {}
 };
 
 class HundredBlades : public Ability

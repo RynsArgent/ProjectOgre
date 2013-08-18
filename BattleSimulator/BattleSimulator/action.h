@@ -7,9 +7,19 @@
 class Action
 {
 protected:
+    Unit* source;
+    Battle* battle;
 public:
-    Action() {}
-    
+    Action() 
+		: source(NULL), battle(NULL)
+	{}
+    Action(Unit* source, Battle* battle) 
+		: source(source), battle(battle)
+	{}
+
+	Unit* getSource() const { return source; }
+	Battle* getBattle() const { return battle; }
+
     virtual void print() const = 0;
     
     ~Action() {}

@@ -8,10 +8,9 @@
 #include <cstdlib>
 
 #include "unit.h"
-#include "action.h"
 
 // Simple object that contains potential targets
-struct Targeter : public Action
+struct Targeter
 {	
     Unit* source;
     Battle* battle;
@@ -26,7 +25,7 @@ struct Targeter : public Action
 	bool primary; // Determines whether a primary target exists for this system
 
 	Targeter(Unit* source, Battle* battle, const vector<Unit*> & candidates, TargetGroup group, TargetType method, bool primary = true)
-		: Action(), source(source), battle(battle), base(candidates), candidates(candidates), priorities(), chosen(), group(group), method(method), primary(primary)
+		: source(source), battle(battle), base(candidates), candidates(candidates), priorities(), chosen(), group(group), method(method), primary(primary)
 	{
     }
             

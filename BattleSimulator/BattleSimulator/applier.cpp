@@ -1,9 +1,15 @@
 #include "applier.h"
 
 #include "damage.h"
+#include "status.h"
 
-void Applier::print() const
+void Applier::apply()
 {
-	for (int i = 0; i < damages.size(); ++i)
-		damages[i]->print();
+	success = true;
+	if (success) {
+		if (damage != NULL)
+			damage->apply();
+		if (status != NULL)
+			status->getEffect()->addStatus(status);
+	}
 }

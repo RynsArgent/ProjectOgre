@@ -12,6 +12,7 @@ string toStringAT(AbilityType val)
         case ABILITY_SPECIAL:
             return "Special";
     }
+	return "";
 }
 
 string toStringDT(DamageType val)
@@ -32,6 +33,7 @@ string toStringDT(DamageType val)
         case DAMAGE_LIGHTNING:
             return "Lightning";
     }
+	return "";
 }
 
 string toStringET(ElementType val)
@@ -52,4 +54,5 @@ string toStringET(ElementType val)
         case ELEMENT_LIGHTNING:
             return "Lightning";
     }
+	return "";
 }

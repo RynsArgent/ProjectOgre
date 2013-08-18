@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include "applier.h"
 #include "unit.h"
 #include "target.h"
 #include "damage.h"
@@ -14,8 +15,6 @@ Ability* Ability::getAbility(Skill skill)
 	{   
 	case NO_STANDARD_SKILL:
 		return new NoStandardSkill();
-	case NO_RESPONSE_SKILL:
-		return new NoResponseSkill();
 	case HUNDRED_BLADES:
 		return new HundredBlades();
 	case BLOCK:
@@ -67,16 +66,19 @@ void HundredBlades::action(Unit* current, Battle* battle)
 	
 		if (targets.size() > 0)
 		{
-			Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
-            battle->addToActionStack(system);
-			system->set(1);
+			targeter = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
+			targeter->set(1);
+
             if (checkpoint(current)) return;
 
-			if (system->chosen.size() > 0) {
-				Unit* target = system->chosen[0];
+			if (targeter->chosen.size() > 0) {
+				Unit* target = targeter->chosen[0];
+
 				Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_LOW, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
-                battle->addToActionStack(damage);
-				damage->apply();
+				
+				Applier* applier = new Applier(damage, NULL);
+				applier->apply();
+				appliers.push_back(applier);
 			}
 		}
 	}
@@ -99,20 +101,25 @@ void Block::action(Unit* current, Battle* battle)
 	
 	if (targets.size() > 0)
 	{
-		Targeter* system = new Targeter(current, battle, targets, TARGET_ALLIES, TARGET_RANDOM, true);
-        battle->addToActionStack(system);
-		system->set(1);
+		targeter = new Targeter(current, battle, targets, TARGET_ALLIES, TARGET_RANDOM, true);
+		targeter->set(1);
+
         if (checkpoint(current)) return;
 
-		if (system->chosen.size() > 0) {
-			Unit* target = system->chosen[0];
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
 
 			string name = "Block";
 			Effect* effect = new Effect(current, battle, name, current);
+			
 			Status* status = new StatusBlock(effect, name, target, true, 30);
 			//Status* status = new StatusFlee(effect, "Flee", target);
 			status->setTimed(true, 3);
-			effect->addStatus(status);
+			
+			Applier* applier = new Applier(NULL, status);
+			applier->apply();
+			appliers.push_back(applier);
+			
 			effect->applyEffect();
 		}
 	}
@@ -133,16 +140,19 @@ void Strike::action(Unit* current, Battle* battle)
 	
 	if (targets.size() > 0)
 	{
-		Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
-        battle->addToActionStack(system);
-		system->set(1);
+		targeter = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
+		targeter->set(1);
+
         if (checkpoint(current)) return;
 
-		if (system->chosen.size() > 0) {
-			Unit* target = system->chosen[0];
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+
 			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
-            battle->addToActionStack(damage);
-			damage->apply();
+			
+			Applier* applier = new Applier(damage, NULL);
+			applier->apply();
+			appliers.push_back(applier);
 		}
 	}
 }
@@ -163,7 +173,10 @@ void Taunt::action(Unit* current, Battle* battle)
 	{
 		Status* status = new StatusTaunt(effect, name, targets[i], current);
 		status->setTimed(true, 1);
-		effect->addStatus(status);
+		
+		Applier* applier = new Applier(NULL, status);
+		applier->apply();
+		appliers.push_back(applier);
 	}
 	effect->applyEffect();
 	*/
@@ -171,9 +184,14 @@ void Taunt::action(Unit* current, Battle* battle)
 	for (int i = 0; i < targets.size(); ++i)
 	{
 		Effect* effect = new Effect(current, battle, name, targets[i]);
+
 		Status* status = new StatusPoison(effect, name, targets[i], 10);
 		status->setTimed(true, 1);
-		effect->addStatus(status);
+		
+		Applier* applier = new Applier(NULL, status);
+		applier->apply();
+		appliers.push_back(applier);
+
 		effect->applyEffect();
 	}
 }
@@ -198,7 +216,10 @@ void BattleShout::action(Unit* current, Battle* battle)
 		//Status* status = new StatusSleep(effect, "Sleep", targets[i]);
 		//Status* status = new StatusFlee(effect, "Flee", targets[i]);
 		status->setTimed(true, 1);
-		effect->addStatus(status);
+		
+		Applier* applier = new Applier(NULL, status);
+		applier->apply();
+		appliers.push_back(applier);
 	}
 	effect->applyEffect();
 }
@@ -220,16 +241,19 @@ void Shoot::action(Unit* current, Battle* battle)
 	
 	if (targets.size() > 0)
 	{
-		Targeter* system = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
-        battle->addToActionStack(system);
-		system->set(1);
+		targeter = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
+		targeter->set(1);
+
         if (checkpoint(current)) return;
         
-		if (system->chosen.size() > 0) {
-			Unit* target = system->chosen[0];
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+
 			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
-            battle->addToActionStack(damage);
-			damage->apply();
+			
+			Applier* applier = new Applier(damage, NULL);
+			applier->apply();
+			appliers.push_back(applier);
 		}
 	}
 }

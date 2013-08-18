@@ -65,12 +65,7 @@ void Damage::apply()
 	head->modify(target);
 
 	// Pre Damage Effects
-    Unit* applier = NULL;
-    if (ability != NULL && ability->getSource() != NULL)
-        applier = ability->getSource();
-    //else if (status != NULL && status->getSource() != NULL)
-    //    applier = status->getSource();
-    
+    Unit* applier = action->getSource();
 	if (applier != NULL) {
 		for (int i = 0; i < applier->getCurrentStatus().size(); ++i)
 		{
