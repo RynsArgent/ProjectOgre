@@ -502,13 +502,14 @@ public:
 		return NULL;
 	}
 	
-	Effect* findEffect(const string & value)
+	vector<Effect*> findEffects(const string & value)
 	{
+		vector<Effect*> ret;
 		for (int i = 0; i < trigger->getCurrentEffects().size(); ++i) 
 			if (trigger->getCurrentEffects()[i]->getName() == value &&
 				!trigger->getCurrentEffects()[i]->isExpired())
-				return trigger->getCurrentEffects()[i];
-		return NULL;
+				ret.push_back(trigger->getCurrentEffects()[i]);
+		return ret;
 	}
 
 	void merge(Status* dominant, Status* recessive) {
@@ -551,9 +552,12 @@ public:
 		for (int i = 0; i < status.size(); ++i)
 			status[i]->onSpawn();
 	
-		Effect* match = findEffect(name);
-		if (match != NULL)
-			merge(match);
+		// There can be more than one effect of the same name, 
+		// try to merge with all the old ones
+		// and update to the new one
+		vector<Effect*> matches = findEffects(name);
+		for (int i = 0; i < matches.size(); ++i)
+			merge(matches[i]);
 
 		if (trigger != NULL) trigger->currentEffects.push_back(this);
 	}
