@@ -116,6 +116,19 @@ public:
 	// This deals with Status Effects that occur every round lengthwise. (i.e. Poison/Burn/Bleed)
 	virtual void onRound();
     
+	// This deals with events that can have a roller's chance to succeed or fail
+	// i.e. Blind will affect the chances of success for an attack
+	virtual void onPrePerformHit(Event* event);
+
+	// This deals with events that have already determined a roller's chance of success or fail
+	virtual void onPostPerformHit(Event* event);
+	
+	// This deals with events that can have a target be victim to a chance of success or fail
+	virtual void onPreReactHit(Event* event);
+	
+	// This deals with events that have already a target be victim to a chance of success or fail
+	virtual void onPostReactHit(Event* event);
+
 	// This deals with the triggers before damage is about to be applied. (i.e. Damage Prevention)
 	virtual void onPreApplyDamage(Damage* applier);
     
@@ -184,7 +197,7 @@ private:
     
 public:
     StatusSleep(Effect* effect, const string & subname, Unit* target)
-    : Status(effect, subname, DEBUFF, target)
+		: Status(effect, subname, DEBUFF, target)
     {}
     
 	// Main Function
@@ -202,7 +215,7 @@ private:
     
 public:
     StatusFlee(Effect* effect, const string & subname, Unit* target)
-    : Status(effect, subname, DEBUFF, target)
+		: Status(effect, subname, DEBUFF, target)
     {}
     
 	// Main Function
@@ -221,7 +234,7 @@ private:
     
 public:
     StatusConfusion(Effect* effect, const string & subname, Unit* target)
-    : Status(effect, subname, DEBUFF, target)
+		: Status(effect, subname, DEBUFF, target)
     {}
     
 	// Main Function
@@ -239,7 +252,7 @@ private:
     
 public:
     StatusCharm(Effect* effect, const string & subname, Unit* target)
-    : Status(effect, subname, DEBUFF, target)
+		: Status(effect, subname, DEBUFF, target)
     {}
     
 	// Main Function
@@ -258,7 +271,7 @@ protected:
 	int amount;
 public:
 	StatusPoison(Effect* effect, const string & subname, Unit* target, int amount)
-    : Status(effect, subname, DEBUFF, target), amount(amount)
+		: Status(effect, subname, DEBUFF, target), amount(amount)
 	{}
 	
 	// Helper Functions
@@ -273,6 +286,43 @@ public:
 	void setAmount(int value) { amount = value; }
     
 	~StatusPoison() {}
+};
+
+class StatusBlind : public Status
+{
+protected:
+public:
+	StatusBlind(Effect* effect, const string & subname, Unit* target)
+		: Status(effect, subname, DEBUFF, target)
+	{}
+	
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onPrePerformHit(Event* event);
+
+	~StatusBlind() {}
+};
+
+class StatusMortality : public Status
+{
+protected:
+	int amount;
+public:
+	StatusMortality(Effect* effect, const string & subname, Unit* target, int amount)
+		: Status(effect, subname, DEBUFF, target), amount(amount)
+	{}
+
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onSpawn();
+	virtual void onKill();
+	
+	// Set Status Specific Variables
+	void setAmount(int value) { amount = value; }
+
+	~StatusMortality() {}
 };
 
 class StatusBlock : public Status
@@ -383,16 +433,14 @@ private:
 	vector<Status*> status;
 
 	Unit* trigger; // Unit that processes Effects on its turn
-
-	bool clean; // Used for efficient cleaning
 public:
 	Effect(Unit* source = NULL, Battle* battle = NULL, const string & name = "", Unit* trigger = NULL)
-    : Action(name, EFFECT_TRIGGER, source, battle), status(), trigger(trigger), clean(false)
+		: Action(name, EFFECT_TRIGGER, ABILITY_SPECIAL, source, battle), status(), trigger(trigger)
 	{
 	}
 
 	bool isExpired() const {
-		return clean;
+		return status.size() <= 0;
 	}
     
     Unit* getTrigger() const {
@@ -404,26 +452,24 @@ public:
 	}
 
 	// Each ongoing status effect is processed every round starting from the origin.
-	// For examples, most effects are timed and will be updated here.
+	// For example, most effects that are timed will be updated here.
 	void processRound() {
 		for (int i = 0; i < status.size(); ++i) {
 			// Process the Status effect
 			status[i]->onRound();
-            
-			// Flag certain status effects to be cleaned at the end if it is expired
+
+			// Sets the clean flag and on End effects
 			if (status[i]->hasExpired())
 			{
-				// Sets the clean flag and on End effects
 				status[i]->onKill();
-				
-				// Remove Status buff/debuff link from target
-				Unit* target = status[i]->getTarget();
-				if (target != NULL) {
-					target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), status[i]));
-				}
 			}
 		}
-        
+		cleanStatus();
+	}
+	
+	// Cleans up any expired status effects, removing links and trigger onKill
+	void cleanStatus() 
+	{
 		// Clean up all expired status effects
 		vector<Status*> nstatus(status.size());
 		int c = 0;
@@ -432,21 +478,27 @@ public:
 				nstatus[c] = status[i];
 				++c;
 			}
-			else delete status[i];
+			else {
+				// Remove Status buff/debuff link from target
+				Unit* target = status[i]->getTarget();
+				if (target != NULL) {
+					target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), status[i]));
+				}
+				delete status[i];
+			}
 		}
 		nstatus.resize(c);
 		status = nstatus;
-        
-		// If there are no more ongoing status effects, set container's clean flag
-		if (status.size() <= 0)
-			end();
 	}
-	
-	Status* findStatus(const string & value)
+
+	Status* findStatus(const string & subname, const Unit* target)
 	{
-		for (int i = 0; i < status.size(); ++i) 
-			if (status[i]->getSubname() == value && !status[i]->hasExpired())
+		for (int i = 0; i < status.size(); ++i) {
+			if (status[i]->getSubname() == subname && 
+				status[i]->getTarget() == target && 
+				!status[i]->hasExpired())
 				return status[i];
+		}
 		return NULL;
 	}
 	
@@ -464,6 +516,7 @@ public:
 
 		// Do not do onKill(...), for the merged buff should cancel it
 		dominant->onMerge(res);
+		recessive->clean = true;
 	}
 
 	void merge(Effect* old) 
@@ -472,12 +525,13 @@ public:
 		for (int i = 0; i < status.size(); ++i)
 		{
 			Status* keep = status[i];
-			Status* replace = old->findStatus(keep->getSubname());
+			Status* replace = old->findStatus(keep->getSubname(), keep->getTarget());
 			if (replace != NULL) merge(keep, replace);
 		}
 
-		// Remove all non-matching and matching effects. This works based on the assumption that the effect
-		// will always share the same set of status effects.
+		/*
+		// TODO: This method allows Block to only be applied to a single target for a single caster, remember to integrate later...
+		// This may be desirable for certain Status
 		for (int i = 0; i < old->status.size(); ++i) {
 			Status* recessive = old->status[i];
 			// Remove Status buff/debuff link from target
@@ -488,7 +542,8 @@ public:
 			delete recessive;
 		}
 		old->status.clear();
-		old->end();
+		*/
+		old->cleanStatus();
 	}
 
 	void applyEffect()
@@ -501,14 +556,6 @@ public:
 			merge(match);
 
 		if (trigger != NULL) trigger->currentEffects.push_back(this);
-	}
-
-	bool needsCleaning() const {
-		return clean;
-	}
-    
-	void end() {
-		clean = true;
 	}
     
 	virtual void print() const;

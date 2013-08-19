@@ -12,7 +12,6 @@ class Ability : public Action
 {
 protected:
     string name;
-	AbilityType type; // Defines the category an ability belongs to
 	bool respondable; // Determines whether this ability can be followed with a counterattack
 	bool interruptible; // Determines whether an ability can be cancelled
 	int cost; // Can perhaps later be AP cost
@@ -25,7 +24,7 @@ public:
 	static Ability* getAbility(Skill skill);
     
 	Ability(const string & name, ActionType act, AbilityType type, bool respondable, bool interruptible, int cost)
-    : Action(name, act), type(type), respondable(respondable), interruptible(interruptible), cost(cost), cancelled(false), targeter(NULL), events()
+    : Action(name, act, type), respondable(respondable), interruptible(interruptible), cost(cost), cancelled(false), targeter(NULL), events()
 	{
 	}
     
@@ -33,6 +32,7 @@ public:
 	virtual void action(Unit* current, Battle* battle) {
         this->source = current;
         this->battle = battle;
+		Event* event = new Event(this);
     };
     
     bool isRespondable() const { return respondable; }
@@ -43,8 +43,6 @@ public:
 	void setTargeter(Targeter* value) { targeter = value; }
 
     bool checkpoint(Unit* current);
-    
-	AbilityType getAbilityType() const { return type; }
     
     virtual void print() const;
     

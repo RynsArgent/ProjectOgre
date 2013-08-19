@@ -171,18 +171,42 @@ void Taunt::action(Unit* current, Battle* battle)
 	vector<Unit*> targets = enemyGroup->allyUnits();
 	/*
 	string name = "Taunt";
-	Effect* effect = new Effect(name, current, current, battle);
+	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
 		Status* status = new StatusTaunt(effect, name, targets[i], current);
 		status->setTimed(true, 1);
 		
-		Applier* applier = new Applier(NULL, status);
-		applier->apply();
-		appliers.push_back(applier);
+		Event* event = new Event(this, NULL, status);
+		event->apply();
 	}
 	effect->applyEffect();
 	*/
+	/*
+	string name = "Blind";
+	Effect* effect = new Effect(current, battle, name, current);
+	for (int i = 0; i < targets.size(); ++i)
+	{
+		Status* status = new StatusBlind(effect, name, targets[i]);
+		status->setTimed(true, 1);
+		
+		Event* event = new Event(this, NULL, status);
+		event->apply();
+	}
+	effect->applyEffect();
+	*/
+	string name = "Mortality";
+	Effect* effect = new Effect(current, battle, name, current);
+	for (int i = 0; i < targets.size(); ++i)
+	{
+		Status* status = new StatusMortality(effect, name, targets[i], 10);
+		status->setTimed(true, 3);
+		
+		Event* event = new Event(this, NULL, status);
+		event->apply();
+	}
+	effect->applyEffect();
+	/*
 	string name = "Poison";
 	for (int i = 0; i < targets.size(); ++i)
 	{
@@ -196,6 +220,7 @@ void Taunt::action(Unit* current, Battle* battle)
 
 		effect->applyEffect();
 	}
+	*/
 }
 
 void BattleShout::action(Unit* current, Battle* battle)

@@ -49,7 +49,7 @@ void Unit::cleanEffects()
 	vector<Effect*> neffects(currentEffects.size());
 	for (int i = 0; i < currentEffects.size(); ++i) {
 		Effect* effect = currentEffects[i];
-		if (!effect->needsCleaning()) {
+		if (!effect->isExpired()) {
 			neffects[c] = effect;
 			++c;
 		}

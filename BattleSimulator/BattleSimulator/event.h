@@ -10,10 +10,12 @@ struct Event
     
 	Damage* damage;
 	Status* status;
+	
+	int chance;
 
 	bool success;
 
-	Event(Action* ref = NULL, Damage* damage = NULL, Status* status = NULL);
+	Event(Action* ref = NULL, Damage* damage = NULL, Status* status = NULL, int chance = 100);
 
     // Apply Event abilities if the odds were a success
 	void apply();

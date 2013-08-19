@@ -60,6 +60,27 @@ public:
 	string getName() const {
 		return character->getName();
 	}
+	
+	int getCurrentHealth() const {
+		return currentHealth;
+	}
+
+	void setCurrentHealth(int currentHealth) {
+		this->currentHealth = currentHealth;
+		if (this->currentHealth > maxHealth)
+			this->currentHealth = maxHealth;
+		if (this->currentHealth < 0)
+			this->currentHealth = 0;
+	}
+	
+	int getMaxHealth() const {
+		return maxHealth;
+	}
+
+	void setMaxHealth(int maxHealth) {
+		this->maxHealth = maxHealth;
+		setCurrentHealth(currentHealth);
+	}
 
 	int getCurrentPhysicalAttack() const {
 		return currentPhysicalAttack;
@@ -91,14 +112,6 @@ public:
 
 	void setCurrentFireDefense(int currentFireDefense) {
 		this->currentFireDefense = currentFireDefense;
-	}
-
-	int getCurrentHealth() const {
-		return currentHealth;
-	}
-
-	void setCurrentHealth(int currentHealth) {
-		this->currentHealth = currentHealth;
 	}
 
 	int getCurrentIceDefense() const {

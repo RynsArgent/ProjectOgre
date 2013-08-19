@@ -1,8 +1,10 @@
 #include "status.h"
 
 #include <cstdlib>
+#include "action.h"
 #include "ability.h"
 #include "damage.h"
+#include "event.h"
 #include "target.h"
 #include "battle.h"
 
@@ -25,6 +27,22 @@ void Status::onKill()
 {
 	clean = true;
     subname = "-----";
+}
+
+void Status::onPrePerformHit(Event* event)
+{
+}
+
+void Status::onPostPerformHit(Event* event)
+{
+}
+
+void Status::onPreReactHit(Event* event)
+{
+}
+
+void Status::onPostReactHit(Event* event)
+{
 }
 
 void Status::onPreApplyDamage(Damage* applier)
@@ -313,6 +331,63 @@ void StatusPoison::onRound()
 	applyTimedDamage();
 }
 
+StatusMergeResult StatusBlind::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
+void StatusBlind::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
+}
+
+void StatusBlind::onPrePerformHit(Event* event)
+{
+	if (hasExpired())
+		return;
+	Status::onPrePerformHit(event);
+
+	Action* act = event->ref;
+	if (act != NULL) {
+		AbilityType type = act->getAbilityType();
+		if (type == ABILITY_ATTACK_MELEE ||
+			type == ABILITY_ATTACK_RANGE)
+		{
+			event->chance -= 50;
+		}
+	}
+}
+
+StatusMergeResult StatusMortality::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.val1 = amount;
+	return res;
+}
+
+void StatusMortality::onMerge(const StatusMergeResult & mergeResult)
+{
+	amount += mergeResult.val1;
+}
+
+void StatusMortality::onSpawn()
+{
+	Status::onSpawn();
+	int val = target->getMaxHealth();
+	val -= amount;
+	target->setMaxHealth(val);
+}
+
+void StatusMortality::onKill()
+{
+	Status::onKill();
+	int val = target->getMaxHealth();
+	val += amount;
+	target->setMaxHealth(val);
+}
+
 StatusMergeResult StatusBlock::getMergeResult() const
 {
 	StatusMergeResult res;
@@ -321,6 +396,9 @@ StatusMergeResult StatusBlock::getMergeResult() const
 
 void StatusBlock::onMerge(const StatusMergeResult & mergeResult)
 {
+	int val = target->getCurrentPhysicalAttack();
+	val += amount;
+	target->setCurrentPhysicalAttack(val);
 }
 
 bool StatusBlock::hasExpired() const
@@ -394,6 +472,12 @@ StatusMergeResult StatusBattleShout::getMergeResult() const
 void StatusBattleShout::onMerge(const StatusMergeResult & mergeResult)
 {
 	timer += mergeResult.timer;
+
+	// This is in case Battle Shout lasts for more than 1 turn, if it does, the damage will begin stacking
+	// So, under the assumption that the amount is the same for each stack. We cancel it with onSpawn
+	int val = target->getCurrentPhysicalAttack();
+	val -= amount;
+	target->setCurrentPhysicalAttack(val);
 }
 
 void StatusBattleShout::onSpawn()
@@ -402,7 +486,6 @@ void StatusBattleShout::onSpawn()
 	int val = target->getCurrentPhysicalAttack();
 	val += amount;
 	target->setCurrentPhysicalAttack(val);
-	
 }
 
 void StatusBattleShout::onKill()
