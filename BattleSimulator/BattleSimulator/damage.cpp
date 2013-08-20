@@ -27,10 +27,14 @@ void DamageNode::modify(Unit* target)
 	case DAMAGE_LIGHTNING:
 		totalDamage -= target->getCurrentLightningDefense();
 		break;
+	case DAMAGE_HEALING:
+		totalDamage = -totalDamage;
+		break;
 	case DAMAGE_TYPELESS:
 		break;
 	}
 
+	amount = totalDamage;
 	if (next)
 		next->modify(target);
 }
@@ -39,8 +43,12 @@ int DamageNode::apply(Unit* target)
 {
 	final = amount;
 	
-	if (amount < 0)
-		amount = 0;
+	// If it is not healing, then damage cannot be negative
+	if (final < 0 && type != DAMAGE_HEALING)
+		final = 0;
+	// It if is healing, then damage should be in the negative
+	if (final > 0 && type == DAMAGE_HEALING)
+		final = 0;
 	int val = target->getCurrentHealth();
 	val -= final;
 	target->setCurrentHealth(val);
@@ -54,7 +62,10 @@ int DamageNode::apply(Unit* target)
 
 void DamageNode::print() const 
 {
-    cout << " " << final << " (" << start << ") " << toStringDT(type);
+	if (type != DAMAGE_HEALING)
+	   cout << " " << final << " (" << start << ") " << toStringDT(type);
+	else
+	   cout << " " << -final << " (" << start << ") " << toStringDT(type);
     if (next) next->print();
 }
 
@@ -100,8 +111,18 @@ void Damage::apply()
 
 void Damage::print() const
 {
-    head->print();
-    cout << " damage to " << target->getName();
+	if (head) {
+		if (head->type != DAMAGE_HEALING)
+			cout << " does";
+		else
+			cout << " grants";
+		head->print();
+		// Look at first node to determine whether it is healing or damage
+		if (head->type != DAMAGE_HEALING)
+			cout << " damage to " << target->getName();
+		else
+			cout << " to " << target->getName();
+	}
 }
 
 int Damage::findNumMatching(const vector<DamageType> & types1, const vector<DamageType> & types2)

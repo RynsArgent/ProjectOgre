@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 	glutMouseFunc(GLprocessMouse);
 	gluOrtho2D(0.0, WINDOW_WIDTH, WINDOW_HEIGHT, 0.0);
 
-	srand(time(0));
+	srand(0);
 	initialize();
 	battle->print();
 

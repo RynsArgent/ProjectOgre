@@ -12,7 +12,6 @@ struct Event
 	Status* status;
 	
 	int chance;
-
 	bool success;
 
 	Event(Action* ref = NULL, Damage* damage = NULL, Status* status = NULL, int chance = 100);

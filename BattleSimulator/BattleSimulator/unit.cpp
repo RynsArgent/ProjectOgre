@@ -28,7 +28,8 @@ void Unit::carryOverCharacterStatistics()
 
 Unit::Unit(Character* character, int gid, int x, int y)
 	: character(character), 
-	basicSkill(NO_STANDARD_SKILL), backSkill(NO_STANDARD_SKILL), midSkill(NO_STANDARD_SKILL), frontSkill(NO_STANDARD_SKILL), currentSkill(NO_STANDARD_SKILL),
+	basicSkill(NO_STANDARD_SKILL), backSkill(NO_STANDARD_SKILL), midSkill(NO_STANDARD_SKILL), frontSkill(NO_STANDARD_SKILL), 
+	currentSkill(NO_STANDARD_SKILL), currentTier(0),
 	gid(gid), formX(x), formY(y), gridX(x), gridY(y), currentEffects(), currentStatus()
 {
 	carryOverCharacterStatistics();
@@ -61,14 +62,22 @@ void Unit::cleanEffects()
 
 void Unit::print() const
 {
-	cout << getName() << " - HP: " << currentHealth << " ";
-	/*	
-	cout << " Effects: ";
-	for (int i = 0; i < currentEffects.size(); ++i)
-		cout << currentEffects[i]->getName() << " ";
-	*/
-	cout << " Status: ";
-	for (int i = 0; i < currentStatus.size(); ++i)
-		cout << currentStatus[i]->getSubname() << currentStatus[i]->getTimer() << " ";
+	cout << getName();
+	if (currentHealth <= 0)
+	{
+		cout << " *dead*";
+	}
+	else
+	{
+		cout << " - HP: " << currentHealth << "/" << maxHealth;
+		/*
+		cout << " Effects: ";
+		for (int i = 0; i < currentEffects.size(); ++i)
+			cout << currentEffects[i]->getName() << " ";
+		*/
+		cout << " Status: ";
+		for (int i = 0; i < currentStatus.size(); ++i)
+			cout << currentStatus[i]->getSubname() << currentStatus[i]->getTimer() << " ";
+	}
 	cout << endl;
 }

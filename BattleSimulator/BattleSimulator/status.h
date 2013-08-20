@@ -113,34 +113,42 @@ public:
 	virtual void onSpawn();
 	virtual void onKill();
     
-	// This deals with Status Effects that occur every round lengthwise. (i.e. Poison/Burn/Bleed)
+	// This deals with Status Effects that occur every round lengthwise. 
+	// (i.e. Poison/Burn/Bleed)
 	virtual void onRound();
     
 	// This deals with events that can have a roller's chance to succeed or fail
-	// i.e. Blind will affect the chances of success for an attack
+	// (i.e. Blind will affect the chances of success for an attack)
 	virtual void onPrePerformHit(Event* event);
 
 	// This deals with events that have already determined a roller's chance of success or fail
+	// (i.e. Convert a miss for an attack to an auto-hit)
 	virtual void onPostPerformHit(Event* event);
 	
 	// This deals with events that can have a target be victim to a chance of success or fail
+	// (i.e. Evasion increases chance of failure for an attack to succeed on self)
 	virtual void onPreReactHit(Event* event);
 	
 	// This deals with events that have already a target be victim to a chance of success or fail
+	// (i.e. Convert a successful hit to an auto-miss)
 	virtual void onPostReactHit(Event* event);
 
-	// This deals with the triggers before damage is about to be applied. (i.e. Damage Prevention)
+	// This deals with the triggers after damage is applied. 
+	// (i.e. Extra damage against beasts)
 	virtual void onPreApplyDamage(Damage* applier);
     
-	// This deals with the triggers after damage is applied. (i.e. Extra damage against beasts)
+	// This deals with the triggers before damage is about to be applied. 
+	// (i.e. Damage dealt heals attacker)
 	virtual void onPostApplyDamage(Damage* applier);
     
-	// This deals with the triggers before damage is about to be applied. (i.e. Damage dealt heals attacker)
+	// This deals with the triggers before damage is about to be applied. 
+	// (i.e. Damage Prevention)
 	virtual void onPreReceiveDamage(Damage* applier);
     
-	// This deals with the triggers after damage is applied. (i.e. Heal half of damage taken)
+	// This deals with the triggers after damage is applied. 
+	// (i.e. Heal half of damage taken)
 	virtual void onPostReceiveDamage(Damage* applier);
-    
+
 	// This deals with the triggers when candidate units are found.
     // Targets are not exactly chosen yet.
     // (i.e. Confused target also adds all ally units as candidates and set to TARGET_RANDOM)
@@ -161,11 +169,12 @@ public:
 	virtual void onPostBecomeTarget(Targeter* system);
     
     // This deals with executing the status effects that need to be checked after triggers.
-    // (i.e. cancel the ability if a unit is stunned (beginning, midway, end)
     // This is mostly for status effects that render a unit unable to act.
+    // (i.e. cancel the ability if a unit is stunned (beginning, midway, end)
     virtual void onCheckpoint(Ability* ability);
 
 	// This deals with selecting which ability to use
+	// (i.e. Charmed and Confused casters will use their basic ability)
     virtual void onSelectAbility(Unit* caster);
     
 	~Status() {}
@@ -186,6 +195,7 @@ public:
 	virtual StatusMergeResult getMergeResult() const;
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onCheckpoint(Ability* ability);
+    virtual void onSelectAbility(Unit* caster);
 	
     ~StatusStun() {}
 };
@@ -205,6 +215,7 @@ public:
 	virtual void onMerge(const StatusMergeResult & mergeResult);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onCheckpoint(Ability* ability);
+    virtual void onSelectAbility(Unit* caster);
     
     ~StatusSleep() {}
 };
@@ -224,6 +235,7 @@ public:
 	virtual void onSpawn();
 	virtual void onCheckpoint(Ability* ability);
     virtual void onKill();
+    virtual void onSelectAbility(Unit* caster);
 
     ~StatusFlee() {}
 };
@@ -397,35 +409,6 @@ public:
 	~StatusBattleShout() {}
 };
 
-/*
-class StatusAttackResponse : public Status
-{
-protected:
-	static const StatusType TYPE = STATUS_ABILITY_RESPONSE;
-	
-	Skill skill;
-	bool preemptive; // If set, respond to the enemy ability before it applies to you
-	bool limited; // If set, will expire based on number of uses
-	int amount;
-public:
-	StatusAttackResponse(const string & name, StatusBenefit benefit, Unit* target, Skill skill, bool preemptive, bool limited, int amount)
-		: Status(name, benefit, TYPE, target), skill(skill), preemptive(preemptive), limited(limited), amount(amount)
-	{ onSpawn(); }
-	
-	// Functions to use Status Effect
-	virtual bool hasExpired() const;
-	void applyAbility(Unit* caster, Battle* battle);
-
-	// Set Status Specific Variables
-	void setSkill(Skill value) { skill = value; }
-	void setPreemptive(bool value) { preemptive = value; }
-	void setLimited(bool value) { limited = value; }
-	void setAmount(int value) { amount = value; }
-
-	~StatusAttackResponse() {}
-};
-*/
-
 // Keeps track of ongoing Status Effects, also allows multiple status effects to be associated under one name
 class Effect : public Action
 {
@@ -491,7 +474,7 @@ public:
 		status = nstatus;
 	}
 
-	Status* findStatus(const string & subname, const Unit* target)
+	Status* findStatus(const string & subname, Unit* target)
 	{
 		for (int i = 0; i < status.size(); ++i) {
 			if (status[i]->getSubname() == subname && 
@@ -549,15 +532,16 @@ public:
 
 	void applyEffect()
 	{
-		for (int i = 0; i < status.size(); ++i)
+		for (int i = 0; i < status.size(); ++i) 
 			status[i]->onSpawn();
 	
 		// There can be more than one effect of the same name, 
 		// try to merge with all the old ones
 		// and update to the new one
 		vector<Effect*> matches = findEffects(name);
-		for (int i = 0; i < matches.size(); ++i)
+		for (int i = 0; i < matches.size(); ++i) {
 			merge(matches[i]);
+		}
 
 		if (trigger != NULL) trigger->currentEffects.push_back(this);
 	}

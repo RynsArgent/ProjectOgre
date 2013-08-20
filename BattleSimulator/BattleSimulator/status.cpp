@@ -107,6 +107,15 @@ void StatusStun::onCheckpoint(Ability* ability)
         ability->setCancelled(true);
 }
 
+void StatusStun::onSelectAbility(Unit* caster)
+{
+    if (hasExpired())
+        return;
+	Status::onSelectAbility(caster);
+
+	if (caster->getCurrentTier() > 0)
+		caster->setCurrentTier(0);
+}
 
 StatusMergeResult StatusSleep::getMergeResult() const
 {
@@ -137,6 +146,16 @@ void StatusSleep::onCheckpoint(Ability* ability)
     
     if (ability->isInterruptible())
         ability->setCancelled(true);
+}
+
+void StatusSleep::onSelectAbility(Unit* caster)
+{
+    if (hasExpired())
+        return;
+	Status::onSelectAbility(caster);
+
+	if (caster->getCurrentTier() > 0)
+		caster->setCurrentTier(0);
 }
 
 StatusMergeResult StatusFlee::getMergeResult() const
@@ -195,6 +214,16 @@ void StatusFlee::onKill()
     }
 }
 
+void StatusFlee::onSelectAbility(Unit* caster)
+{
+    if (hasExpired())
+        return;
+	Status::onSelectAbility(caster);
+
+	if (caster->getCurrentTier() > 0)
+		caster->setCurrentTier(0);
+}
+
 StatusMergeResult StatusConfusion::getMergeResult() const
 {
 	StatusMergeResult res;
@@ -219,9 +248,9 @@ void StatusConfusion::onPreFindTarget(Targeter* system)
 
         vector<Unit*> units;
         if (system->group == TARGET_ENEMIES)
-            units = system->getBattle()->getAllyGroup(system->getSource()->getGrid())->allyUnits();
+            units = system->ref->getBattle()->getAllyGroup(system->ref->getSource()->getGrid())->allyUnits();
         else if (system->group == TARGET_ALLIES)
-            units = system->getBattle()->getEnemyGroup(system->getSource()->getGrid())->allyUnits();
+            units = system->ref->getBattle()->getEnemyGroup(system->ref->getSource()->getGrid())->allyUnits();
 
         for (int i = 0; i < units.size(); ++i)
             system->candidates.push_back(units[i]);
@@ -235,9 +264,9 @@ void StatusConfusion::onSelectAbility(Unit* caster)
     if (hasExpired())
         return;
 	Status::onSelectAbility(caster);
-
-	if (caster->getCurrentSkill() == NO_STANDARD_SKILL)
-		caster->setCurrentSkill(caster->getBasicSkill());
+	
+	if (caster->getCurrentTier() > 1)
+		caster->setCurrentTier(1);
 }
 
 StatusMergeResult StatusCharm::getMergeResult() const
@@ -271,9 +300,9 @@ void StatusCharm::onPreFindTarget(Targeter* system)
     if (system->method != TARGET_CONFUSED && system->method != TARGET_CHARMED) 
     {
         if (system->group == TARGET_ENEMIES)
-            system->candidates = system->getBattle()->getAllyGroup(system->getSource()->getGrid())->allyUnits();
+            system->candidates = system->ref->getBattle()->getAllyGroup(system->ref->getSource()->getGrid())->allyUnits();
         else if (system->group == TARGET_ALLIES)
-            system->candidates = system->getBattle()->getEnemyGroup(system->getSource()->getGrid())->allyUnits();
+            system->candidates = system->ref->getBattle()->getEnemyGroup(system->ref->getSource()->getGrid())->allyUnits();
 
 		system->method = TARGET_CHARMED;
     }
@@ -285,8 +314,8 @@ void StatusCharm::onSelectAbility(Unit* caster)
         return;
 	Status::onSelectAbility(caster);
 
-	if (caster->getCurrentSkill() == NO_STANDARD_SKILL)
-		caster->setCurrentSkill(caster->getBasicSkill());
+	if (caster->getCurrentTier() > 1)
+		caster->setCurrentTier(1);
 }
 
 StatusMergeResult StatusPoison::getMergeResult() const
@@ -396,9 +425,6 @@ StatusMergeResult StatusBlock::getMergeResult() const
 
 void StatusBlock::onMerge(const StatusMergeResult & mergeResult)
 {
-	int val = target->getCurrentPhysicalAttack();
-	val += amount;
-	target->setCurrentPhysicalAttack(val);
 }
 
 bool StatusBlock::hasExpired() const
@@ -431,6 +457,9 @@ void StatusBlock::onPreReceiveDamage(Damage* applier)
 	Status::onPreReceiveDamage(applier);
 	
 	applyDamagePrevention(applier);
+
+	if (hasExpired())
+		onKill();
 }
 
 StatusMergeResult StatusTaunt::getMergeResult() const
@@ -473,11 +502,13 @@ void StatusBattleShout::onMerge(const StatusMergeResult & mergeResult)
 {
 	timer += mergeResult.timer;
 
+	/*
 	// This is in case Battle Shout lasts for more than 1 turn, if it does, the damage will begin stacking
 	// So, under the assumption that the amount is the same for each stack. We cancel it with onSpawn
 	int val = target->getCurrentPhysicalAttack();
 	val -= amount;
 	target->setCurrentPhysicalAttack(val);
+	*/
 }
 
 void StatusBattleShout::onSpawn()

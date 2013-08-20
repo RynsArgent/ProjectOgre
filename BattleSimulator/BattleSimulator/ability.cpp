@@ -14,8 +14,6 @@ Ability* Ability::getAbility(Skill skill)
 	{   
 	case NO_STANDARD_SKILL:
 		return new NoSkill();
-    case NO_RESPONSE_SKILL:
-        return new NoSkill();
 	case HUNDRED_BLADES:
 		return new HundredBlades();
 	case BLOCK:
@@ -28,9 +26,41 @@ Ability* Ability::getAbility(Skill skill)
 		return new BattleShout();
 	case SHOOT:
 		return new Shoot();
+	case HEAL:
+		return new Heal();
 	default:
 		return new NoSkill();
 	}
+}
+
+Skill Ability::selectSkill(Unit* unit)
+{
+	switch (unit->getCurrentTier())
+	{
+	case 0:
+		// The lowest tier means no action
+		return NO_STANDARD_SKILL;
+	case 1:
+		// Level 1 tier is a basic skill
+		return unit->getBasicSkill();
+	case 2:
+		{
+			// Assign the associated row ability of the current unit if no
+			// ability is forced yet.
+			int row = unit->getGridY();
+			switch (row)
+			{
+			case 2:
+				return unit->getFrontSkill();
+			case 1:
+				return unit->getMidSkill();
+			case 0:
+				return unit->getBackSkill();
+			}
+			return NO_STANDARD_SKILL;
+		}
+	}
+	return NO_STANDARD_SKILL;
 }
 
 // Executed after certain triggers during the execution of a single ability,
@@ -44,58 +74,61 @@ bool Ability::checkpoint(Unit* current)
 
 void Ability::print() const
 {
-    cout << "Ability " << getName() << " from " << source->getName() << endl;
 }
 
 Ability::~Ability()
 {
-    if (targeter) delete targeter;
+	for (int i = 0; i < targeters.size(); ++i)
+		delete targeters[i];
 }
 
 // The following are definitions of specific abilities
 
-void HundredBlades::action(Unit* current, Battle* battle)
+void HundredBlades::action(Ability* previous, Unit* current, Battle* battle)
 {
-    Ability::action(current, battle);
-    
+    Ability::action(previous, current, battle);
+
 	Group* allyGroup = battle->getAllyGroup(current->getGrid());
 	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 
 	int numTimes = rand() % 3 + 2;
 	for (int i = 0; i < numTimes; ++i)
 	{
-        if (checkpoint(current)) return;
-        
+		if (checkpoint(current)) return;
+
 		int rowRange = 1;
 		int initialColumnRange = 1;
 		vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
-	
+
 		if (targets.size() > 0)
 		{
-			targeter = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
+			Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
 			targeter->set(1);
 
-            if (checkpoint(current)) return;
+			if (checkpoint(current)) return;
 
 			if (targeter->chosen.size() > 0) {
 				Unit* target = targeter->chosen[0];
+				if (i == 0)
+					targeter->provoked = true;
 
 				Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_LOW, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
-				
-                Event* event = new Event(this, damage, NULL);
-                event->apply();
+
+				Event* event = new Event(this, damage, NULL);
+				event->apply();
 			}
+			targeters.push_back(targeter);
 		}
 	}
 }
 
-void Block::action(Unit* current, Battle* battle)
+void Block::action(Ability* previous, Unit* current, Battle* battle)
 {
-    Ability::action(current, battle);
-    
-	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+    Ability::action(previous, current, battle);
     
     if (checkpoint(current)) return;
+    
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
     
 	int minx = 0;
 	int maxx = allyGroup->getWidth() - 1;
@@ -106,7 +139,7 @@ void Block::action(Unit* current, Battle* battle)
 	
 	if (targets.size() > 0)
 	{
-		targeter = new Targeter(current, battle, targets, TARGET_ALLIES, TARGET_RANDOM, true);
+		Targeter* targeter = new Targeter(this, targets, TARGET_ALLIES, TARGET_RANDOM, true);
 		targeter->set(1);
 
         if (checkpoint(current)) return;
@@ -119,57 +152,78 @@ void Block::action(Unit* current, Battle* battle)
 			
 			Status* status = new StatusBlock(effect, name, target, true, 30);
 			//Status* status = new StatusFlee(effect, "Flee", target);
-			status->setTimed(true, 3);
+			status->setTimed(true, 1);
 			
 			Event* event = new Event(this, NULL, status);
 			event->apply();
 			
 			effect->applyEffect();
 		}
+		targeters.push_back(targeter);
 	}
 }
 
-void Strike::action(Unit* current, Battle* battle)
+void Strike::action(Ability* previous, Unit* current, Battle* battle)
 {
-    Ability::action(current, battle);
-    
-	Group* allyGroup = battle->getAllyGroup(current->getGrid());
-	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
-	
-    if (checkpoint(current)) return;
-    
-	int rowRange = 1;
-	int initialColumnRange = 1;
-	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
-	
-	if (targets.size() > 0)
+	if (previous != NULL)
 	{
-		targeter = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
-		targeter->set(1);
-
-        if (checkpoint(current)) return;
-
-		if (targeter->chosen.size() > 0) {
-			Unit* target = targeter->chosen[0];
-
-			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+		if (previous->getSource() != NULL && previous->getSource()->isAvailable() && 
+			previous->getAbilityType() == ABILITY_ATTACK_MELEE)
+		{
+			Ability::action(previous, current, battle);
 			
+			if (checkpoint(current)) return;
+
+			Unit* target = previous->getSource();
+			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+				
 			Event* event = new Event(this, damage, NULL);
 			event->apply();
 		}
 	}
+	else
+	{
+		Ability::action(previous, current, battle);
+	
+		if (checkpoint(current)) return;
+
+		Group* allyGroup = battle->getAllyGroup(current->getGrid());
+		Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+    
+		int rowRange = 1;
+		int initialColumnRange = 1;
+		vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	
+		if (targets.size() > 0)
+		{
+			Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
+			targeter->set(1);
+
+			if (checkpoint(current)) return;
+
+			if (targeter->chosen.size() > 0) {
+				Unit* target = targeter->chosen[0];
+				targeter->provoked = true;
+
+				Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+			
+				Event* event = new Event(this, damage, NULL);
+				event->apply();
+			}
+			targeters.push_back(targeter);
+		}
+	}
 }
 
-void Taunt::action(Unit* current, Battle* battle)
+void Taunt::action(Ability* previous, Unit* current, Battle* battle)
 {
-    Ability::action(current, battle);
-    
-	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+    Ability::action(previous, current, battle);
     
     if (checkpoint(current)) return;
+    
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
 	
 	vector<Unit*> targets = enemyGroup->allyUnits();
-	/*
 	string name = "Taunt";
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
@@ -181,7 +235,6 @@ void Taunt::action(Unit* current, Battle* battle)
 		event->apply();
 	}
 	effect->applyEffect();
-	*/
 	/*
 	string name = "Blind";
 	Effect* effect = new Effect(current, battle, name, current);
@@ -194,7 +247,6 @@ void Taunt::action(Unit* current, Battle* battle)
 		event->apply();
 	}
 	effect->applyEffect();
-	*/
 	string name = "Mortality";
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
@@ -206,7 +258,6 @@ void Taunt::action(Unit* current, Battle* battle)
 		event->apply();
 	}
 	effect->applyEffect();
-	/*
 	string name = "Poison";
 	for (int i = 0; i < targets.size(); ++i)
 	{
@@ -223,13 +274,13 @@ void Taunt::action(Unit* current, Battle* battle)
 	*/
 }
 
-void BattleShout::action(Unit* current, Battle* battle)
+void BattleShout::action(Ability* previous, Unit* current, Battle* battle)
 {
-    Ability::action(current, battle);
-    
-	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+    Ability::action(previous, current, battle);
     
     if (checkpoint(current)) return;
+    
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
 	
 	vector<Unit*> targets = allyGroup->allyUnits();
 	string name = "BattleShout";
@@ -250,35 +301,103 @@ void BattleShout::action(Unit* current, Battle* battle)
 	effect->applyEffect();
 }
 
-///////// SCOUT
-
-void Shoot::action(Unit* current, Battle* battle)
+void Shoot::action(Ability* previous, Unit* current, Battle* battle)
 {
-    Ability::action(current, battle);
-    
-	Group* allyGroup = battle->getAllyGroup(current->getGrid());
-	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
-    
-    if (checkpoint(current)) return;
-	
-	int rowRange = 2;
-	int initialColumnRange = 1;
-	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
-	
-	if (targets.size() > 0)
+	if (previous != NULL)
 	{
-		targeter = new Targeter(current, battle, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
-		targeter->set(1);
+		if (previous->getSource() != NULL && previous->getSource()->isAvailable() &&
+			previous->getAbilityType() == ABILITY_ATTACK_RANGE)
+		{
+			Ability::action(previous, current, battle);
 
-        if (checkpoint(current)) return;
-        
-		if (targeter->chosen.size() > 0) {
-			Unit* target = targeter->chosen[0];
+			if (checkpoint(current)) return;
 
+			Unit* target = previous->getSource();
 			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+
+			Event* event = new Event(this, damage, NULL);
+			event->apply();
+		}
+	}
+	else
+	{
+		Ability::action(previous, current, battle);
+    
+		if (checkpoint(current)) return;
+		
+		Group* allyGroup = battle->getAllyGroup(current->getGrid());
+		Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+	
+		int rowRange = 2;
+		int initialColumnRange = 1;
+		vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	
+		if (targets.size() > 0)
+		{
+			Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
+			targeter->set(1);
+
+			if (checkpoint(current)) return;
+        
+			if (targeter->chosen.size() > 0) {
+				Unit* target = targeter->chosen[0];
+				targeter->provoked = true;
+
+				Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentPhysicalAttack()), DAMAGE_PHYSICAL);
+			
+				Event* event = new Event(this, damage, NULL);
+				event->apply();
+			
+			}
+			targeters.push_back(targeter);
+		}
+	}
+}
+
+void Heal::action(Ability* previous, Unit* current, Battle* battle)
+{   
+	if (previous != NULL)
+	{
+		if (previous->getSource() != NULL && previous->getSource()->isAvailable())
+		{
+			Ability::action(previous, current, battle);
+
+			if (checkpoint(current)) return;
+
+			Unit* target = current;
+
+			Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentMagicAttack()), DAMAGE_HEALING);
 			
 			Event* event = new Event(this, damage, NULL);
 			event->apply();
+		}
+	}
+	else
+	{
+		Ability::action(previous, current, battle);
+    
+		if (checkpoint(current)) return;
+
+		Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	
+		vector<Unit*> targets = allyGroup->allyUnits();
+	
+		if (targets.size() > 0)
+		{
+			Targeter* targeter = new Targeter(this, targets, TARGET_ALLIES, TARGET_WEAKEST, true);
+			targeter->set(1);
+
+			if (checkpoint(current)) return;
+
+			if (targeter->chosen.size() > 0) {
+				Unit* target = targeter->chosen[0];
+			
+				Damage* damage = new Damage(this, target, Damage::getDamageValue(DAMAGE_MEDIUM, current->getCurrentMagicAttack()), DAMAGE_HEALING);
+			
+				Event* event = new Event(this, damage, NULL);
+				event->apply();
+			}
+			targeters.push_back(targeter);
 		}
 	}
 }

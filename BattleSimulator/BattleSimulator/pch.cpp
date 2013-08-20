@@ -32,6 +32,8 @@ string toStringDT(DamageType val)
             return "Ice";
         case DAMAGE_LIGHTNING:
             return "Lightning";
+		case DAMAGE_HEALING:
+			return "Life";
     }
 	return "";
 }

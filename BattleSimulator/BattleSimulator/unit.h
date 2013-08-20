@@ -36,6 +36,7 @@ private:
 	Skill midSkill;
 	Skill frontSkill;
 	Skill currentSkill;
+	int currentTier; 
 
 	int gid;
 	int formX; // Formation Position
@@ -216,6 +217,14 @@ public:
 
 	void setCurrentSkill(Skill value) {
 		currentSkill = value;
+	}
+
+	int getCurrentTier() const {
+		return currentTier;
+	}
+
+	void setCurrentTier(int value) {
+		currentTier = value;
 	}
 
 	int getGrid() const {

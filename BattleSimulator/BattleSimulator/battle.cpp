@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include "status.h"
 #include "ability.h"
+#include "target.h"
 
 // Used to determine unit order, faster units are sorted to the front of the list
 bool compareSpeed(Unit* lhs, Unit* rhs) {
@@ -58,43 +59,54 @@ void Battle::executeTurn()
 	}
 
 	// Retrieve the next unit in the turn list
-	Unit* unit = unitOrder[turnIndex];
+	Unit* unit1 = unitOrder[turnIndex];
 	
 	// Process unit ongoing effects
-	unit->processEffects();
+	unit1->processEffects();
 
-    Ability* ability = NULL;
+    Ability* mainAbility = NULL;
 	// Perform the unit ability based on its position
-	if (unit->isAvailable())
+	if (unit1 && unit1->isAvailable())
 	{
-		unit->setCurrentSkill(NO_STANDARD_SKILL);
+		unit1->setCurrentSkill(NO_STANDARD_SKILL);
+		unit1->setCurrentTier(2);
 
 		// Activate any status effects that occur on preparing for abilities
-		for (int i = 0; i < unit->getCurrentStatus().size(); ++i) {
-			unit->getCurrentStatus()[i]->onSelectAbility(unit);
+		for (int i = 0; i < unit1->getCurrentStatus().size(); ++i) {
+			unit1->getCurrentStatus()[i]->onSelectAbility(unit1);
 		}
 
-		// Assign the associated row ability of the current unit if no
-		// ability is forced yet.
-		if (unit->getCurrentSkill() == NO_STANDARD_SKILL) {
-			int row = unit->getGridY();
-			switch (row)
-			{
-			case 2:
-				unit->setCurrentSkill(unit->getFrontSkill());
-				break;
-			case 1:
-				unit->setCurrentSkill(unit->getMidSkill());
-				break;
-			case 0:
-				unit->setCurrentSkill(unit->getBackSkill());
-				break;
-			}
-		}
+		unit1->setCurrentSkill(Ability::selectSkill(unit1));
 
 		// Execute the ability
-		ability = Ability::getAbility(unit->getCurrentSkill());
-		ability->action(unit, this);
+		mainAbility = Ability::getAbility(unit1->getCurrentSkill());
+		mainAbility->action(NULL, unit1, this);
+	}
+
+	// Response ability
+	Ability* respondAbility = NULL;
+	if (mainAbility != NULL && mainAbility->getTargeters().size() > 0)
+	{
+		Targeter* mainTargeter = mainAbility->getTargeters()[0];
+		Unit* unit2 = mainTargeter->getPrimary();
+		if (unit2 && unit2->isAvailable())
+		{
+			if (mainAbility->isRespondable() && mainTargeter->provoked)
+			{
+				unit2->setCurrentSkill(NO_STANDARD_SKILL);
+				unit2->setCurrentTier(1);
+
+				// Activate any status effects that occur on preparing for abilities
+				for (int i = 0; i < unit2->getCurrentStatus().size(); ++i) {
+					unit2->getCurrentStatus()[i]->onSelectAbility(unit2);
+				}
+				
+				unit2->setCurrentSkill(Ability::selectSkill(unit2));
+
+				respondAbility = Ability::getAbility(unit2->getCurrentSkill());
+				respondAbility->action(mainAbility, unit2, this);
+			}
+		}
 	}
 
 	// Clean up any units that have died
@@ -110,10 +122,11 @@ void Battle::executeTurn()
 	for (int i = 0; i < eventStack.size(); ++i)
 		delete eventStack[i];
 	eventStack.clear();
-    if (ability) delete ability;
+    if (mainAbility) delete mainAbility;
+	if (respondAbility) delete respondAbility;
 	// Clean up ended effects, this must be after deleted event stacks because the event stack
 	// references effect names
-	unit->cleanEffects();
+	unit1->cleanEffects();
     
 	// Increment to the next turn
 	++turnIndex;
@@ -138,6 +151,7 @@ void Battle::print() const
 {
 	cout << "Round Number: " << roundNumber << endl;
 	
+	/*
 	if (turnIndex >= 0 && turnIndex < unitOrder.size())
 	{
 		Unit* unit = unitOrder[turnIndex];
@@ -148,7 +162,7 @@ void Battle::print() const
 	}
 	if (eventStack.size() <= 0 && roundNumber > 0)
 		return;
-	
+	*/
     for (int i = 0; i < eventStack.size(); ++i)
         eventStack[i]->print();
     
@@ -158,7 +172,11 @@ void Battle::print() const
 	group1->printGroup(false);
 	
 	for (int i = 0; i < unitOrder.size(); ++i)
+	{
+		if (i == turnIndex)
+			cout << "*** ";
 		unitOrder[i]->print();
+	}
 	if (isBattleOver())
 	{
 		if (group1->groupIsAvailable())

@@ -46,9 +46,9 @@ void Targeter::set(int n)
             status->onPreBecomeTarget(this);
         }
     }
-	for (int i = 0; i < source->getCurrentStatus().size(); ++i)
+	for (int i = 0; i < ref->getSource()->getCurrentStatus().size(); ++i)
 	{
-		Status* status = source->getCurrentStatus()[i];
+		Status* status = ref->getSource()->getCurrentStatus()[i];
 		status->onPreFindTarget(this);
 	}
 
@@ -115,9 +115,9 @@ void Targeter::set(int n)
 	}
             
     // OnPostTarget Methods
-	for (int i = 0; i < source->getCurrentStatus().size(); ++i)
+	for (int i = 0; i < ref->getSource()->getCurrentStatus().size(); ++i)
 	{
-		Status* status = source->getCurrentStatus()[i];
+		Status* status = ref->getSource()->getCurrentStatus()[i];
 		status->onPostFindTarget(this);
 	}
     for (int i = 0; i < candidates.size(); ++i)

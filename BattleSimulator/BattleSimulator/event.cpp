@@ -74,7 +74,6 @@ void Event::print() const
     cout << ref->getSource()->getName() << "'s " << ref->getName();
     if (damage) {
 		if (success) {
-			cout << " does";
 			damage->print();
 		} else {
 			cout << " misses " << damage->target->getName();
