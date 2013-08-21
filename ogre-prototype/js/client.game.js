@@ -1,5 +1,16 @@
 $.noConflict();
 
+/////////////////// UTILITIES /////////////////////////////////////////////////
+// Create object function using another object as its prototype
+if (typeof Object.create !== 'function') {
+    Object.create = function (o) {
+        var F = function () {};
+        F.prototype = o;
+        return new F;
+    };
+}
+///////////////////////////////////////////////////////////////////////////////
+
 var terrain = (function () {
     var dict = {
         'p' : {label: 'Plains', image: 'images/Plains.png'},
@@ -45,6 +56,72 @@ var terrain = (function () {
         }
     };
 }());
+/*        col
+        0    1   2   3   4
+    0  [ 0][ 1][ 2][ 3][ 4]
+row 1  [ 5][ 6][ 7][ 8][ 9]
+    2  [10][11][12][13][14]
+    
+    rows: 3     columns: 5
+    
+    index = row * columns + col
+*/
+var createTile = function (details) {
+    var label, 
+        index, row, col, 
+        width, height,
+        bgImage, stImage;
+        
+    label = details.label || '';
+    row = details.row || -1;
+    col = details.col || -1;
+    index = details.index || -1;
+    width = details.width || 0;
+    height = details.height || 0;
+    
+    if (details.bgImage !== undefined) {
+        bgImage = details.bgImage;
+    }
+    if (details.stImage !== undefined) {
+        stImage = details.stImage;
+    }
+    
+    return {
+        getLabel : function () {
+            return label;
+        },
+        getRow : function () {
+            return row;
+        },
+        getColumn : function () {
+            return col;
+        },
+        getTilePosition : function () {
+            return {row:row,col:col};
+        },
+        getIndex : function () {
+            return index;
+        },
+        getWidth : function () {
+            return width;
+        },
+        getHeight : function () {
+            return height;
+        },
+        getBackgroundImage : function () {
+            return bgImage;
+        },
+        getStationaryImage : function () {
+            return stImage;
+        }
+    };
+};
+
+var createMap = function (details) {
+
+};
+
+///////////////////////////////////////////////////////////////////////////////
 
 jQuery(document).ready(function () {
     'use strict';
@@ -57,20 +134,15 @@ jQuery(document).ready(function () {
 
     gameClient = (function () {
         // Declare private variables and methods
-        var that,
-            player,
+        var that, player,
             
-            tick,
-            update,
-            animate,
+            tick, update, animate,
+            
             handleInput,
             
             socket = io.connect(),
             
-            bgCanvas,
-            stCanvas,
-            mainCanvas,
-            fgCanvas;
+            bgCanvas, stCanvas, mainCanvas, fgCanvas;
             
             bgCanvas = jQuery("#bg").get(0);
             stCanvas = jQuery("#st").get(0);
@@ -109,12 +181,24 @@ jQuery(document).ready(function () {
             
             if (data.status === 'success') {
                 player.username = data.username;
+                
+                // TODO: we need to also grab the map data from the server.
+                // but for now we are going to cheat and use a pre-defined
+                // map data file
+                tick();
+                
                 jQuery("div#frontPage").hide("slide", { direction: "left" }, "slow", function() {
                     jQuery("div#gamePage").show("slide", { direction: "right" }, "slow");
                 });
             }
         });
         ///////////////////////////////
+        
+        tick = function () {
+            requestAnimationFrame(tick);
+            
+            console.log( 'gameClient: called tick' );
+        };
 
         // define privileged functions
         return {
