@@ -105,7 +105,7 @@ public:
 	virtual void onMerge(const StatusMergeResult & mergeResult) = 0;
 
 	// This deals with Status Effects that have effects that do something at the moment of creation or disappearance
-	// (i.e. Doom III, Unit dies after it expires)
+	// (i.e. Doom III, Unit dies after it expires; would have to check timer == 0 in case of it activity on a dispel)
 	// (i.e. Attribute modifiers, modifies stats and then restores them on expiration, specifically targeting Unit variables)
 	//
 	// Note: In order to support merging (stacking), onSpawn() must be implemented being called in the merging process as well
@@ -113,7 +113,7 @@ public:
 	virtual void onSpawn();
 	virtual void onKill();
     
-	// This deals with Status Effects that occur every round lengthwise. 
+	// This deals with Status Effects that occur every round. 
 	// (i.e. Poison/Burn/Bleed)
 	virtual void onRound();
     
@@ -442,7 +442,7 @@ public:
 			status[i]->onRound();
 
 			// Sets the clean flag and on End effects
-			if (status[i]->hasExpired())
+			if (!status[i]->needsCleaning() && status[i]->hasExpired())
 			{
 				status[i]->onKill();
 			}
@@ -462,11 +462,6 @@ public:
 				++c;
 			}
 			else {
-				// Remove Status buff/debuff link from target
-				Unit* target = status[i]->getTarget();
-				if (target != NULL) {
-					target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), status[i]));
-				}
 				delete status[i];
 			}
 		}
@@ -498,9 +493,10 @@ public:
 	void merge(Status* dominant, Status* recessive) {
 		StatusMergeResult res = recessive->getMergeResult();
 
-		// Do not do onKill(...), for the merged buff should cancel it
+		// Do not do onKill(...), for the merged buff should cancel it,
+		// however, we do have to unlink it
 		dominant->onMerge(res);
-		recessive->clean = true;
+		recessive->Status::onKill();
 	}
 
 	void merge(Effect* old) 
@@ -512,21 +508,6 @@ public:
 			Status* replace = old->findStatus(keep->getSubname(), keep->getTarget());
 			if (replace != NULL) merge(keep, replace);
 		}
-
-		/*
-		// TODO: This method allows Block to only be applied to a single target for a single caster, remember to integrate later...
-		// This may be desirable for certain Status
-		for (int i = 0; i < old->status.size(); ++i) {
-			Status* recessive = old->status[i];
-			// Remove Status buff/debuff link from target
-			Unit* target = recessive->getTarget();
-			if (target != NULL) {
-				target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), recessive));
-			}
-			delete recessive;
-		}
-		old->status.clear();
-		*/
 		old->cleanStatus();
 	}
 

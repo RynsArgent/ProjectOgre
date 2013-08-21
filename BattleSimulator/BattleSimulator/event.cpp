@@ -7,8 +7,8 @@
 #include "unit.h"
 #include <cstdlib>
 
-Event::Event(Action* ref, Damage* damage, Status* status, int chance)
-: ref(ref), damage(damage), status(status), chance(chance), success(false)
+Event::Event(Action* ref, int chance)
+	: ref(ref), chance(chance), success(true)
 {
     if (ref) {
         ref->addEvent(this);
@@ -16,12 +16,9 @@ Event::Event(Action* ref, Damage* damage, Status* status, int chance)
     }
 }
 
-void Event::apply()
+void Event::determineSuccess(Unit* target)
 {
 	Unit* source = ref->getSource();
-	Unit* target = NULL;
-	if (damage) target = damage->target;
-	else if (status) target = status->getTarget();
 
 	// Trigger Pre on hit status effects
 	if (source != NULL) {
@@ -31,10 +28,12 @@ void Event::apply()
 			status->onPrePerformHit(this);
 		}
 	}
-	for (int i = 0; i < target->getCurrentStatus().size(); ++i)
-	{
-		Status* status = target->getCurrentStatus()[i];
-		status->onPreReactHit(this);
+	if (target != NULL) {
+		for (int i = 0; i < target->getCurrentStatus().size(); ++i)
+		{
+			Status* status = target->getCurrentStatus()[i];
+			status->onPreReactHit(this);
+		}
 	}
 
 	// Determine if roll was a success out of a 100%
@@ -54,23 +53,31 @@ void Event::apply()
 			status->onPostPerformHit(this);
 		}
 	}
+}
 
-	// If the event hit was a success, apply the damage, status effect, whatnot
-	if (success) {
-		if (damage != NULL)
-			damage->apply();
-		if (status != NULL)
-			status->getEffect()->addStatus(status);
-	}
+void Event::apply()
+{
 }
 
 void Event::print() const
 {
-	if (!damage && !status && ref->getAction() != EFFECT_TRIGGER) {
+	if (ref->getAction() != EFFECT_TRIGGER)
 		cout << ref->getSource()->getName() << " readies " << ref->getName() << endl;
-		return;
-	}
+}
 
+Event::~Event()
+{
+}
+
+void EventCauseDamage::apply()
+{
+	determineSuccess(damage->target);
+	if (success)
+		damage->apply();
+}
+
+void EventCauseDamage::print() const
+{
     cout << ref->getSource()->getName() << "'s " << ref->getName();
     if (damage) {
 		if (success) {
@@ -78,10 +85,26 @@ void Event::print() const
 		} else {
 			cout << " misses " << damage->target->getName();
 		}
-    }
+	}
+    cout << endl;
+}
+
+EventCauseDamage::~EventCauseDamage()
+{
+    delete damage;
+}
+
+void EventCauseStatus::apply()
+{
+	determineSuccess(status->getTarget());
+	if (success)
+		status->getEffect()->addStatus(status);
+}
+
+void EventCauseStatus::print() const
+{
+    cout << ref->getSource()->getName() << "'s " << ref->getName();
     if (status) {
-		if (damage)
-			cout << " and ";
 		if (success) {
 			cout << " applies " << status->getEffect()->getName() << " to " << status->getTarget()->getName();
 		} else {
@@ -91,9 +114,41 @@ void Event::print() const
     cout << endl;
 }
 
-Event::~Event()
+EventCauseStatus::~EventCauseStatus()
 {
-    delete damage;
     if (!success && status)
         delete status; // Only delete status if not linked to an Effect
+}
+
+void EventRemoveStatus::apply()
+{
+	if (!target->isAvailable())
+		return;
+
+	cout << "in here\n";
+
+	// Removes the most recent status effect of the matching type
+	for (int i = target->getCurrentStatus().size() - 1; i >= 0; --i) {
+		if (target->getCurrentStatus()[i]->getBenefit() == removingType)
+		{
+			removedResult = target->getCurrentStatus()[i];
+			target->getCurrentStatus()[i]->onKill();
+			break;
+		}
+	}
+}
+
+void EventRemoveStatus::print() const
+{
+    if (removedResult) {
+		cout << ref->getSource()->getName() << "'s " << ref->getName();
+		if (removedResult) {
+			cout << " removes " << removedResult->getSubname() << " from " << target->getName();
+		}
+		cout << endl;
+    }
+}
+
+EventRemoveStatus::~EventRemoveStatus()
+{
 }

@@ -14,7 +14,34 @@ bool Status::hasExpired() const {
 
 void Status::onSpawn()
 {
-	if (target != NULL) target->currentStatus.push_back(this);
+	if (target != NULL) 
+	{
+		switch (benefit) 
+		{
+			case BUFF:
+			{
+				int val = target->getNumBuffs();
+				val += 1;
+				target->setNumBuffs(val);
+				break;
+			}
+			case DEBUFF:
+			{
+				int val = target->getNumDebuffs();
+				val += 1;
+				target->setNumDebuffs(val);
+				break;
+			}
+			case NEUTRAL:
+			{
+				int val = target->getNumNeutrals();
+				val += 1;
+				target->setNumNeutrals(val);
+				break;
+			}
+		}
+		target->currentStatus.push_back(this);
+	}
 }
 
 void Status::onRound() 
@@ -25,8 +52,35 @@ void Status::onRound()
 
 void Status::onKill() 
 {
+	// Remove Status buff/debuff link from target
+	if (!clean && target != NULL) {
+		switch (benefit) 
+		{
+			case BUFF:
+			{
+				int val = target->getNumBuffs();
+				val -= 1;
+				target->setNumBuffs(val);
+				break;
+			}
+			case DEBUFF:
+			{
+				int val = target->getNumDebuffs();
+				val -= 1;
+				target->setNumDebuffs(val);
+				break;
+			}
+			case NEUTRAL:
+			{
+				int val = target->getNumNeutrals();
+				val -= 1;
+				target->setNumNeutrals(val);
+				break;
+			}
+		}
+		target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), this));
+	}
 	clean = true;
-    subname = "-----";
 }
 
 void Status::onPrePerformHit(Event* event)
@@ -195,7 +249,6 @@ void StatusFlee::onCheckpoint(Ability* ability)
 
 void StatusFlee::onKill()
 {
-    Status::onKill();
     if (GridPoint(target->getGridX(), target->getGridY()) == GridPoint(-1, -1))
     {
         Battle* battle = effect->getBattle();
@@ -212,6 +265,7 @@ void StatusFlee::onKill()
         target->setOnGridX(place.x);
         target->setOnGridY(place.y);
     }
+    Status::onKill();
 }
 
 void StatusFlee::onSelectAbility(Unit* caster)
@@ -334,7 +388,7 @@ void StatusPoison::applyTimedDamage()
 {
 	Damage* damage = new Damage(effect, target, amount, DAMAGE_EARTH);
 	
-	Event* event = new Event(effect, damage, NULL);
+	Event* event = new EventCauseDamage(effect, 100, damage);
 	event->apply();
 
 	/*
@@ -411,10 +465,10 @@ void StatusMortality::onSpawn()
 
 void StatusMortality::onKill()
 {
-	Status::onKill();
 	int val = target->getMaxHealth();
 	val += amount;
 	target->setMaxHealth(val);
+	Status::onKill();
 }
 
 StatusMergeResult StatusBlock::getMergeResult() const
@@ -521,29 +575,11 @@ void StatusBattleShout::onSpawn()
 
 void StatusBattleShout::onKill()
 {
-	Status::onKill();
 	int val = target->getCurrentPhysicalAttack();
 	val -= amount;
 	target->setCurrentPhysicalAttack(val);
+	Status::onKill();
 }
-
-/*
-bool StatusAttackResponse::hasExpired() const
-{
-	return Status::hasExpired() || (limited && amount <= 0);
-}
-
-void StatusAttackResponse::applyAbility(Unit* caster, Battle* battle)
-{
-	if (hasExpired())
-		return;
-	Ability* ability = NULL;
-	ability = getAbility(skill);
-	ability->action(NULL, caster, battle);
-	if (limited)
-		--amount;
-}
-*/
 
 void Effect::print() const
 {

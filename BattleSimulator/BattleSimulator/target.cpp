@@ -6,11 +6,31 @@
 
 // Comparator functions to determine strongest/weakest unit
 bool compareLifePreferLess(Unit* lhs, Unit* rhs) {
-	return lhs->getCurrentHealth() < rhs->getCurrentHealth();
+	return lhs->getCurrentHealth() < rhs->getCurrentHealth() ||
+		(lhs->getCurrentHealth() == rhs->getCurrentHealth() && lhs->getRValue() < rhs->getRValue());
 }
 bool compareLifePreferMore(Unit* lhs, Unit* rhs) {
-	return lhs->getCurrentHealth() > rhs->getCurrentHealth();
+	return lhs->getCurrentHealth() > rhs->getCurrentHealth() ||
+		(lhs->getCurrentHealth() == rhs->getCurrentHealth() && lhs->getRValue() > rhs->getRValue());
 }
+bool compareNumBuffsLess(Unit* lhs, Unit* rhs) {
+	return lhs->getNumBuffs() < rhs->getNumBuffs() ||
+		(lhs->getNumBuffs() == rhs->getNumBuffs() && lhs->getRValue() < rhs->getRValue());
+}
+bool compareNumBuffsMore(Unit* lhs, Unit* rhs) {
+	return lhs->getNumBuffs() > rhs->getNumBuffs() ||
+		(lhs->getNumBuffs() == rhs->getNumBuffs() && lhs->getRValue() > rhs->getRValue());
+}
+bool compareNumDebuffsLess(Unit* lhs, Unit* rhs) {
+	return lhs->getNumDebuffs() < rhs->getNumDebuffs() ||
+		(lhs->getNumDebuffs() == rhs->getNumDebuffs() && lhs->getRValue() < rhs->getRValue());
+}
+bool compareNumDebuffsMore(Unit* lhs, Unit* rhs) {
+	return lhs->getNumDebuffs() > rhs->getNumDebuffs() ||
+		(lhs->getNumDebuffs() == rhs->getNumDebuffs() && lhs->getRValue() > rhs->getRValue());
+}
+
+
 
 vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Battle* battle, Group* allyGroup, Group* enemyGroup, int startingAdjacencyRange, int rowRange)
 {
@@ -100,14 +120,37 @@ void Targeter::set(int n)
 		}
 	case TARGET_WEAKEST:
 		{
+			for (int i = 0; i < cand.size(); ++i)
+				cand[i]->setRValue();
 			sort(cand.begin(), cand.end(), compareLifePreferLess);
-			for (; ni < n && cand.size() > 0; ++ni)
+			for (; ni < n && cand.size() > 0; ++ni) {
 				chosen.push_back(cand[ni]);
+			}
 			break;
 		}
 	case TARGET_STRONGEST:
 		{
+			for (int i = 0; i < cand.size(); ++i)
+				cand[i]->setRValue();
 			sort(cand.begin(), cand.end(), compareLifePreferMore);
+			for (; ni < n && cand.size() > 0; ++ni)
+				chosen.push_back(cand[ni]);
+			break;
+		}
+	case TARGET_MOST_DEBUFFS:
+		{
+			for (int i = 0; i < cand.size(); ++i)
+				cand[i]->setRValue();
+			sort(cand.begin(), cand.end(), compareNumDebuffsMore);
+			for (; ni < n && cand.size() > 0; ++ni)
+				chosen.push_back(cand[ni]);
+			break;
+		}
+	case TARGET_MOST_BUFFS:
+		{
+			for (int i = 0; i < cand.size(); ++i)
+				cand[i]->setRValue();
+			sort(cand.begin(), cand.end(), compareNumBuffsMore);
 			for (; ni < n && cand.size() > 0; ++ni)
 				chosen.push_back(cand[ni]);
 			break;

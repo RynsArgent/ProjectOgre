@@ -30,9 +30,29 @@ Unit::Unit(Character* character, int gid, int x, int y)
 	: character(character), 
 	basicSkill(NO_STANDARD_SKILL), backSkill(NO_STANDARD_SKILL), midSkill(NO_STANDARD_SKILL), frontSkill(NO_STANDARD_SKILL), 
 	currentSkill(NO_STANDARD_SKILL), currentTier(0),
-	gid(gid), formX(x), formY(y), gridX(x), gridY(y), currentEffects(), currentStatus()
+	gid(gid), formX(x), formY(y), gridX(x), gridY(y), currentEffects(), currentStatus(),
+	numBuffs(0), numDebuffs(0), numNeutrals(0), rValue(0)
 {
 	carryOverCharacterStatistics();
+}
+
+bool Unit::hasStatus(StatusBenefit benefit) const
+{
+	for (int i = 0; i < currentStatus.size(); ++i)
+		if (currentStatus[i]->getBenefit() == benefit &&
+			!currentStatus[i]->hasExpired())
+			return true;
+	return false;
+}
+
+vector<Status*> Unit::getCurrentStatus(StatusBenefit benefit) const
+{
+	vector<Status*> ret;
+	for (int i = 0; i < currentStatus.size(); ++i)
+		if (currentStatus[i]->getBenefit() == benefit &&
+			!currentStatus[i]->hasExpired())
+			ret.push_back(currentStatus[i]);
+	return ret;
 }
 
 void Unit::processEffects()

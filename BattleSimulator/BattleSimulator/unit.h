@@ -47,6 +47,12 @@ private:
 	vector<Effect*> currentEffects;
 	vector<Status*> currentStatus;
 
+	int numDebuffs;
+	int numBuffs;
+	int numNeutrals;
+
+	int rValue; // Used to settle ties, can be used for multiple things
+
 	void carryOverCharacterStatistics();
 public:
 	Unit(Character* character, int gid, int x, int y);
@@ -288,6 +294,41 @@ public:
 	bool isAvailable() const {
 		return isAlive();
 	}
+	
+	int getNumDebuffs() const {
+		return numDebuffs;
+	}
+
+	void setNumDebuffs(int value) {
+		numDebuffs = value;
+	}
+
+	int getNumBuffs() const {
+		return numBuffs;
+	}
+	
+	void setNumBuffs(int value) {
+		numBuffs = value;
+	}
+
+	int getNumNeutrals() const {
+		return numNeutrals;
+	}
+
+	void setNumNeutrals(int value) {
+		numNeutrals = value;
+	}
+
+	void setRValue() {
+		rValue = rand();
+	}
+
+	int getRValue() const {
+		return rValue;
+	}
+
+	bool hasStatus(StatusBenefit benefit) const;
+	vector<Status*> getCurrentStatus(StatusBenefit benefit) const;
 
 	// Process all Effects that have originated from this unit
 	void processEffects();

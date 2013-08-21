@@ -23,7 +23,8 @@ protected:
 	vector<Event*> events;
 public:
 	static Ability* getAbility(Skill skill);
-	static Skill Ability::selectSkill(Unit* unit);
+	static Skill selectSkill(Unit* unit);
+	static bool isAbleToRespond(Ability* previous, Ability* current);
     
 	Ability(const string & name, ActionType act, AbilityType type, bool basic, bool respondable, bool interruptible, int cost)
     : Action(name, act, type), respondable(respondable), basic(basic), interruptible(interruptible), cost(cost), cancelled(false), targeters(), events()
@@ -43,6 +44,7 @@ public:
     void setCancelled(bool value) { cancelled = value; }
 	vector<Targeter*> getTargeters() const { return targeters; }
 	void setTargeters(const vector<Targeter*> & value) { targeters = value; }
+	Targeter* retrieveFirstPrimaryTargeter() const;
 
 	// This is used to check whether the unit is stunned, sleep, fleeing, ect.
 	// Because if the unit is, the ability is probably cancelled
@@ -162,6 +164,7 @@ public:
 
 class Heal : public Ability
 {
+protected:
 	static const ActionType ACT = ABILITY_STANDARD;
 	static const AbilityType TYPE = ABILITY_SPECIAL;
 	static const bool BASIC = true;
@@ -172,6 +175,21 @@ public:
 	Heal() : Ability("Heal", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
 	~Heal() {}
+};
+
+class Cleanse : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Cleanse() : Ability("Cleanse", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Cleanse() {}
 };
 
 #endif

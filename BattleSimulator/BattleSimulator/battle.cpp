@@ -85,13 +85,13 @@ void Battle::executeTurn()
 
 	// Response ability
 	Ability* respondAbility = NULL;
-	if (mainAbility != NULL && mainAbility->getTargeters().size() > 0)
+	if (mainAbility != NULL)
 	{
-		Targeter* mainTargeter = mainAbility->getTargeters()[0];
-		Unit* unit2 = mainTargeter->getPrimary();
-		if (unit2 && unit2->isAvailable())
+		Targeter* mainTargeter = mainAbility->retrieveFirstPrimaryTargeter();
+		if (mainTargeter != NULL)
 		{
-			if (mainAbility->isRespondable() && mainTargeter->provoked)
+			Unit* unit2 = mainTargeter->getPrimary();
+			if (unit2 != NULL && mainTargeter->provoked)
 			{
 				unit2->setCurrentSkill(NO_STANDARD_SKILL);
 				unit2->setCurrentTier(1);
@@ -104,7 +104,8 @@ void Battle::executeTurn()
 				unit2->setCurrentSkill(Ability::selectSkill(unit2));
 
 				respondAbility = Ability::getAbility(unit2->getCurrentSkill());
-				respondAbility->action(mainAbility, unit2, this);
+				if (Ability::isAbleToRespond(mainAbility, respondAbility))
+					respondAbility->action(mainAbility, unit2, this);
 			}
 		}
 	}
@@ -150,27 +151,21 @@ void Battle::simulate()
 void Battle::print() const
 {
 	cout << "Round Number: " << roundNumber << endl;
-	
-	/*
-	if (turnIndex >= 0 && turnIndex < unitOrder.size())
-	{
-		Unit* unit = unitOrder[turnIndex];
-		cout << unit->getName() << "'s turn";
-		if (unit->isDead())
-			cout << " *dead*";
-		cout << endl; 
-	}
-	if (eventStack.size() <= 0 && roundNumber > 0)
-		return;
-	*/
-    for (int i = 0; i < eventStack.size(); ++i)
-        eventStack[i]->print();
     
+	cout << "--------------------------------------------------" << endl;
+
 	cout << "Battle Map: " << endl;
 	group2->printGroup(true);
 	cout << endl;
 	group1->printGroup(false);
 	
+	cout << "--------------------------------------------------" << endl;
+	
+    for (int i = 0; i < eventStack.size(); ++i)
+        eventStack[i]->print();
+	
+	cout << "--------------------------------------------------" << endl;
+
 	for (int i = 0; i < unitOrder.size(); ++i)
 	{
 		if (i == turnIndex)

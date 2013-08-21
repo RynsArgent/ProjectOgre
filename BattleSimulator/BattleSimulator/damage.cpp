@@ -142,19 +142,16 @@ int Damage::getDamageValue(DamageRating rating, int base)
 		return 0;
 	case DAMAGE_MINOR:
 		return (base / 4.0) + 0.5;
-		break;
 	case DAMAGE_LOW:
 		return (base / 2.0) + 0.5;
-		break;
 	case DAMAGE_MEDIUM:
 		return base;
-		break;
 	case DAMAGE_HIGH:
 		return (base * 1.5) + 0.5;
-		break;
 	case DAMAGE_MASSIVE:
 		return base * 2;
-		break;
+	case DAMAGE_COLOSSAL:
+		return base * 4;
 	default:
 		return 0;
 	}
