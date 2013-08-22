@@ -4,6 +4,10 @@
 #include "ability.h"
 #include "status.h"
 
+DamageNode::DamageNode(int amount, DamageRating rating, DamageType type, DamageNode* next)
+	: start(Damage::getDamageValue(rating, amount)), amount(start), final(0), rating(rating), type(type), next(next)
+{}
+
 void DamageNode::modify(Unit* target)
 {
 	int totalDamage = amount;

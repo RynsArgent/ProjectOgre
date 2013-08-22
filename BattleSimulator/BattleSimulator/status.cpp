@@ -386,10 +386,10 @@ void StatusPoison::onMerge(const StatusMergeResult & mergeResult)
 
 void StatusPoison::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, amount, DAMAGE_EARTH);
+	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_EARTH);
 	
-	Event* event = new EventCauseDamage(effect, 100, damage);
-	event->apply();
+	Event* log = new EventCauseDamage(effect, 100, damage);
+	log->apply();
 
 	/*
      // Has a nice idea for divided damage, however poison is one type
@@ -558,7 +558,7 @@ void StatusBattleShout::onMerge(const StatusMergeResult & mergeResult)
 
 	/*
 	// This is in case Battle Shout lasts for more than 1 turn, if it does, the damage will begin stacking
-	// So, under the assumption that the amount is the same for each stack. We cancel it with onSpawn
+	// So, under the assumption that the amount is the same for each stack. this cancel with onSpawn.
 	int val = target->getCurrentPhysicalAttack();
 	val -= amount;
 	target->setCurrentPhysicalAttack(val);
@@ -579,6 +579,96 @@ void StatusBattleShout::onKill()
 	val -= amount;
 	target->setCurrentPhysicalAttack(val);
 	Status::onKill();
+}
+
+StatusMergeResult StatusHaste::getMergeResult() const
+{
+	StatusMergeResult res;
+	return res;
+}
+
+void StatusHaste::onMerge(const StatusMergeResult & mergeResult)
+{
+}
+
+void StatusHaste::onSpawn()
+{
+	Status::onSpawn();
+	int val = target->getCurrentSpeed();
+	val += amount;
+	target->setCurrentSpeed(val);
+}
+
+void StatusHaste::onKill()
+{
+	int val = target->getCurrentSpeed();
+	val -= amount;
+	target->setCurrentSpeed(val);
+	Status::onKill();
+}
+
+StatusMergeResult StatusScope::getMergeResult() const
+{
+	StatusMergeResult res;
+	return res;
+}
+
+void StatusScope::onMerge(const StatusMergeResult & mergeResult)
+{
+}
+
+void StatusScope::onPreApplyDamage(Damage* applier)
+{
+	if (hasExpired())
+		return;
+	Status::onPreApplyDamage(applier);
+
+	if (!applier->action || applier->action->getAbilityType() != ABILITY_ATTACK_RANGE ||
+		applier->size <= 0)
+		return;
+	
+	int div = amount / applier->size;
+	int rem = amount % applier->size;
+	for (DamageNode* node = applier->head; node != NULL; node = node->next) {
+		if (node == applier->head)
+			node->amount += Damage::getDamageValue(node->rating, div + rem);
+		else
+			node->amount += Damage::getDamageValue(node->rating, div);
+		node->start = node->amount;
+	}
+}
+
+StatusMergeResult StatusTangleTrap::getMergeResult() const
+{
+	StatusMergeResult res;
+	return res;
+}
+
+void StatusTangleTrap::onMerge(const StatusMergeResult & mergeResult)
+{
+}
+
+void StatusTangleTrap::onPostBecomeTarget(Targeter* system)
+{
+	if (hasExpired())
+		return;
+	Status::onPostBecomeTarget(system);
+
+	if (system->ref && system->ref->getSource() &&
+		system->ref->getAbilityType() == ABILITY_ATTACK_MELEE)
+	{
+		string name = "Stun";
+		Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), name, system->ref->getSource());
+		Status* status = new StatusStun(neffect, "Stun", system->ref->getSource());
+		status->setTimed(true, 1);
+		
+		Event* log = new EventCauseStatus(effect, 100, status);
+		log->apply();
+
+		neffect->applyEffect();
+
+		onKill();
+	}
 }
 
 void Effect::print() const

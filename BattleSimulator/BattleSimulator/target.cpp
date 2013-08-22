@@ -163,11 +163,11 @@ void Targeter::set(int n)
 		Status* status = ref->getSource()->getCurrentStatus()[i];
 		status->onPostFindTarget(this);
 	}
-    for (int i = 0; i < candidates.size(); ++i)
+    for (int i = 0; i < chosen.size(); ++i)
     {
-        for (int j = 0; j < candidates[i]->getCurrentStatus().size(); ++j)
+        for (int j = 0; j < chosen[i]->getCurrentStatus().size(); ++j)
         {
-            Status* status = candidates[i]->getCurrentStatus()[j];
+            Status* status = chosen[i]->getCurrentStatus()[j];
             status->onPostBecomeTarget(this);
         }
     }

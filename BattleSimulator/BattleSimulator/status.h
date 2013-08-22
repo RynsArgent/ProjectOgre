@@ -409,6 +409,71 @@ public:
 	~StatusBattleShout() {}
 };
 
+class StatusHaste : public Status
+{
+protected:
+	int amount;
+public:
+	StatusHaste(Effect* effect, const string & subname, Unit* target, int amount)
+		: Status(effect, subname, BUFF, target), amount(amount)
+	{}
+
+	// Helper Functions
+	
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onSpawn();
+	virtual void onKill();
+
+	// Set Status Specific Variables
+	void setAmount(int value) { amount = value; }
+
+	~StatusHaste() {}
+};
+
+class StatusScope : public Status
+{
+protected:
+	int amount;
+public:
+	StatusScope(Effect* effect, const string & subname, Unit* target, int amount)
+		: Status(effect, subname, BUFF, target), amount(amount)
+	{}
+
+	// Helper Functions
+	
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onPreApplyDamage(Damage* applier);
+
+	// Set Status Specific Variables
+	void setAmount(int value) { amount = value; }
+
+	~StatusScope() {}
+};
+
+class StatusTangleTrap : public Status
+{
+protected:
+public:
+	StatusTangleTrap(Effect* effect, const string & subname, Unit* target)
+		: Status(effect, subname, BUFF, target)
+	{}
+
+	// Helper Functions
+	
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onPostBecomeTarget(Targeter* system);
+
+	// Set Status Specific Variables
+
+	~StatusTangleTrap() {}
+};
+
 // Keeps track of ongoing Status Effects, also allows multiple status effects to be associated under one name
 class Effect : public Action
 {

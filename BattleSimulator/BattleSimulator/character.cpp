@@ -34,7 +34,7 @@ Scout::Scout(const string & name, ElementType favoredElement, int upkeep)
 		BASE_SIZE, favoredElement, upkeep)
 {
 	backSkills.push_back(SHOOT);
-	backSkills.push_back(FOREWARN);
+	backSkills.push_back(HASTE);
 	midSkills.push_back(SHOOT);
 	midSkills.push_back(SCOPE);
 	frontSkills.push_back(TANGLE_TRAP);

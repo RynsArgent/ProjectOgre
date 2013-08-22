@@ -145,8 +145,6 @@ public:
 	~BattleShout() {}
 };
 
-// SCOUT
-
 class Shoot : public Ability
 {
 protected:
@@ -157,9 +155,54 @@ protected:
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	Shoot() : Ability("Shoot", ACT, TYPE, BASIC,RESPONDABLE, INTERRUPTIBLE, COST) {}
+	Shoot() : Ability("Shoot", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
 	~Shoot() {}
+};
+
+class Haste : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Haste() : Ability("Haste", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Haste() {}
+};
+
+class Scope : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Scope() : Ability("Scope", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Scope() {}
+};
+
+class TangleTrap : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	TangleTrap() : Ability("Tangle Trap", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~TangleTrap() {}
 };
 
 class Heal : public Ability
