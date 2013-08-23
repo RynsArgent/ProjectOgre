@@ -21,9 +21,12 @@ GROUP_OUT = group.o
 STATUS_OUT = status.o
 UNIT_OUT = unit.o
 TARGET_OUT = target.o
+RENDERER_WINDOWS_OUT = rendererwindows.o
+RENDERER_LINUX_OUT = rendererlinux.o
+RENDERER_MAC_OUT = renderermac.o
 
 ## Requirements for each command
-MAIN_REQS = main.cpp $(PCH_OUT) $(ACTION_OUT) $(ABILITY_OUT) $(EVENT_OUT) $(GRIDPOINT_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT) $(DAMAGE_OUT) $(TARGET_OUT)
+MAIN_REQS = main.cpp $(PCH_OUT) $(ACTION_OUT) $(ABILITY_OUT) $(EVENT_OUT) $(GRIDPOINT_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT) $(DAMAGE_OUT) $(TARGET_OUT) 
 PCH_REQS = pch.h pch.cpp
 ACTION_REQS = action.h action.cpp
 ABILITY_REQS = ability.h ability.cpp
@@ -37,6 +40,7 @@ GROUP_REQS = group.h group.cpp
 STATUS_REQS = status.h status.cpp
 UNIT_REQS = unit.h unit.cpp
 TARGET_REQS = target.h target.cpp
+RENDERER_REQS = renderer.h renderer.cpp
 
 ## Targets to compile for each command
 MAIN_TARGETS = main.cpp $(PCH_OUT) $(ACTION_OUT) $(ABILITY_OUT) $(EVENT_OUT) $(GRIDPOINT_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT) $(DAMAGE_OUT) $(TARGET_OUT)
@@ -53,6 +57,7 @@ GROUP_TARGETS = group.cpp
 STATUS_TARGETS = status.cpp
 UNIT_TARGETS = unit.cpp
 TARGET_TARGETS = target.cpp
+RENDERER_TARGETS = renderer.cpp
 
 all:
 	echo Usage: make mainwindows
@@ -63,12 +68,12 @@ all:
 	echo Usage: make cleanmac
 
 ## Main 
-mainwindows: $(MAIN_REQS) $(INCLUDE)
-	$(CC) -o $(MAIN_OUT) $(MAIN_TARGETS) $(LIBS_WINDOWS) -D IN_WINDOWS
-mainlinux: $(MAIN_REQS) $(INCLUDE)
-	$(CC) -o $(MAIN_OUT) $(MAIN_TARGETS) $(LIBS_LINUX) -D IN_LINUX
-mainmac: $(MAIN_REQS) $(INCLUDE)
-	$(CC) -o $(MAIN_OUT) $(MAIN_TARGETS) $(LIBS_MAC) -D IN_MAC
+mainwindows: $(MAIN_REQS) $(RENDERER_WINDOWS_OUT) $(INCLUDE)
+	$(CC) -o $(MAIN_OUT) $(MAIN_TARGETS) $(RENDERER_WINDOWS_OUT) $(LIBS_WINDOWS) -D IN_WINDOWS
+mainlinux: $(MAIN_REQS) $(RENDERER_LINUX_OUT) $(INCLUDE)
+	$(CC) -o $(MAIN_OUT) $(MAIN_TARGETS) $(RENDERER_LINUX_OUT) $(LIBS_LINUX) -D IN_LINUX
+mainmac: $(MAIN_REQS) $(RENDERER_MAC_OUT) $(INCLUDE)
+	$(CC) -o $(MAIN_OUT) $(MAIN_TARGETS) $(RENDERER_MAC_OUT) $(LIBS_MAC) -D IN_MAC
 ## Object class
 $(BATTLE_OUT): $(BATTLE_REQS) $(INCLUDE)
 	$(CC) -c $(BATTLE_TARGETS)
@@ -96,6 +101,12 @@ $(TARGET_OUT) : $(TARGET_REQS) $(INCLUDE)
 	$(CC) -c $(TARGET_TARGETS)
 $(PCH_OUT) : $(PCH_REQS) $(INCLUDE)
 	$(CC) -c $(PCH_TARGETS)
+$(RENDERER_WINDOWS_OUT) : $(RENDERER_REQS) $(INCLUDE)
+	$(CC) -c $(RENDERER_TARGETS) -o $(RENDERER_WINDOWS_OUT) -D IN_WINDOWS
+$(RENDERER_LINUX_OUT) : $(RENDERER_REQS) $(INCLUDE)
+	$(CC) -c $(RENDERER_TARGETS) -o $(RENDERER_LINUX_OUT) -D IN_LINUX
+$(RENDERER_MAC_OUT) : $(RENDERER_REQS) $(INCLUDE)
+	$(CC) -c $(RENDERER_TARGETS) -o $(RENDERER_MAC_OUT) -D IN_MAC
 cleanwindows:
 	del *~ *.o *.exe
 cleanlinux:
