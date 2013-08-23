@@ -388,7 +388,7 @@ void StatusPoison::applyTimedDamage()
 {
 	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_EARTH);
 	
-	Event* log = new EventCauseDamage(effect, 100, damage);
+	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
 	log->apply();
 
 	/*
@@ -493,8 +493,7 @@ void StatusBlock::applyDamagePrevention(Damage* applier)
 		if (n->type == DAMAGE_PHYSICAL) {
 			int startingDamage = n->amount;
 			int resultantDamage = startingDamage - currentPrevention;
-			if (resultantDamage < 0)
-				resultantDamage = 0;
+			bound(resultantDamage, VALUE_DAMAGE);
 			n->amount = resultantDamage;
 
 			currentPrevention -= (startingDamage - resultantDamage);
@@ -629,12 +628,13 @@ void StatusScope::onPreApplyDamage(Damage* applier)
 	
 	int div = amount / applier->size;
 	int rem = amount % applier->size;
+
 	for (DamageNode* node = applier->head; node != NULL; node = node->next) {
 		if (node == applier->head)
-			node->amount += Damage::getDamageValue(node->rating, div + rem);
+			node->start += Damage::getDamageValue(node->rating, div + rem);
 		else
-			node->amount += Damage::getDamageValue(node->rating, div);
-		node->start = node->amount;
+			node->start += Damage::getDamageValue(node->rating, div);
+		node->amount = node->start;
 	}
 }
 
@@ -662,7 +662,7 @@ void StatusTangleTrap::onPostBecomeTarget(Targeter* system)
 		Status* status = new StatusStun(neffect, "Stun", system->ref->getSource());
 		status->setTimed(true, 1);
 		
-		Event* log = new EventCauseStatus(effect, 100, status);
+		Event* log = new EventCauseStatus(effect, Event::DEBUFF_HIT_CHANCE, status);
 		log->apply();
 
 		neffect->applyEffect();

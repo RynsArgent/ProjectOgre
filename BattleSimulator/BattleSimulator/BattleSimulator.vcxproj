@@ -98,6 +98,7 @@
     <ClCompile Include="group.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="renderer.cpp" />
     <ClCompile Include="status.cpp" />
     <ClCompile Include="target.cpp" />
     <ClCompile Include="unit.cpp" />
@@ -113,6 +114,7 @@
     <ClInclude Include="gridpoint.h" />
     <ClInclude Include="group.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="renderer.h" />
     <ClInclude Include="status.h" />
     <ClInclude Include="target.h" />
     <ClInclude Include="unit.h" />

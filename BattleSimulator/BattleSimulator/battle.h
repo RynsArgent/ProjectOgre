@@ -52,6 +52,7 @@ public:
 	~Battle() {}
 
 	friend class Ability;
+	friend class Renderer;
 };
 
 #endif

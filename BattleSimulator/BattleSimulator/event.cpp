@@ -16,6 +16,14 @@ Event::Event(Action* ref, int chance)
     }
 }
 
+void Event::determineSuccess()
+{
+	// Determine if roll was a success out of a 100%
+	int roll = rand() % 100 + 1;
+	success = roll <= chance;
+}
+
+
 void Event::determineSuccess(Unit* target)
 {
 	Unit* source = ref->getSource();
@@ -122,17 +130,18 @@ EventCauseStatus::~EventCauseStatus()
 
 void EventRemoveStatus::apply()
 {
-	if (!target->isAvailable())
+	determineSuccess();
+	if (!success && !target->isAvailable())
 		return;
-
-	cout << "in here\n";
 
 	// Removes the most recent status effect of the matching type
 	for (int i = target->getCurrentStatus().size() - 1; i >= 0; --i) {
-		if (target->getCurrentStatus()[i]->getBenefit() == removingType)
+		Status* rstatus = target->getCurrentStatus()[i];
+		if (rstatus->getBenefit() == removingType &&
+			rstatus->isDispellable())
 		{
-			removedResult = target->getCurrentStatus()[i];
-			target->getCurrentStatus()[i]->onKill();
+			removedResult = rstatus;
+			rstatus->onKill();
 			break;
 		}
 	}

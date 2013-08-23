@@ -8,8 +8,9 @@
 
 // Used to determine unit order, faster units are sorted to the front of the list
 bool compareSpeed(Unit* lhs, Unit* rhs) {
-	return lhs->getCurrentSpeed() > rhs->getCurrentSpeed() || 
-		(lhs->getCurrentSpeed() == rhs->getCurrentSpeed() && lhs->getCurrentInitiative() > rhs->getCurrentInitiative());
+	return bound(lhs->getCurrentSpeed(), VALUE_SPEED) > bound(rhs->getCurrentSpeed(), VALUE_SPEED) || 
+		(bound(lhs->getCurrentSpeed(), VALUE_SPEED) == bound(rhs->getCurrentSpeed(), VALUE_SPEED) &&
+		 lhs->getCurrentInitiative() > rhs->getCurrentInitiative());
 }
 
 Battle::Battle(Group* group1, Group* group2)

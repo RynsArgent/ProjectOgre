@@ -370,7 +370,9 @@ protected:
 public:
 	StatusTaunt(Effect* effect, const string & subname, Unit* target, Unit* focus)
 		: Status(effect, subname, NEUTRAL, target), focus(focus)
-	{}
+	{
+		dispellable = false;
+	}
 	
 	// Helper Functions
 	void addToPriorityList(Targeter* system) const;

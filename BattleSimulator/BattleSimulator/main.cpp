@@ -17,9 +17,15 @@
 #include "unit.h"
 #include "group.h"
 #include "battle.h"
+#include "renderer.h"
 
-const int WINDOW_WIDTH = 400;
-const int WINDOW_HEIGHT = 300;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
+
+const double VIEWPORT_LEFT = 0.0;
+const double VIEWPORT_RIGHT = 1.0;
+const double VIEWPORT_TOP = 0.0;
+const double VIEWPORT_BOTTOM = 1.0;
 
 Formation* formA = new Formation();
 Formation* formB = new Formation();
@@ -27,6 +33,8 @@ Formation* formB = new Formation();
 Group* groupA = NULL;
 Group* groupB = NULL;
 Battle* battle = NULL;
+
+Renderer* renderer = new Renderer(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
 
 void initialize() {
 	/*
@@ -100,7 +108,7 @@ int main(int argc, char** argv)
 	glutCreateWindow("My Application");
 	glutDisplayFunc(GLrender);
 	glutMouseFunc(GLprocessMouse);
-	gluOrtho2D(0.0, WINDOW_WIDTH, WINDOW_HEIGHT, 0.0);
+	gluOrtho2D(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_BOTTOM, VIEWPORT_TOP);
 
 	srand(0);
 	initialize();
@@ -116,6 +124,7 @@ void GLrender()
 	glClear(GL_COLOR_BUFFER_BIT); 
 
 	//This is where we draw
+	renderer->render(battle);
 
 	glFlush();	
 	glutSwapBuffers();
@@ -127,5 +136,6 @@ void GLprocessMouse(int button, int state, int x, int y)
 	if (state == GLUT_DOWN)
 	{
 		battle->executeTurn();
+		glutPostRedisplay();
 	}
 }

@@ -8,19 +8,6 @@
 #include "formation.h"
 #include "gridpoint.h"
 
-// Should not be associated with Battle group simulator, but here for now. Used to determine facing
-enum Direction { DIRECTION_NONE, DIRECTION_NORTH, DIRECTION_EAST, DIRECTION_SOUTH, DIRECTION_WEST };
-Direction turnLeft(Direction face);
-Direction turnRight(Direction face);
-Direction fullTurn(Direction face);
-
-// Facing will start FORWARD, and will be adjusted depending on the direction
-// of the Unit Group and the position of the other interacting entity
-enum Facing { FACING_FORWARD, FACING_LEFT, FACING_RIGHT, FACING_BACKWARD };
-Facing turnLeft(Facing face);
-Facing turnRight(Facing face);
-Facing fullTurn(Facing face);
-
 class Group
 {
 private:

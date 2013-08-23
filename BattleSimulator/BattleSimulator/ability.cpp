@@ -146,7 +146,7 @@ void HundredBlades::action(Ability* previous, Unit* current, Battle* battle)
 
 				Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
 
-				Event* log = new EventCauseDamage(this, 100, damage);
+				Event* log = new EventCauseDamage(this, Event::MELEE_HIT_CHANCE, damage);
 				log->apply();
 			}
 			targeters.push_back(targeter);
@@ -186,7 +186,7 @@ void Block::action(Ability* previous, Unit* current, Battle* battle)
 			//Status* status = new StatusFlee(effect, "Flee", target);
 			status->setTimed(true, 1);
 			
-			Event* log = new EventCauseStatus(this, 100, status);
+			Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 			log->apply();
 
 			effect->applyEffect();
@@ -209,7 +209,7 @@ void Strike::action(Ability* previous, Unit* current, Battle* battle)
 			
 			Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
 				
-			Event* log = new EventCauseDamage(this, 100, damage);
+			Event* log = new EventCauseDamage(this, Event::MELEE_HIT_CHANCE, damage);
 			log->apply();
 		}
 	}
@@ -235,7 +235,7 @@ void Strike::action(Ability* previous, Unit* current, Battle* battle)
 
 				Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
 			
-				Event* log = new EventCauseDamage(this, 100, damage);
+				Event* log = new EventCauseDamage(this, Event::MELEE_HIT_CHANCE, damage);
 				log->apply();
 			}
 			targeters.push_back(targeter);
@@ -259,7 +259,7 @@ void Taunt::action(Ability* previous, Unit* current, Battle* battle)
 		Status* status = new StatusTaunt(effect, name, targets[i], current);
 		status->setTimed(true, 1);
 		
-		Event* log = new EventCauseStatus(this, 100, status);
+		Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 		log->apply();
 	}
 	effect->applyEffect();
@@ -271,7 +271,7 @@ void Taunt::action(Ability* previous, Unit* current, Battle* battle)
 		Status* status = new StatusBlind(effect, name, targets[i]);
 		status->setTimed(true, 1);
 		
-		Event* log = new EventCauseStatus(this, 100, status);
+		Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 		log->apply();
 	}
 	effect->applyEffect();
@@ -282,7 +282,7 @@ void Taunt::action(Ability* previous, Unit* current, Battle* battle)
 		Status* status = new StatusMortality(effect, name, targets[i], 10);
 		status->setTimed(true, 3);
 		
-		Event* log = new EventCauseStatus(this, 100, status);
+		Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 		log->apply();
 	}
 	effect->applyEffect();
@@ -294,7 +294,7 @@ void Taunt::action(Ability* previous, Unit* current, Battle* battle)
 		Status* status = new StatusPoison(effect, name, targets[i], 10);
 		status->setTimed(true, 1);
 		
-		Event* log = new EventCauseStatus(this, 100, status);
+		Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 		log->apply();
 
 		effect->applyEffect();
@@ -323,7 +323,7 @@ void BattleShout::action(Ability* previous, Unit* current, Battle* battle)
 		//Status* status = new StatusFlee(effect, "Flee", targets[i]);
 		status->setTimed(true, 1);
 
-		Event* log = new EventCauseStatus(this, 100, status);
+		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 		log->apply();
 	}
 	effect->applyEffect();
@@ -344,7 +344,7 @@ void Shoot::action(Ability* previous, Unit* current, Battle* battle)
 			
 			Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
 			
-			Event* log = new EventCauseDamage(this, 100, damage);
+			Event* log = new EventCauseDamage(this, Event::RANGE_HIT_CHANCE, damage);
 			log->apply();
 		}
 	}
@@ -370,7 +370,7 @@ void Shoot::action(Ability* previous, Unit* current, Battle* battle)
 				
 				Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
 			
-				Event* log = new EventCauseDamage(this, 100, damage);
+				Event* log = new EventCauseDamage(this, Event::RANGE_HIT_CHANCE, damage);
 				log->apply();
 			}
 			targeters.push_back(targeter);
@@ -394,7 +394,7 @@ void Haste::action(Ability* previous, Unit* current, Battle* battle)
 		Status* status = new StatusHaste(effect, name, targets[i], 1);
 		status->setTimed(true, 1);
 		
-		Event* log = new EventCauseStatus(this, 100, status);
+		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 		log->apply();
 	}
 	effect->applyEffect();
@@ -416,7 +416,7 @@ void Scope::action(Ability* previous, Unit* current, Battle* battle)
 		Status* status = new StatusScope(effect, name, targets[i], 10);
 		status->setTimed(true, 1);
 		
-		Event* log = new EventCauseStatus(this, 100, status);
+		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 		log->apply();
 	}
 	effect->applyEffect();
@@ -448,7 +448,7 @@ void TangleTrap::action(Ability* previous, Unit* current, Battle* battle)
 			Status* status = new StatusTangleTrap(effect, name, target);
 			status->setTimed(true, 1);
 			
-			Event* log = new EventCauseStatus(this, 100, status);
+			Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 			log->apply();
 
 			effect->applyEffect();
@@ -471,7 +471,7 @@ void Heal::action(Ability* previous, Unit* current, Battle* battle)
 
 			Damage* damage = new Damage(this, target, current->getCurrentMagicAttack(), DAMAGE_MEDIUM, DAMAGE_HEALING);
 			
-			Event* log = new EventCauseDamage(this, 100, damage);
+			Event* log = new EventCauseDamage(this, Event::HEAL_HIT_CHANCE, damage);
 			log->apply();
 		}
 	}
@@ -493,7 +493,7 @@ void Heal::action(Ability* previous, Unit* current, Battle* battle)
 			
 				Damage* damage = new Damage(this, target, current->getCurrentMagicAttack(), DAMAGE_MEDIUM, DAMAGE_HEALING);
 			
-				Event* log = new EventCauseDamage(this, 100, damage);
+				Event* log = new EventCauseDamage(this, Event::HEAL_HIT_CHANCE, damage);
 				log->apply();
 			}
 			targeters.push_back(targeter);
@@ -521,7 +521,7 @@ void Cleanse::action(Ability* previous, Unit* current, Battle* battle)
 		if (targeter->chosen.size() > 0) {
 			Unit* target = targeter->chosen[0];
 
-			Event* log = new EventRemoveStatus(this, 100, target, DEBUFF);
+			Event* log = new EventRemoveStatus(this, Event::CLEANSE_HIT_CHANCE, target, DEBUFF);
 			log->apply();
 		}
 		targeters.push_back(targeter);

@@ -74,10 +74,7 @@ public:
 
 	void setCurrentHealth(int currentHealth) {
 		this->currentHealth = currentHealth;
-		if (this->currentHealth > maxHealth)
-			this->currentHealth = maxHealth;
-		if (this->currentHealth < 0)
-			this->currentHealth = 0;
+		this->currentHealth = bound(this->currentHealth, 0, bound(maxHealth, VALUE_HEALTH));
 	}
 	
 	int getMaxHealth() const {

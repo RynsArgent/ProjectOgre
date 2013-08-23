@@ -90,12 +90,14 @@ void Unit::print() const
 	else
 	{
 		cout << " - HP: " << currentHealth << "/" << maxHealth;
+		cout << " - ";
 		/*
 		cout << " Effects: ";
 		for (int i = 0; i < currentEffects.size(); ++i)
 			cout << currentEffects[i]->getName() << " ";
+		cout << " - ";
+		cout << "Status: ";
 		*/
-		cout << " Status: ";
 		for (int i = 0; i < currentStatus.size(); ++i)
 			cout << currentStatus[i]->getSubname() << currentStatus[i]->getTimer() << " ";
 	}

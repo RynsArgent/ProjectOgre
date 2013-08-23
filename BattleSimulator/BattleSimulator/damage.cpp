@@ -14,25 +14,24 @@ void DamageNode::modify(Unit* target)
 	switch (type)
 	{
 	case DAMAGE_PHYSICAL:
-		totalDamage -= target->getCurrentPhysicalDefense();
+		totalDamage -= bound(target->getCurrentPhysicalDefense(), VALUE_PHYSICAL_DEFENSE);
 		break;
 	case DAMAGE_FIRE:
-		totalDamage -= target->getCurrentFireDefense();
+		totalDamage -= bound(target->getCurrentFireDefense(), VALUE_FIRE_DEFENSE);
 		break;
 	case DAMAGE_WATER:
-		totalDamage -= target->getCurrentWaterDefense();
+		totalDamage -= bound(target->getCurrentWaterDefense(), VALUE_WATER_DEFENSE);
 		break;
 	case DAMAGE_EARTH:
-		totalDamage -= target->getCurrentEarthDefense();
+		totalDamage -= bound(target->getCurrentEarthDefense(), VALUE_EARTH_DEFENSE);
 		break;
 	case DAMAGE_ICE:
-		totalDamage -= target->getCurrentIceDefense();
+		totalDamage -= bound(target->getCurrentIceDefense(), VALUE_ICE_DEFENSE);
 		break;
 	case DAMAGE_LIGHTNING:
-		totalDamage -= target->getCurrentLightningDefense();
+		totalDamage -= bound(target->getCurrentLightningDefense(), VALUE_LIGHTNING_DEFENSE);
 		break;
 	case DAMAGE_HEALING:
-		totalDamage = -totalDamage;
 		break;
 	case DAMAGE_TYPELESS:
 		break;
@@ -45,23 +44,20 @@ void DamageNode::modify(Unit* target)
 
 int DamageNode::apply(Unit* target)
 {
-	final = amount;
-	
-	// If it is not healing, then damage cannot be negative
-	if (final < 0 && type != DAMAGE_HEALING)
-		final = 0;
-	// It if is healing, then damage should be in the negative
-	if (final > 0 && type == DAMAGE_HEALING)
-		final = 0;
+	final = bound(amount, VALUE_DAMAGE);
 	int val = target->getCurrentHealth();
-	val -= final;
+	if (type != DAMAGE_HEALING) val -= final;
+	else val += final;
 	target->setCurrentHealth(val);
 	
 	int totalDamage = final;
 	if (next)
 		totalDamage += next->apply(target);
-
-	return totalDamage;
+	
+	if (type != DAMAGE_HEALING) 
+		return totalDamage;
+	else
+		return -totalDamage;
 }
 
 void DamageNode::print() const 
@@ -69,7 +65,7 @@ void DamageNode::print() const
 	if (type != DAMAGE_HEALING)
 	   cout << " " << final << " (" << start << ") " << toStringDT(type);
 	else
-	   cout << " " << -final << " (" << start << ") " << toStringDT(type);
+	   cout << " " << final << " (" << start << ") " << toStringDT(type);
     if (next) next->print();
 }
 
@@ -108,7 +104,7 @@ void Damage::apply()
 		for (int i = 0; i < applier->getCurrentStatus().size(); ++i)
 		{
 			Status* status = applier->getCurrentStatus()[i];
-			status->onPreApplyDamage(this);
+			status->onPostApplyDamage(this);
 		}
 	}
 }
@@ -145,13 +141,13 @@ int Damage::getDamageValue(DamageRating rating, int base)
 	case DAMAGE_NONE:
 		return 0;
 	case DAMAGE_MINOR:
-		return (base / 4.0) + 0.5;
+		return static_cast<int>((base / 4.0) + 0.5);
 	case DAMAGE_LOW:
-		return (base / 2.0) + 0.5;
+		return static_cast<int>((base / 2.0) + 0.5);
 	case DAMAGE_MEDIUM:
 		return base;
 	case DAMAGE_HIGH:
-		return (base * 1.5) + 0.5;
+		return static_cast<int>((base * 1.5) + 0.5);
 	case DAMAGE_MASSIVE:
 		return base * 2;
 	case DAMAGE_COLOSSAL:
