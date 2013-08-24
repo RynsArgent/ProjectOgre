@@ -11,7 +11,7 @@ if (typeof Object.create !== 'function') {
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-var terrain = (function () {
+var terrain_dictionary = (function () {
     var dict = {
         'p' : {label: 'Plains', image: 'images/Plains.png'},
         'w' : {label: 'Sea', image: 'images/Seas.png'},
@@ -53,6 +53,10 @@ var terrain = (function () {
                 dict[key].imageObject = img;
             }
             return dict[key].imageObject;
+        },
+        
+        getLabelFor : function (key) {
+            return dict[key].label;
         }
     };
 }());
@@ -66,24 +70,24 @@ row 1  [ 5][ 6][ 7][ 8][ 9]
     
     index = row * columns + col
 */
-var createTile = function (details) {
+var createTile = function (params) {
     var label, 
         index, row, col, 
         width, height,
         bgImage, stImage;
         
-    label = details.label || '';
-    row = details.row || -1;
-    col = details.col || -1;
-    index = details.index || -1;
-    width = details.width || 0;
-    height = details.height || 0;
+    label = params.label || '';
+    row = params.row || -1;
+    col = params.col || -1;
+    index = params.index || -1;
+    width = params.width || 0;
+    height = params.height || 0;
     
-    if (details.bgImage !== undefined) {
-        bgImage = details.bgImage;
+    if (params.bgImage !== undefined) {
+        bgImage = params.bgImage;
     }
-    if (details.stImage !== undefined) {
-        stImage = details.stImage;
+    if (params.stImage !== undefined) {
+        stImage = params.stImage;
     }
     
     return {
@@ -117,8 +121,99 @@ var createTile = function (details) {
     };
 };
 
-var createMap = function (details) {
+var createMap = function (data) {//(rows, columns, tileWidthInPixels, tileHeightInPixels) {
+    var rows = data.rows,
+        columns = data.columns,
+        tileWidthInPixels = data.tilePixelWidth,
+        tileHeightInPixels = data.tilePixelHeight,
+        tilemap = [],
+        keys = data.keys;
 
+        console.log("createMap call: keys = " + keys);        
+        (function () {
+            var i, j, k, row;
+            console.log("createMap : generating map");
+            // generate the map from data
+            for (i = 0; i < rows; i += 1) {
+                row = [];
+                for (j = 0; j < columns; j += 1) {
+                    k = data.matrix[i][j];
+                    
+                    row.push(createTile({
+                        label : terrain_dictionary.getLabelFor(k),
+                        row : i,
+                        col : j,
+                        index : i * columns + j,    // index = row * columns + col
+                        width : tileWidthInPixels,
+                        height : tileHeightInPixels,
+                        bgImage : terrain_dictionary.getImageObject(k)
+                    }));
+                }
+                tilemap.push(row);
+            }
+        }());
+    
+    return {
+        getWidthInPixels : function () {
+            return columns * tileWidthInPixels;
+        },
+        getHeightInPixels : function () {
+            return rows * tileHeightInPixels;
+        },
+        numberOfRows : function () {
+            return rows;
+        },
+        numberOfColums : function () {
+            return columns;
+        },
+        getTileMap : function () {
+            return tilemap;
+        },
+        getTileAt : function (row, col) {
+            return tilemap[row][col];
+        },
+        setTileAt : function (row, col, tile) {
+            tilemap[row][col] = tile;
+        },
+        
+        generate : function (data) {
+            var i, j, key, tile, row;
+            
+            // danger : clears the tilemap if it has existing data
+            tilemap = [];
+            
+            if (data.columsn !== undefined) {
+                columns = data.columns;
+            }
+            
+            if (data.rows !== undefined) {
+                rows = data.rows;
+            }
+            
+            if (data.keys !== undefined) {
+                keys = data.keys;
+            }
+            
+            // index = row * columns + col
+            for (i = 0; i < rows; i += 1) {
+                row = [];
+                for (j = 0; j < columns; j += 1) {
+                    k = data.matrix[i][j];
+                    
+                    row.push(createTile({
+                        label : terrain_dictionary.getLabelFor(k),
+                        row : i,
+                        col : j,
+                        index : i * columns + j,
+                        width : tileWidthInPixels,
+                        height : tileHeightInPixels,
+                        bgImage : terrain_dictionary.getImageObject(k)
+                    }));
+                }
+                tilemap.push(row);
+            }
+        }
+    };
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -136,18 +231,21 @@ jQuery(document).ready(function () {
         // Declare private variables and methods
         var that, player,
             
-            tick, update, animate,
+            tick, update, animate, draw,
             
             handleInput,
             
             socket = io.connect(),
             
-            bgCanvas, stCanvas, mainCanvas, fgCanvas;
+            bgCanvas = jQuery("#bg").get(0),
+            stCanvas = jQuery("#st").get(0),
+            mainCanvas = jQuery("#main").get(0),
+            fgCanvas = jQuery("#fg").get(0),
             
-            bgCanvas = jQuery("#bg").get(0);
-            stCanvas = jQuery("#st").get(0);
-            mainCanvas = jQuery("#main").get(0);
-            fgCanvas = jQuery("#fg").get(0);
+            bgContext = bgCanvas.getContext('2d'),
+            stContext = stCanvas.getContext('2d'),
+            mainContext = mainCanvas.getContext('2d'),
+            fgContext = fgContext.getContext('2d');
             
             bgCanvas.width = document.body.clientWidth;
             bgCanvas.height = document.body.clientHeight;
@@ -185,7 +283,9 @@ jQuery(document).ready(function () {
                 // TODO: we need to also grab the map data from the server.
                 // but for now we are going to cheat and use a pre-defined
                 // map data file
-                tick();
+                createMap(tmp_data);
+                
+                //tick();
                 
                 jQuery("div#frontPage").hide("slide", { direction: "left" }, "slow", function() {
                     jQuery("div#gamePage").show("slide", { direction: "right" }, "slow");
@@ -198,6 +298,11 @@ jQuery(document).ready(function () {
             requestAnimationFrame(tick);
             
             console.log( 'gameClient: called tick' );
+        };
+        
+        draw = function () {
+            requestAnimationFrame(draw);
+            
         };
 
         // define privileged functions
