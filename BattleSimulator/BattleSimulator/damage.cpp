@@ -3,6 +3,7 @@
 #include "unit.h"
 #include "ability.h"
 #include "status.h"
+#include <algorithm>
 
 DamageNode::DamageNode(int amount, DamageRating rating, DamageType type, DamageNode* next)
 	: start(Damage::getDamageValue(rating, amount)), amount(start), final(0), rating(rating), type(type), next(next)
@@ -60,13 +61,13 @@ int DamageNode::apply(Unit* target)
 		return -totalDamage;
 }
 
-void DamageNode::print() const 
+void DamageNode::print(ostream& out) const 
 {
 	if (type != DAMAGE_HEALING)
-	   cout << " " << final << " (" << start << ") " << toStringDT(type);
+	   out << " " << final << " (" << start << ") " << toStringDT(type);
 	else
-	   cout << " " << final << " (" << start << ") " << toStringDT(type);
-    if (next) next->print();
+	   out << " " << final << " (" << start << ") " << toStringDT(type);
+    if (next) next->print(out);
 }
 
 void Damage::apply()
@@ -109,19 +110,19 @@ void Damage::apply()
 	}
 }
 
-void Damage::print() const
+void Damage::print(ostream& out) const
 {
 	if (head) {
 		if (head->type != DAMAGE_HEALING)
-			cout << " does";
+			out << " does";
 		else
-			cout << " grants";
-		head->print();
+			out << " grants";
+		head->print(out);
 		// Look at first node to determine whether it is healing or damage
 		if (head->type != DAMAGE_HEALING)
-			cout << " damage to " << target->getName();
+			out << " damage to " << target->getName();
 		else
-			cout << " to " << target->getName();
+			out << " to " << target->getName();
 	}
 }
 

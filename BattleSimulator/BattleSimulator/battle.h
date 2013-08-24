@@ -3,8 +3,7 @@
 
 #include "pch.h"
 
-#include "gridpoint.h"
-#include "group.h"
+#include <vector>
 
 class Battle
 {
@@ -15,6 +14,11 @@ private:
 	int roundNumber;
 	int turnIndex;
 	vector<Unit*> unitOrder;
+
+	Unit* mainUnit;
+	Unit* respondUnit;
+	Ability* mainAbility;
+	Ability* respondAbility;
 	vector<Event*> eventStack;
 
 	bool isOver;
@@ -25,24 +29,14 @@ public:
 		return unitOrder.size();
 	}
 
-	Group* getAllyGroup(int gid) const {
-		if (gid == group1->getGrid())
-			return group1;
-		else
-			return group2;
-	}
-
-	Group* getEnemyGroup(int gid) const {
-		if (gid != group1->getGrid())
-			return group1;
-		else
-			return group2;
-	}
+	Group* getAllyGroup(int gid) const;
+	Group* getEnemyGroup(int gid) const;
 
 	bool isBattleOver() const;
 	void initializeUnits();
 	void newUnitOrder();
 	void executeTurn();
+	void cleanupTurn();
     void addToEventStack(Event* event);
     
 	void simulate();

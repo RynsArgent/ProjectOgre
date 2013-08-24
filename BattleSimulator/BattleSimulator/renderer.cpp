@@ -5,7 +5,7 @@
 #include "battle.h"
 #include "event.h"
 #include "action.h"
-
+#include <sstream>
 #include <vector>
 
 Renderer::Renderer(double edgeLeft, double edgeRight, double edgeTop, double edgeBottom)
@@ -100,8 +100,14 @@ void Renderer::render(Group* group, Direction dir, double centerx, double center
 
 void Renderer::render(Battle* battle) const
 {
-	render(battle->group1, DIRECTION_NORTH, 0.5, 0.75, 0.40, 0.40);
-	render(battle->group2, DIRECTION_SOUTH, 0.5, 0.25, 0.40, 0.40);
+	render(battle->group1, DIRECTION_NORTH, 0.75, 0.75, 0.40, 0.40);
+	render(battle->group2, DIRECTION_SOUTH, 0.75, 0.25, 0.40, 0.40);
+
+	for (int i = 0; i < battle->eventStack.size(); ++i) {
+		stringstream ss;
+		battle->eventStack[i]->print(ss);
+		GLoutputString(0, 0.05 + 0.05 * i, ss.str(), 1.0, 1.0, 1.0, GLUT_BITMAP_HELVETICA_12);
+	}
 }
 
 Renderer::~Renderer()

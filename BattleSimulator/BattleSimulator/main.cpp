@@ -135,7 +135,8 @@ void GLprocessMouse(int button, int state, int x, int y)
 {
 	if (state == GLUT_DOWN)
 	{
+		battle->cleanupTurn();
 		battle->executeTurn();
-		glutPostRedisplay();
+		GLrender();
 	}
 }

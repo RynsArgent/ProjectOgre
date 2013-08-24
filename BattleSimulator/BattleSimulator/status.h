@@ -3,10 +3,10 @@
 
 #include "pch.h"
 
-#include <algorithm>
 #include "action.h"
 #include "event.h"
 #include "unit.h"
+#include <fstream>
 
 // All Status Effects share this result object when merging data
 // The value variables are ambiguous and can be used for anything 
@@ -594,7 +594,7 @@ public:
 		if (trigger != NULL) trigger->currentEffects.push_back(this);
 	}
     
-	virtual void print() const;
+	virtual void print(ostream& out) const;
 
 	~Effect() {}
 };	

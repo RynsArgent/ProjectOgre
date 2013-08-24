@@ -3,6 +3,7 @@
 
 #include "pch.h"
 
+#include <fstream>
 #include <vector>
 
 struct DamageNode
@@ -28,7 +29,7 @@ struct DamageNode
 		next = NULL;
 	}
 
-    void print() const;
+    void print(ostream& out) const;
     
 	~DamageNode() {}
 };
@@ -68,7 +69,7 @@ struct Damage
 		tail = NULL;
 	}
 
-    void print() const;
+    void print(ostream& out) const;
     
 	~Damage() {
 		clean();

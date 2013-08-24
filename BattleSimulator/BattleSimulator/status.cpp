@@ -6,6 +6,7 @@
 #include "damage.h"
 #include "event.h"
 #include "target.h"
+#include "group.h"
 #include "battle.h"
 
 bool Status::hasExpired() const {
@@ -671,6 +672,6 @@ void StatusTangleTrap::onPostBecomeTarget(Targeter* system)
 	}
 }
 
-void Effect::print() const
+void Effect::print(ostream& out) const
 {
 }

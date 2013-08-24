@@ -4,7 +4,7 @@
 #include "pch.h"
 
 #include "action.h"
-#include "event.h"
+#include <fstream>
 #include <vector>
 
 // Base class for abilities
@@ -32,11 +32,7 @@ public:
 	}
     
 	// Most abilities will have their logic implemented in this function
-	virtual void action(Ability* previous, Unit* current, Battle* battle) {
-        this->source = current;
-        this->battle = battle;
-		Event* event = new Event(this);
-    };
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
     
     bool isRespondable() const { return respondable; }
     bool isInterruptible() const { return interruptible; }
@@ -50,7 +46,7 @@ public:
 	// Because if the unit is, the ability is probably cancelled
     bool checkpoint(Unit* current);
     
-    virtual void print() const;
+    virtual void print(ostream& out) const;
     
 	~Ability();
 };

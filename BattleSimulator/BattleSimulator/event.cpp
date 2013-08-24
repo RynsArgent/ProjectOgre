@@ -8,7 +8,7 @@
 #include <cstdlib>
 
 Event::Event(Action* ref, int chance)
-	: ref(ref), chance(chance), success(true)
+	: ref(ref), chance(chance), success(true), desc("")
 {
     if (ref) {
         ref->addEvent(this);
@@ -67,10 +67,10 @@ void Event::apply()
 {
 }
 
-void Event::print() const
+void Event::print(ostream& out) const
 {
 	if (ref->getAction() != EFFECT_TRIGGER)
-		cout << ref->getSource()->getName() << " readies " << ref->getName() << endl;
+		out << ref->getSource()->getName() << " readies " << ref->getName() << endl;
 }
 
 Event::~Event()
@@ -84,17 +84,17 @@ void EventCauseDamage::apply()
 		damage->apply();
 }
 
-void EventCauseDamage::print() const
+void EventCauseDamage::print(ostream& out) const
 {
-    cout << ref->getSource()->getName() << "'s " << ref->getName();
+    out << ref->getSource()->getName() << "'s " << ref->getName();
     if (damage) {
 		if (success) {
-			damage->print();
+			damage->print(out);
 		} else {
-			cout << " misses " << damage->target->getName();
+			out << " misses " << damage->target->getName();
 		}
 	}
-    cout << endl;
+    out << endl;
 }
 
 EventCauseDamage::~EventCauseDamage()
@@ -109,17 +109,17 @@ void EventCauseStatus::apply()
 		status->getEffect()->addStatus(status);
 }
 
-void EventCauseStatus::print() const
+void EventCauseStatus::print(ostream& out) const
 {
-    cout << ref->getSource()->getName() << "'s " << ref->getName();
+    out << ref->getSource()->getName() << "'s " << ref->getName();
     if (status) {
 		if (success) {
-			cout << " applies " << status->getEffect()->getName() << " to " << status->getTarget()->getName();
+			out << " applies " << status->getEffect()->getName() << " to " << status->getTarget()->getName();
 		} else {
-			cout << " fizzles on " << status->getTarget()->getName();
+			out << " fizzles on " << status->getTarget()->getName();
 		}
     }
-    cout << endl;
+    out << endl;
 }
 
 EventCauseStatus::~EventCauseStatus()
@@ -147,14 +147,14 @@ void EventRemoveStatus::apply()
 	}
 }
 
-void EventRemoveStatus::print() const
+void EventRemoveStatus::print(ostream& out) const
 {
     if (removedResult) {
-		cout << ref->getSource()->getName() << "'s " << ref->getName();
+		out << ref->getSource()->getName() << "'s " << ref->getName();
 		if (removedResult) {
-			cout << " removes " << removedResult->getSubname() << " from " << target->getName();
+			out << " removes " << removedResult->getSubname() << " from " << target->getName();
 		}
-		cout << endl;
+		out << endl;
     }
 }
 

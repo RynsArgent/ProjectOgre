@@ -2,10 +2,12 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include "event.h"
 #include "unit.h"
 #include "target.h"
 #include "damage.h"
 #include "status.h"
+#include "group.h"
 #include "battle.h"
 
 Ability* Ability::getAbility(Skill skill)
@@ -85,6 +87,13 @@ bool Ability::isAbleToRespond(Ability* previous, Ability* current)
 	return false;
 }
 
+void Ability::action(Ability* previous, Unit* current, Battle* battle) 
+{
+	this->source = current;
+	this->battle = battle;
+	Event* event = new Event(this);
+};
+
 Targeter* Ability::retrieveFirstPrimaryTargeter() const
 {
 	for (int i = 0; i < targeters.size(); ++i)
@@ -105,7 +114,7 @@ bool Ability::checkpoint(Unit* current)
     return isCancelled();
 }
 
-void Ability::print() const
+void Ability::print(ostream& out) const
 {
 }
 

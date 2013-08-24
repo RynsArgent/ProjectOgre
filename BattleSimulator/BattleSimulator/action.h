@@ -35,7 +35,7 @@ public:
     
     void addEvent(Event* event);
 
-    virtual void print() const = 0;
+    virtual void print(ostream& out) const = 0;
     
     ~Action();
 };

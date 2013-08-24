@@ -5,6 +5,9 @@
 #include "status.h"
 #include "ability.h"
 #include "target.h"
+#include "unit.h"
+#include "gridpoint.h"
+#include "group.h"
 
 // Used to determine unit order, faster units are sorted to the front of the list
 bool compareSpeed(Unit* lhs, Unit* rhs) {
@@ -14,7 +17,9 @@ bool compareSpeed(Unit* lhs, Unit* rhs) {
 }
 
 Battle::Battle(Group* group1, Group* group2)
-	: group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), eventStack(), isOver(false)
+	: group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), 
+	mainUnit(NULL), respondUnit(NULL), mainAbility(NULL), respondAbility(NULL),
+	eventStack(), isOver(false)
 {
 	group1->turnToFace(FACING_FORWARD);
 	group2->turnToFace(FACING_FORWARD);
@@ -27,6 +32,21 @@ bool Battle::isBattleOver() const
 {
 	return isOver;
 }
+
+Group* Battle::getAllyGroup(int gid) const {
+	if (gid == group1->getGrid())
+		return group1;
+	else
+		return group2;
+}
+
+Group* Battle::getEnemyGroup(int gid) const {
+	if (gid != group1->getGrid())
+		return group1;
+	else
+		return group2;
+}
+
 
 void Battle::initializeUnits()
 {
@@ -60,53 +80,53 @@ void Battle::executeTurn()
 	}
 
 	// Retrieve the next unit in the turn list
-	Unit* unit1 = unitOrder[turnIndex];
+	mainUnit = unitOrder[turnIndex];
 	
 	// Process unit ongoing effects
-	unit1->processEffects();
+	mainUnit->processEffects();
 
-    Ability* mainAbility = NULL;
+    mainAbility = NULL;
 	// Perform the unit ability based on its position
-	if (unit1 && unit1->isAvailable())
+	if (mainUnit && mainUnit->isAvailable())
 	{
-		unit1->setCurrentSkill(NO_STANDARD_SKILL);
-		unit1->setCurrentTier(2);
+		mainUnit->setCurrentSkill(NO_STANDARD_SKILL);
+		mainUnit->setCurrentTier(2);
 
 		// Activate any status effects that occur on preparing for abilities
-		for (int i = 0; i < unit1->getCurrentStatus().size(); ++i) {
-			unit1->getCurrentStatus()[i]->onSelectAbility(unit1);
+		for (int i = 0; i < mainUnit->getCurrentStatus().size(); ++i) {
+			mainUnit->getCurrentStatus()[i]->onSelectAbility(mainUnit);
 		}
 
-		unit1->setCurrentSkill(Ability::selectSkill(unit1));
+		mainUnit->setCurrentSkill(Ability::selectSkill(mainUnit));
 
 		// Execute the ability
-		mainAbility = Ability::getAbility(unit1->getCurrentSkill());
-		mainAbility->action(NULL, unit1, this);
+		mainAbility = Ability::getAbility(mainUnit->getCurrentSkill());
+		mainAbility->action(NULL, mainUnit, this);
 	}
 
 	// Response ability
-	Ability* respondAbility = NULL;
+	respondAbility = NULL;
 	if (mainAbility != NULL)
 	{
 		Targeter* mainTargeter = mainAbility->retrieveFirstPrimaryTargeter();
 		if (mainTargeter != NULL)
 		{
-			Unit* unit2 = mainTargeter->getPrimary();
-			if (unit2 != NULL && mainTargeter->provoked)
+			respondUnit = mainTargeter->getPrimary();
+			if (respondUnit != NULL && mainTargeter->provoked)
 			{
-				unit2->setCurrentSkill(NO_STANDARD_SKILL);
-				unit2->setCurrentTier(1);
+				respondUnit->setCurrentSkill(NO_STANDARD_SKILL);
+				respondUnit->setCurrentTier(1);
 
 				// Activate any status effects that occur on preparing for abilities
-				for (int i = 0; i < unit2->getCurrentStatus().size(); ++i) {
-					unit2->getCurrentStatus()[i]->onSelectAbility(unit2);
+				for (int i = 0; i < respondUnit->getCurrentStatus().size(); ++i) {
+					respondUnit->getCurrentStatus()[i]->onSelectAbility(respondUnit);
 				}
 				
-				unit2->setCurrentSkill(Ability::selectSkill(unit2));
+				respondUnit->setCurrentSkill(Ability::selectSkill(respondUnit));
 
-				respondAbility = Ability::getAbility(unit2->getCurrentSkill());
+				respondAbility = Ability::getAbility(respondUnit->getCurrentSkill());
 				if (Ability::isAbleToRespond(mainAbility, respondAbility))
-					respondAbility->action(mainAbility, unit2, this);
+					respondAbility->action(mainAbility, respondUnit, this);
 			}
 		}
 	}
@@ -119,22 +139,31 @@ void Battle::executeTurn()
 		isOver = true;
 	
     print();
-
-    // Clean up turn data
-	for (int i = 0; i < eventStack.size(); ++i)
-		delete eventStack[i];
-	eventStack.clear();
-    if (mainAbility) delete mainAbility;
-	if (respondAbility) delete respondAbility;
-	// Clean up ended effects, this must be after deleted event stacks because the event stack
-	// references effect names
-	unit1->cleanEffects();
     
 	// Increment to the next turn
 	++turnIndex;
 	
 	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
 	sort(unitOrder.begin() + turnIndex, unitOrder.end(), compareSpeed);
+}
+
+void Battle::cleanupTurn()
+{
+    // Clean up turn data
+	for (int i = 0; i < eventStack.size(); ++i)
+		delete eventStack[i];
+	eventStack.clear();
+    if (mainAbility) {
+		delete mainAbility;
+		mainAbility = NULL;
+	}
+	if (respondAbility) {
+		delete respondAbility;
+		respondAbility = NULL;
+	}
+	// Clean up ended effects, this must be after deleted event stacks because the event stack
+	// references effect names
+	if (mainUnit) mainUnit->cleanEffects();
 }
 
 void Battle::addToEventStack(Event* event) {
@@ -163,7 +192,7 @@ void Battle::print() const
 	cout << "--------------------------------------------------" << endl;
 	
     for (int i = 0; i < eventStack.size(); ++i)
-        eventStack[i]->print();
+        eventStack[i]->print(cout);
 	
 	cout << "--------------------------------------------------" << endl;
 

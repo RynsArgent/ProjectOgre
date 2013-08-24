@@ -3,6 +3,9 @@
 
 #include "pch.h"
 
+#include <fstream>
+#include <string>
+
 // Tracks a result of an Action.
 struct Event
 {
@@ -20,6 +23,8 @@ struct Event
 	int chance;
 	bool success;
 
+	string desc;
+
 	Event(Action* ref = NULL, int chance = 100);
 
     // Apply Event abilities if the odds were a success on a target Unit
@@ -27,7 +32,7 @@ struct Event
 	void determineSuccess(Unit* target);
 
 	virtual void apply();
-    virtual void print() const;
+    virtual void print(ostream& out) const;
     
 	~Event();
 };
@@ -41,8 +46,8 @@ struct EventCauseDamage : public Event
 	{}
 	
 	virtual void apply();
-    virtual void print() const;
-	
+    virtual void print(ostream& out) const;
+
 	~EventCauseDamage();
 };
 
@@ -55,7 +60,7 @@ struct EventCauseStatus : public Event
 	{}
 	
 	virtual void apply();
-    virtual void print() const;
+    virtual void print(ostream& out) const;
 
 	~EventCauseStatus();
 };
@@ -72,7 +77,7 @@ struct EventRemoveStatus : public Event
 	{}
 
 	virtual void apply();
-    virtual void print() const;
+    virtual void print(ostream& out) const;
 	
 	~EventRemoveStatus();
 };
