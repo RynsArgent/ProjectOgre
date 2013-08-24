@@ -514,7 +514,6 @@ public:
 				status[i]->onKill();
 			}
 		}
-		cleanStatus();
 	}
 	
 	// Cleans up any expired status effects, removing links and trigger onKill
@@ -534,6 +533,8 @@ public:
 		}
 		nstatus.resize(c);
 		status = nstatus;
+		
+		cleanStatus();
 	}
 
 	Status* findStatus(const string & subname, Unit* target)
