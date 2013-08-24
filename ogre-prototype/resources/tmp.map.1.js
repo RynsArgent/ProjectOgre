@@ -15,6 +15,8 @@ var tmp_data = {
 	},
 	width : 100,
 	height : 100,
+	tilePixelWidth : 32,
+	tilePixelHeight : 32,
 	matrix : [
 		['wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','ws','ws','ws','wb','pf','pf','pf','pf','df','df','wb','ws','ws','ws','ws','wo','ws','ws','wb','wb','wb','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','dm','dm','dm','dm','dm','dm','dm','dm','dm','df','df','dm','dm','dn','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm'],
 		['wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','wo','ws','ws','wb','wb','pf','pf','pf','pf','df','dn','wb','wb','ws','ws','ws','ws','ws','ws','wb','wb','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','df','dm','dm','dm','dm','dm','dm','dm','dm','df','df','df','dm','dm','dm','dn','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm','dm'],

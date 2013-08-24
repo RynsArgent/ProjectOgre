@@ -122,8 +122,8 @@ var createTile = function (params) {
 };
 
 var createMap = function (data) {//(rows, columns, tileWidthInPixels, tileHeightInPixels) {
-    var rows = data.rows,
-        columns = data.columns,
+    var rows = data.rows || data.height,
+        columns = data.columns || data.width,
         tileWidthInPixels = data.tilePixelWidth,
         tileHeightInPixels = data.tilePixelHeight,
         tilemap = [],
@@ -160,12 +160,14 @@ var createMap = function (data) {//(rows, columns, tileWidthInPixels, tileHeight
         getHeightInPixels : function () {
             return rows * tileHeightInPixels;
         },
-        numberOfRows : function () {
-            return rows;
+        getTileWidthInPixels : function () {
+            return tileWidthInPixels;
         },
-        numberOfColums : function () {
-            return columns;
+        getTileHeightInPixels : function () {
+            return tileHeightInPixels;
         },
+        numberOfRows : rows,
+        numberOfColumns : columns,
         getTileMap : function () {
             return tilemap;
         },
@@ -245,21 +247,30 @@ jQuery(document).ready(function () {
             bgContext = bgCanvas.getContext('2d'),
             stContext = stCanvas.getContext('2d'),
             mainContext = mainCanvas.getContext('2d'),
-            fgContext = fgContext.getContext('2d');
+            fgContext = fgCanvas.getContext('2d'),
             
-            bgCanvas.width = document.body.clientWidth;
-            bgCanvas.height = document.body.clientHeight;
+            gamescreen = {
+                width : document.body.clientWidth,
+                height : document.body.clientHeight
+            },
+            
+            scroll = {x: 0, y: 0},
+            
+            map;
+            
+            bgCanvas.width = gamescreen.width;
+            bgCanvas.height = gamescreen.height;
             
             console.log( "bgCanvas width: " + bgCanvas.width );
             
-            stCanvas.width = document.body.clientWidth;
-            stCanvas.height = document.body.clientHeight;
+            stCanvas.width = gamescreen.width;
+            stCanvas.height = gamescreen.height;
             
-            mainCanvas.width = document.body.clientWidth;
-            mainCanvas.height = document.body.clientHeight;
+            mainCanvas.width = gamescreen.width;
+            mainCanvas.height = gamescreen.height;
             
-            fgCanvas.width = document.body.clientWidth;
-            fgCanvas.height = document.body.clientHeight;
+            fgCanvas.width = gamescreen.width;
+            fgCanvas.height = gamescreen.height;
 
         // connection communications //
         // Handle when we connect to the server, showing state and storing id's.
@@ -283,9 +294,10 @@ jQuery(document).ready(function () {
                 // TODO: we need to also grab the map data from the server.
                 // but for now we are going to cheat and use a pre-defined
                 // map data file
-                createMap(tmp_data);
+                map = createMap(tmp_data);
                 
                 //tick();
+                draw();
                 
                 jQuery("div#frontPage").hide("slide", { direction: "left" }, "slow", function() {
                     jQuery("div#gamePage").show("slide", { direction: "right" }, "slow");
@@ -303,12 +315,72 @@ jQuery(document).ready(function () {
         draw = function () {
             requestAnimationFrame(draw);
             
+            bgContext.fillStyle = '#ffffff';
+            bgContext.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            
+            var startRow = Math.floor(scroll.x / map.getTileWidthInPixels()), 
+                startCol = Math.floor(scroll.y / map.getTileHeightInPixels()), 
+                
+                rowCount = startRow + Math.floor(bgCanvas.width / map.getTileWidthInPixels()) + 1, 
+                colCount = startCol + Math.floor(bgCanvas.height / map.getTileHeightInPixels()) + 1,
+
+                row, col,
+                tilePositionX, tilePositionY,
+                tile, img;
+                
+            if ((startRow + rowCount) > map.numberOfRows) {
+                rowCount = map.numberOfRows;
+            }
+            
+            if ((startCol + colCount) > map.numberOfColumns) {
+                colCount = map.numberOfColumns;
+            }
+            /*console.log({
+                label : "executing draw",
+                scroll : scroll,
+                tilepixelwidth : map.getTileWidthInPixels(),
+                tilepixelheight : map.getTileHeightInPixels(),
+                startRow : startRow,
+                startCol : startCol,
+                rowCount : rowCount,
+                colCount : colCount,
+                numOfRows : map.numberOfRows,
+                numOfCols : map.numberOfColumns
+            });*/
+            for (row = startRow; row < rowCount && row < map.numberOfRows; row += 1) {
+                for (col = startCol; col < colCount && col < map.numberOfColumns; col += 1) {
+                    tilePositionX = map.getTileWidthInPixels() * row;
+                    tilePositionY = map.getTileHeightInPixels() * col;
+                    
+                    tilePositionX -= scroll.x;
+                    tilePositionY -= scroll.y;
+                    
+                    tile = map.getTileAt(row, col);
+                    img = tile.getBackgroundImage();
+                    
+                    bgContext.drawImage(img,
+                        tilePositionX, 
+                        tilePositionY,
+                        map.getTileWidthInPixels(),
+                        map.getTileHeightInPixels());
+                    //console.log(tile);
+                    //console.log(img);
+                }
+            }
         };
 
         // define privileged functions
         return {
             requestLogin : function (username) {
                 socket.emit('requestlogin', username);
+            },
+            
+            screenDimension : function () {
+                return gamescreen;
+            },
+            
+            scroll : function () {
+                return scroll;
             }
         };
         
