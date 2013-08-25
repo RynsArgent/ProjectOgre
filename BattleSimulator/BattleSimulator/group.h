@@ -21,6 +21,8 @@ private:
 	vector<vector<Unit*> > grid; // Modified representation of units due to facing and battle
 	Facing facing;
 	
+	Unit* leader;
+
 	vector<Unit*> dead; // Collects dead units in battle
 
 	void carryOverFormationStatistics();
@@ -63,7 +65,17 @@ public:
 	void setUnitAt(const GridPoint & p, Unit* unit) {
 		grid[p.x][p.y] = unit;
 	}
-	
+
+	Unit* getLeader() const {
+		return leader;
+	}
+	void setLeader(Unit* value) {
+		if (leader != NULL)
+			leader->setLeader(false);
+		leader = value;
+		value->setLeader(true);
+	}
+
     vector<GridPoint> getAvailablePoints() const {
         vector<GridPoint> ret;
         for (int x = 0; x < width; ++x)

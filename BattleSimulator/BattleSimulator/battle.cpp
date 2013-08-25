@@ -16,8 +16,8 @@ bool compareSpeed(Unit* lhs, Unit* rhs) {
 		 lhs->getCurrentInitiative() > rhs->getCurrentInitiative());
 }
 
-Battle::Battle(Group* group1, Group* group2)
-	: group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), 
+Battle::Battle(int seed, Group* group1, Group* group2)
+	: seed(seed), group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), 
 	mainUnit(NULL), respondUnit(NULL), mainAbility(NULL), respondAbility(NULL),
 	eventStack(), isOver(false)
 {
@@ -75,6 +75,8 @@ void Battle::executeTurn()
 	// Determine whether a new round started
 	if (turnIndex < 0 || turnIndex >= unitOrder.size())
 	{
+		for (int i = 0; i < unitOrder.size(); ++i)
+			unitOrder[i]->setDone(false);
 		turnIndex = 0;
 		++roundNumber;
 	}
@@ -141,6 +143,7 @@ void Battle::executeTurn()
     print();
     
 	// Increment to the next turn
+	mainUnit->setDone(true);
 	++turnIndex;
 	
 	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds

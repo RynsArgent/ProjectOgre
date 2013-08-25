@@ -6,10 +6,11 @@
 #include "event.h"
 #include "action.h"
 #include <sstream>
+#include <cmath>
 #include <vector>
 
 Renderer::Renderer(double edgeLeft, double edgeRight, double edgeTop, double edgeBottom)
-	: edgeLeft(edgeLeft), edgeRight(edgeRight), edgeTop(edgeTop), edgeBottom(edgeBottom)
+	: edgeLeft(edgeLeft), edgeRight(edgeRight), edgeTop(edgeTop), edgeBottom(edgeBottom), battle(NULL)
 {
 }
 
@@ -26,7 +27,19 @@ void Renderer::GLoutputString(double x, double y, const string & str,
 	}
 }
 
-void Renderer::render(Unit* unit, double centerx, double centery, double width, double height) const
+void Renderer::GLoutputString(double x, double y, const string & str, 
+								const Color & col,
+								void* font)
+{
+	glColor3d(col.r, col.g, col.b);
+	glRasterPos2f(x, y);
+	for (unsigned i = 0; i < str.length(); i++) 
+	{
+		glutBitmapCharacter(font, str[i]);
+	}
+}
+
+void Renderer::render(Unit* unit, double centerx, double centery, double width, double height)
 {
 	double xpos, ypos;
 
@@ -51,11 +64,26 @@ void Renderer::render(Unit* unit, double centerx, double centery, double width, 
 	glVertex2d(xpos + scaledWidth, ypos + barHeight);
 	glVertex2d(xpos, ypos + barHeight);
 	glEnd();
-	GLoutputString(xpos + width / 10, ypos + 2 * barHeight, toStringInt(unit->getCurrentHealth()) + "/" + toStringInt(unit->getMaxHealth()), 0.0, 0.0, 1.0);
-	GLoutputString(xpos + width / 10, ypos + 3 * barHeight, unit->getName(), 0.0, 0.0, 1.0);
+
+	Color colText;
+	if (battle->mainUnit && battle->mainUnit == unit)
+		colText = Color(0.0, 1.0, 0.0);
+	else
+	{
+		if (unit->isDone())
+			colText = Color(0.2, 0.2, 0.2);
+		else
+			colText = Color(0.0, 0.0, 1.0);
+	}
+	string descLeader = unit->isLeader() ? "***" : "";
+	string descHP = toStringInt(unit->getCurrentHealth()) + "/" + toStringInt(unit->getMaxHealth());
+	string descName = unit->getName();
+	GLoutputString(xpos + max(barWidth * 0.30, scaledWidth) / 2 - width / 10, ypos + 1 * barHeight, descLeader, colText);
+	GLoutputString(xpos + width / 10, ypos + 2 * barHeight, descHP, colText);
+	GLoutputString(xpos + width / 10, ypos + 3 * barHeight, descName, colText);
 }
 
-void Renderer::render(Group* group, Direction dir, double centerx, double centery, double width, double height) const
+void Renderer::render(Group* group, Direction dir, double centerx, double centery, double width, double height)
 {
 	vector<Unit*> units = group->allyUnits();
 	double dx = width / (group->getWidth());
@@ -98,8 +126,10 @@ void Renderer::render(Group* group, Direction dir, double centerx, double center
 	}
 }
 
-void Renderer::render(Battle* battle) const
+void Renderer::render(Battle* battle)
 {
+	this->battle = battle;
+
 	render(battle->group1, DIRECTION_NORTH, 0.75, 0.75, 0.40, 0.40);
 	render(battle->group2, DIRECTION_SOUTH, 0.75, 0.25, 0.40, 0.40);
 
@@ -108,6 +138,7 @@ void Renderer::render(Battle* battle) const
 		battle->eventStack[i]->print(ss);
 		GLoutputString(0, 0.05 + 0.05 * i, ss.str(), 1.0, 1.0, 1.0, GLUT_BITMAP_HELVETICA_12);
 	}
+	GLoutputString(0.01, 0.99, "seed: " + toStringInt(battle->seed), 1.0, 1.0, 1.0, GLUT_BITMAP_HELVETICA_12);
 }
 
 Renderer::~Renderer()

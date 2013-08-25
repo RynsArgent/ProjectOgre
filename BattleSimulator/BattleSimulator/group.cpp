@@ -3,7 +3,7 @@
 static int groupCount = 0;
 
 Group::Group(Formation *formation)
-	: gid(groupCount++), formation(formation), dead(), facing(FACING_FORWARD)
+	: gid(groupCount++), formation(formation), leader(NULL), dead(), facing(FACING_FORWARD)
 {
 	carryOverFormationStatistics();
 }
@@ -22,6 +22,11 @@ void Group::carryOverFormationStatistics()
 				unit->applyCharacterSkillSets();
 				base[x][y] = unit;
 				grid[x][y] = base[x][y];
+				
+				if (formation->getLeaderPosition() == GridPoint(x, y)) {
+					leader = unit;
+					unit->setLeader(true);
+				}
 			}
 			else
 			{

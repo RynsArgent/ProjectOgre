@@ -37,6 +37,8 @@ Battle* battle = NULL;
 Renderer* renderer = new Renderer(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
 
 void initialize() {
+	int seed = time(0);
+	srand(seed);
 	/*
 		*********GROUP A*********
 		FRONT	[0,0] [1,0] [2,0]
@@ -53,7 +55,8 @@ void initialize() {
 	formA->setCharacterAt(1, 1, new Scout("scout2A"), SHOOT, SHOOT, SCOPE);
 	formA->setCharacterAt(2, 1, new Scout("scout3A"), SHOOT, SHOOT, SCOPE);
 	formA->setCharacterAt(1, 2, new Scout("scout4A"), SHOOT, SHOOT, SCOPE);
-	formA->setTargetOrder(TARGET_RANDOM);
+	formA->setLeaderPosition(1, 1);
+	formA->setTargetOrder(TARGET_LEADER);
 	groupA = new Group(formA);
 
 	/*
@@ -73,10 +76,11 @@ void initialize() {
 	formB->setCharacterAt(0, 0, new Scout("scout2B"), TANGLE_TRAP, SHOOT, SCOPE);
 	formB->setCharacterAt(2, 1, new Scout("scout3B"), HASTE, SHOOT, SCOPE);
 	formB->setCharacterAt(0, 1, new Scout("scout4B"), HASTE, SHOOT, SCOPE);
-	formB->setTargetOrder(TARGET_RANDOM);
+	formB->setLeaderPosition(1, 2);
+	formB->setTargetOrder(TARGET_LEADER);
 	groupB = new Group(formB);
 
-	battle = new Battle(groupA, groupB);
+	battle = new Battle(seed, groupA, groupB);
 }
 
 //Converts the provided point, p, from screen coordinates to OpenGL coordinate system 
@@ -110,10 +114,9 @@ int main(int argc, char** argv)
 	glutMouseFunc(GLprocessMouse);
 	gluOrtho2D(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_BOTTOM, VIEWPORT_TOP);
 
-	srand(0);
 	initialize();
 	battle->print();
-
+	
 	glutMainLoop();
 
 	return 0;

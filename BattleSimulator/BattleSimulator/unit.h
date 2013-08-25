@@ -52,6 +52,9 @@ private:
 	int numBuffs;
 	int numNeutrals;
 
+	bool leader;
+	bool done;
+
 	int rValue; // Used to settle ties, can be used for multiple things
 
 	void carryOverCharacterStatistics();
@@ -272,6 +275,22 @@ public:
 		gridY = y;
 	}
 	
+	bool isLeader() const {
+		return leader;
+	}
+
+	void setLeader(bool value) {
+		leader = value;
+	}
+
+	bool isDone() const {
+		return done;
+	}
+
+	void setDone(bool value) {
+		done = value;
+	}
+
 	vector<Effect*> getCurrentEffects() const {
 		return currentEffects;
 	}

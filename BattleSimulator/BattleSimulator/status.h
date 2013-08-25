@@ -533,8 +533,6 @@ public:
 		}
 		nstatus.resize(c);
 		status = nstatus;
-		
-		cleanStatus();
 	}
 
 	Status* findStatus(const string & subname, Unit* target)

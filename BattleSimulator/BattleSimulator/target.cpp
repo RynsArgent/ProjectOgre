@@ -75,6 +75,8 @@ void Targeter::set(int n)
 	vector<Unit*> cand = candidates;
 	vector<int> prio = priorities;
 
+	// Add all priority targets to the chosen list (taunt targets)
+	// uses TARGET_RANDOM if multiple priorities exist
     int ni = 0;
 	for (; ni < n && ni < prio.size() && method != TARGET_CONFUSED; ++ni) {
 		int randIndex = rand() % prio.size();
@@ -86,6 +88,7 @@ void Targeter::set(int n)
 		cand.pop_back();
 	}
 
+	// Choose candidates
 	switch (method)
 	{
     case TARGET_CONFUSED:
@@ -135,6 +138,27 @@ void Targeter::set(int n)
 			sort(cand.begin(), cand.end(), compareLifePreferMore);
 			for (; ni < n && cand.size() > 0; ++ni)
 				chosen.push_back(cand[ni]);
+			break;
+		}
+	case TARGET_LEADER:
+		{
+			// Select the leader first from the candidate list
+			for (int i = 0; i < cand.size(); ++i)
+				if (cand[i]->isLeader())
+				{
+					chosen.push_back(cand[i]);
+					cand[i] = cand[cand.size() - 1];
+					cand.pop_back();
+					++ni;
+
+					break;
+				}
+			for (; ni < n && cand.size() > 0; ++ni) {
+				int randIndex = rand() % cand.size();
+				chosen.push_back(cand[randIndex]);
+				cand[randIndex] = cand[cand.size() - 1];
+				cand.pop_back();
+			}
 			break;
 		}
 	case TARGET_MOST_DEBUFFS:

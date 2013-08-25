@@ -8,6 +8,7 @@
 class Battle
 {
 private:
+	int seed;
 	Group* group1;
 	Group* group2;
 	
@@ -23,7 +24,7 @@ private:
 
 	bool isOver;
 public:
-	Battle(Group *group1, Group *group2);
+	Battle(int seed, Group *group1, Group *group2);
 
 	int roundLength() const {
 		return unitOrder.size();

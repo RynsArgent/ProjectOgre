@@ -31,7 +31,7 @@ Unit::Unit(Character* character, int gid, int x, int y)
 	basicSkill(NO_STANDARD_SKILL), backSkill(NO_STANDARD_SKILL), midSkill(NO_STANDARD_SKILL), frontSkill(NO_STANDARD_SKILL), 
 	currentSkill(NO_STANDARD_SKILL), currentTier(0),
 	gid(gid), formX(x), formY(y), gridX(x), gridY(y), currentEffects(), currentStatus(),
-	numBuffs(0), numDebuffs(0), numNeutrals(0), rValue(0)
+	numBuffs(0), numDebuffs(0), numNeutrals(0), leader(false), done(false), rValue(0)
 {
 	carryOverCharacterStatistics();
 }
@@ -70,6 +70,9 @@ void Unit::cleanEffects()
 	vector<Effect*> neffects(currentEffects.size());
 	for (int i = 0; i < currentEffects.size(); ++i) {
 		Effect* effect = currentEffects[i];
+
+		effect->cleanStatus();
+
 		if (!effect->isExpired()) {
 			neffects[c] = effect;
 			++c;

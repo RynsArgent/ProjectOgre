@@ -1,7 +1,7 @@
 #include "formation.h"
 
 Formation::Formation()
-	: width(FORMATION_WIDTH), height(FORMATION_HEIGHT), grid(), targetOrder(TARGET_RANDOM)
+	: width(FORMATION_WIDTH), height(FORMATION_HEIGHT), grid(), leaderPosition(-1, -1), targetOrder(TARGET_RANDOM)
 {
 	grid = vector<vector<Character*> >(width, vector<Character*>(height));
 	for (int i = 0; i < width; ++i)

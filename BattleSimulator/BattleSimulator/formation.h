@@ -17,6 +17,7 @@ private:
 	int height;
 
 	vector<vector<Character*> > grid;
+	GridPoint leaderPosition;
 	TargetType targetOrder;
 public:
 	Formation();
@@ -49,6 +50,24 @@ public:
 		character->setBackSkill(backSkill);
 		character->setMidSkill(midSkill);
 		character->setFrontSkill(frontSkill);
+	}
+	
+	GridPoint getLeaderPosition() const {
+		return leaderPosition;
+	}
+	
+	void setLeaderPosition(int x, int y) {
+		leaderPosition = GridPoint(x, y);
+	}
+
+	void setLeaderPosition(const GridPoint & value) {
+		leaderPosition = value;
+	}
+
+	Character* getLeader() const {
+		if (leaderPosition.x < 0 || leaderPosition.y < 0)
+			return NULL;
+		return grid[leaderPosition.x][leaderPosition.y];
 	}
     
 	void setTargetOrder(TargetType targetOrder) {
