@@ -222,7 +222,21 @@ var createMap = function (data) {//(rows, columns, tileWidthInPixels, tileHeight
 
 jQuery(document).ready(function () {
     'use strict';
-    var gameClient;
+    var gameClient,
+        Keys = {
+	        UP : 38,
+	        DOWN : 40,
+	        LEFT : 37,
+	        RIGHT : 39,
+	        W : 87,
+	        S : 83,
+	        A : 65,
+	        D : 68,
+	        w : 119,
+	        s : 115,
+	        a : 97,
+	        d : 100
+        };
     
     jQuery("#enterBtn").click(function(ev) {
         var username = jQuery("#username").val();
@@ -367,7 +381,7 @@ jQuery(document).ready(function () {
                     //console.log(img);
                 }
             }
-        };
+        };  // end draw
 
         // define privileged functions
         return {
@@ -381,10 +395,52 @@ jQuery(document).ready(function () {
             
             scroll : function () {
                 return scroll;
+            },
+            
+            handleKeyboard : function (event) {
+                switch (event.keyCode) {
+                    case Keys.W:
+                    case Keys.w:
+                        if (scroll.y - map.getTileHeightInPixels() >= 0) {
+                            scroll.y -= map.getTileHeightInPixels();
+                        }
+                        break;
+                    case Keys.S:
+                    case Keys.s:
+                        if (scroll.y + map.getTileHeightInPixels() <= 
+                            map.getHeightInPixels() - gamescreen.height) {
+                            
+                            scroll.y += map.getTileHeightInPixels();
+                        }
+                        break;
+                    case Keys.A:
+                    case Keys.a:
+                        if (scroll.x - map.getTileWidthInPixels() >= 0) {
+                            scroll.x -= map.getTileWidthInPixels();
+                        }
+                        break;
+                    case Keys.D:
+                    case Keys.d:
+                        if (scroll.x + map.getTileWidthInPixels() <=
+                            map.getTileWidthInPixels() - gamescreen.width) {
+                            
+                            scroll.x += map.getTileWidthInPixels();   
+                        }
+                        break;
+                }
+                
+                console.log(scroll);
+                
+                jQuery("#scrollx").html(scroll.x);
+                jQuery("#scrolly").html(scroll.y);
             }
         };
         
-    }());
+    }()); // end gameClient
+    
+    jQuery(window).keypress(function(event) {
+        gameClient.handleKeyboard(event);
+    });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////
