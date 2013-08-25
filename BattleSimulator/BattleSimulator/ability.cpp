@@ -153,7 +153,7 @@ void HundredBlades::action(Ability* previous, Unit* current, Battle* battle)
 				Unit* target = targeter->chosen[0];
 				targeter->provoked = true;
 
-				Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
+				Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_LOW, DAMAGE_PHYSICAL);
 
 				Event* log = new EventCauseDamage(this, Event::MELEE_HIT_CHANCE, damage);
 				log->apply();

@@ -139,20 +139,24 @@ int Damage::getDamageValue(DamageRating rating, int base)
 {
 	switch (rating)
 	{
-	case DAMAGE_NONE:
+	case DAMAGE_NONE: // 0%
 		return 0;
-	case DAMAGE_MINOR:
+	case DAMAGE_MINIMAL: // 10%
+		return static_cast<int>((base / 10.0) + 0.5);
+	case DAMAGE_MINOR: // 25%
 		return static_cast<int>((base / 4.0) + 0.5);
-	case DAMAGE_LOW:
+	case DAMAGE_LOW: // 50%
 		return static_cast<int>((base / 2.0) + 0.5);
-	case DAMAGE_MEDIUM:
+	case DAMAGE_MEDIUM: // 100%
 		return base;
-	case DAMAGE_HIGH:
+	case DAMAGE_HIGH: // 150%
 		return static_cast<int>((base * 1.5) + 0.5);
-	case DAMAGE_MASSIVE:
+	case DAMAGE_MASSIVE: // 200%
 		return base * 2;
-	case DAMAGE_COLOSSAL:
+	case DAMAGE_COLOSSAL: // 400$
 		return base * 4;
+	case DAMAGE_UNSTOPPABLE: // 1000%
+		return base * 10;
 	default:
 		return 0;
 	}
