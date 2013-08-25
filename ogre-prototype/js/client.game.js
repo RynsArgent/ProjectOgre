@@ -249,7 +249,7 @@ jQuery(document).ready(function () {
             
             tick, update, animate, draw,
             
-            handleInput,
+            handleInput, resizeScreen,
             
             socket = io.connect(),
             
@@ -263,19 +263,18 @@ jQuery(document).ready(function () {
             mainContext = mainCanvas.getContext('2d'),
             fgContext = fgCanvas.getContext('2d'),
             
-            gamescreen = {
-                width : document.body.clientWidth,
-                height : document.body.clientHeight
-            },
+            gamescreen = {},
             
             scroll = {x: 0, y: 0},
             
             map;
             
+        resizeScreen = function (dimensions) {
+            gamescreen.width = dimensions.width;
+            gamescreen.height = dimensions.height;
+            
             bgCanvas.width = gamescreen.width;
             bgCanvas.height = gamescreen.height;
-            
-            console.log( "bgCanvas width: " + bgCanvas.width );
             
             stCanvas.width = gamescreen.width;
             stCanvas.height = gamescreen.height;
@@ -285,6 +284,13 @@ jQuery(document).ready(function () {
             
             fgCanvas.width = gamescreen.width;
             fgCanvas.height = gamescreen.height;
+        };
+            
+
+        resizeScreen({
+            width : document.body.clientWidth,
+            height : document.body.clientHeight
+        });
 
         // connection communications //
         // Handle when we connect to the server, showing state and storing id's.
@@ -377,8 +383,6 @@ jQuery(document).ready(function () {
                         tilePositionY,
                         map.getTileWidthInPixels(),
                         map.getTileHeightInPixels());
-                    //console.log(tile);
-                    //console.log(img);
                 }
             }
         };  // end draw
@@ -395,6 +399,10 @@ jQuery(document).ready(function () {
             
             scroll : function () {
                 return scroll;
+            },
+            
+            screenResize : function (dimensions) {
+                resizeScreen(dimensions);
             },
             
             handleKeyboard : function (event) {
@@ -422,14 +430,12 @@ jQuery(document).ready(function () {
                     case Keys.D:
                     case Keys.d:
                         if (scroll.x + map.getTileWidthInPixels() <=
-                            map.getTileWidthInPixels() - gamescreen.width) {
+                            map.getWidthInPixels() - gamescreen.width) {
                             
                             scroll.x += map.getTileWidthInPixels();   
                         }
                         break;
                 }
-                
-                console.log(scroll);
                 
                 jQuery("#scrollx").html(scroll.x);
                 jQuery("#scrolly").html(scroll.y);
@@ -438,8 +444,15 @@ jQuery(document).ready(function () {
         
     }()); // end gameClient
     
-    jQuery(window).keypress(function(event) {
+    jQuery(window).keypress(function (event) {
         gameClient.handleKeyboard(event);
+    });
+    
+    jQuery(window).resize(function () {
+        gameClient.screenResize({
+            width: document.body.clientWidth,
+            height: document.body.clientHeight
+        });
     });
 });
 
