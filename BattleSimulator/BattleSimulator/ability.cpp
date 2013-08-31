@@ -38,6 +38,24 @@ Ability* Ability::getAbility(Skill skill)
 		return new Heal();
 	case CLEANSE:
 		return new Cleanse();
+	case REJUVENATE:
+		return new Rejuvenate();
+	case BLIND:
+		return new Blind();
+	case BARRIER:
+		return new Barrier();
+	case POLYMORPH:
+		return new Polymorph();
+	case FIREBALL:
+		return new Fireball();
+	case WATER_JET:
+		return new WaterJet();
+	case ACID_DART:
+		return new AcidDart();
+	case FROST_SHARD:
+		return new FrostShard();
+	case LIGHTNING_BOLT:
+		return new LightningBolt();
 	default:
 		return new NoSkill();
 	}
@@ -84,7 +102,7 @@ bool Ability::isAbleToRespond(Ability* previous, Ability* current)
 	case ABILITY_ATTACK_RANGE:
 		return previous->getAbilityType() == ABILITY_ATTACK_RANGE;
 	}
-	return false;
+	return true;
 }
 
 void Ability::action(Ability* previous, Unit* current, Battle* battle) 
@@ -99,8 +117,9 @@ Targeter* Ability::retrieveFirstPrimaryTargeter() const
 	for (int i = 0; i < targeters.size(); ++i)
 	{
 		Unit* primary = targeters[i]->getPrimary();
-		if (primary && primary->isAvailable())
+		if (primary && primary->isAvailable()) {
 			return targeters[i];
+		}
 	}
 	return NULL;
 }
@@ -191,8 +210,7 @@ void Block::action(Ability* previous, Unit* current, Battle* battle)
 			string name = "Block";
 			Effect* effect = new Effect(current, battle, name, current);
 			
-			Status* status = new StatusBlock(effect, name, target, true, 30);
-			//Status* status = new StatusFlee(effect, "Flee", target);
+			Status* status = new StatusBlock(effect, name, target, true, 1);
 			status->setTimed(true, 1);
 			
 			Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
@@ -265,50 +283,12 @@ void Taunt::action(Ability* previous, Unit* current, Battle* battle)
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status* status = new StatusTaunt(effect, name, targets[i], current);
-		status->setTimed(true, 1);
+		Status* status = new StatusTaunt(effect, name, targets[i], current, 1);
 		
 		Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 		log->apply();
 	}
 	effect->applyEffect();
-	/*
-	string name = "Blind";
-	Effect* effect = new Effect(current, battle, name, current);
-	for (int i = 0; i < targets.size(); ++i)
-	{
-		Status* status = new StatusBlind(effect, name, targets[i]);
-		status->setTimed(true, 1);
-		
-		Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
-		log->apply();
-	}
-	effect->applyEffect();
-	string name = "Mortality";
-	Effect* effect = new Effect(current, battle, name, current);
-	for (int i = 0; i < targets.size(); ++i)
-	{
-		Status* status = new StatusMortality(effect, name, targets[i], 10);
-		status->setTimed(true, 3);
-		
-		Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
-		log->apply();
-	}
-	effect->applyEffect();
-	string name = "Poison";
-	for (int i = 0; i < targets.size(); ++i)
-	{
-		Effect* effect = new Effect(current, battle, name, targets[i]);
-
-		Status* status = new StatusPoison(effect, name, targets[i], 10);
-		status->setTimed(true, 1);
-		
-		Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
-		log->apply();
-
-		effect->applyEffect();
-	}
-	*/
 }
 
 void BattleShout::action(Ability* previous, Unit* current, Battle* battle)
@@ -324,12 +304,12 @@ void BattleShout::action(Ability* previous, Unit* current, Battle* battle)
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status* status = new StatusBattleShout(effect, name, targets[i], 10);
-		//Status* status = new StatusConfusion(effect, "Confusion", targets[i]);
-		//Status* status = new StatusCharm(effect, "Charm", targets[i]);
-		//Status* status = new StatusStun(effect, "Stun", targets[i]);
-		//Status* status = new StatusSleep(effect, "Sleep", targets[i]);
-		//Status* status = new StatusFlee(effect, "Flee", targets[i]);
+		Status* status = new StatusBattleShout(effect, name, targets[i], 1);
+		//Status* status = new StatusConfusion(effect, "Confusion", targets[i], 1);
+		//Status* status = new StatusCharm(effect, "Charm", targets[i], 1);
+		//Status* status = new StatusStun(effect, "Stun", targets[i], 1);
+		//Status* status = new StatusSleep(effect, "Sleep", targets[i], 1);
+		//Status* status = new StatusFlee(effect, "Flee", targets[i], 1);
 		status->setTimed(true, 1);
 
 		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
@@ -401,7 +381,6 @@ void Haste::action(Ability* previous, Unit* current, Battle* battle)
 	for (int i = 0; i < targets.size(); ++i)
 	{
 		Status* status = new StatusHaste(effect, name, targets[i], 1);
-		status->setTimed(true, 1);
 		
 		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 		log->apply();
@@ -422,8 +401,7 @@ void Scope::action(Ability* previous, Unit* current, Battle* battle)
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status* status = new StatusScope(effect, name, targets[i], 10);
-		status->setTimed(true, 1);
+		Status* status = new StatusScope(effect, name, targets[i], 1);
 		
 		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 		log->apply();
@@ -454,8 +432,7 @@ void TangleTrap::action(Ability* previous, Unit* current, Battle* battle)
 			string name = "TangleTrap";
 			Effect* effect = new Effect(current, battle, name, current);
 			
-			Status* status = new StatusTangleTrap(effect, name, target);
-			status->setTimed(true, 1);
+			Status* status = new StatusTangleTrap(effect, name, target, 1);
 			
 			Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 			log->apply();
@@ -474,7 +451,7 @@ void Heal::action(Ability* previous, Unit* current, Battle* battle)
 
 	if (previous != NULL)
 	{
-		if (previous->getSource() != NULL && previous->getSource()->isAvailable())
+		if (previous->getSource() != NULL)
 		{
 			Unit* target = current;
 
@@ -492,7 +469,7 @@ void Heal::action(Ability* previous, Unit* current, Battle* battle)
 	
 		if (targets.size() > 0)
 		{
-			Targeter* targeter = new Targeter(this, targets, TARGET_ALLIES, TARGET_WEAKEST, true);
+			Targeter* targeter = new Targeter(this, targets, TARGET_ALLIES, TARGET_HEALING, true);
 			targeter->set(1);
 
 			if (checkpoint(current)) return;
@@ -532,6 +509,396 @@ void Cleanse::action(Ability* previous, Unit* current, Battle* battle)
 
 			Event* log = new EventRemoveStatus(this, Event::CLEANSE_HIT_CHANCE, target, DEBUFF);
 			log->apply();
+		}
+		targeters.push_back(targeter);
+	}
+}
+
+void Rejuvenate::action(Ability* previous, Unit* current, Battle* battle)
+{   
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	if (previous != NULL)
+	{
+		Unit* target = current;
+
+		string name = "Regeneration";
+		Effect* effect = new Effect(current, battle, name, target);
+	
+		Status* status = new StatusRegeneration(effect, name, target, 1);
+
+		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
+		log->apply();
+			
+		effect->applyEffect();
+	}
+	else
+	{
+		Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	
+		vector<Unit*> targets = allyGroup->allyUnits();
+	
+		if (targets.size() > 0)
+		{
+			Targeter* targeter = new Targeter(this, targets, TARGET_ALLIES, TARGET_HEALING, true);
+			targeter->set(1);
+
+			if (checkpoint(current)) return;
+
+			if (targeter->chosen.size() > 0) {
+				Unit* target = targeter->chosen[0];
+
+				string name = "Regeneration";
+				Effect* effect = new Effect(current, battle, name, current);
+	
+				Status* status = new StatusRegeneration(effect, name, target, 1);
+	
+				Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
+				log->apply();
+			
+				effect->applyEffect();
+			}
+			targeters.push_back(targeter);
+		}
+	}
+}
+
+void Blind::action(Ability* previous, Unit* current, Battle* battle)
+{   
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	if (previous != NULL)
+	{
+		if (previous->getSource() != NULL && previous->getSource()->isAvailable())
+		{
+			Unit* target = previous->getSource();
+
+			string name = "Blind";
+			Effect* effect = new Effect(current, battle, name, target);
+	
+			Status* status = new StatusBlind(effect, name, target, 1);
+
+			Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
+			log->apply();
+			
+			effect->applyEffect();
+		}
+	}
+	else
+	{
+		Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+	
+		vector<Unit*> targets = enemyGroup->allyUnits();
+	
+		if (targets.size() > 0)
+		{
+			Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
+			targeter->set(1);
+
+			if (checkpoint(current)) return;
+
+			if (targeter->chosen.size() > 0) {
+				Unit* target = targeter->chosen[0];
+
+				string name = "Blind";
+				Effect* effect = new Effect(current, battle, name, target);
+	
+				Status* status = new StatusBlind(effect, name, target, 1);
+
+				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
+				log->apply();
+			
+				effect->applyEffect();
+			}
+			targeters.push_back(targeter);
+		}
+	}
+}
+
+void Barrier::action(Ability* previous, Unit* current, Battle* battle)
+{
+    Ability::action(previous, current, battle);
+    
+    if (checkpoint(current)) return;
+    
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	
+	vector<Unit*> targets = allyGroup->allyUnits();
+	string name = "Barrier";
+	Effect* effect = new Effect(current, battle, name, current);
+	for (int i = 0; i < targets.size(); ++i)
+	{
+		Status* status = new StatusBarrier(effect, name, targets[i], 1);
+
+		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
+		log->apply();
+	}
+	effect->applyEffect();
+}
+
+void Polymorph::action(Ability* previous, Unit* current, Battle* battle)
+{   
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+	
+	vector<Unit*> targets = enemyGroup->allyUnits();
+	
+	if (targets.size() > 0)
+	{
+		Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, TARGET_RANDOM, true);
+		targeter->set(1);
+
+		if (checkpoint(current)) return;
+
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+
+			string name = "Polymorph";
+			Effect* effect = new Effect(current, battle, name, target);
+
+			Status* status = new StatusPolymorph(effect, name, target, 1);
+
+			Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
+			log->apply();
+			
+			effect->applyEffect();
+		}
+		targeters.push_back(targeter);
+	}
+}
+
+void Fireball::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+	
+	int rowRange = 2;
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	
+	if (targets.size() > 0)
+	{
+		Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, allyGroup->getTargetOrder(), true);
+		targeter->set(1);
+
+		if (checkpoint(current)) return;
+        
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+			targeter->provoked = true;
+				
+			Damage* damage = new Damage(this, target, current->getCurrentMagicAttack(), DAMAGE_MEDIUM, DAMAGE_FIRE);
+			
+			Event* log = new EventCauseDamage(this, Event::MAGIC_HIT_CHANCE, damage);
+			log->apply();
+				
+			if (damage->final > 0)
+			{
+				string name = "Burn";
+				Effect* effect = new Effect(current, battle, name, target);
+
+				Status* status = new StatusBurn(effect, name, target, 1);
+
+				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
+				log->apply();
+			
+				effect->applyEffect();
+			}
+		}
+		targeters.push_back(targeter);
+	}
+}
+
+void WaterJet::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+	
+	int rowRange = 2;
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	
+	if (targets.size() > 0)
+	{
+		Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, allyGroup->getTargetOrder(), true);
+		targeter->set(1);
+
+		if (checkpoint(current)) return;
+        
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+			targeter->provoked = true;
+				
+			Damage* damage = new Damage(this, target, current->getCurrentMagicAttack(), DAMAGE_MEDIUM, DAMAGE_WATER);
+			
+			Event* log = new EventCauseDamage(this, Event::MAGIC_HIT_CHANCE, damage);
+			log->apply();
+				
+			if (damage->final > 0)
+			{
+				string name = "Flee";
+				Effect* effect = new Effect(current, battle, name, target);
+
+				Status* status = new StatusFlee(effect, name, target, 1);
+
+				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
+				log->apply();
+			
+				effect->applyEffect();
+			}
+		}
+		targeters.push_back(targeter);
+	}
+}
+
+void AcidDart::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+	
+	int rowRange = 2;
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	
+	if (targets.size() > 0)
+	{
+		Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, allyGroup->getTargetOrder(), true);
+		targeter->set(1);
+
+		if (checkpoint(current)) return;
+        
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+			targeter->provoked = true;
+				
+			Damage* damage = new Damage(this, target, current->getCurrentMagicAttack(), DAMAGE_MEDIUM, DAMAGE_EARTH);
+			
+			Event* log = new EventCauseDamage(this, Event::MAGIC_HIT_CHANCE, damage);
+			log->apply();
+				
+			if (damage->final > 0)
+			{
+				string name = "Poison";
+				Effect* effect = new Effect(current, battle, name, target);
+
+				Status* status = new StatusPoison(effect, name, target, 1);
+
+				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
+				log->apply();
+			
+				effect->applyEffect();
+			}
+		}
+		targeters.push_back(targeter);
+	}
+}
+
+void FrostShard::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+	
+	int rowRange = 2;
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	
+	if (targets.size() > 0)
+	{
+		Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, allyGroup->getTargetOrder(), true);
+		targeter->set(1);
+
+		if (checkpoint(current)) return;
+        
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+			targeter->provoked = true;
+				
+			Damage* damage = new Damage(this, target, current->getCurrentMagicAttack(), DAMAGE_MEDIUM, DAMAGE_ICE);
+			
+			Event* log = new EventCauseDamage(this, Event::MAGIC_HIT_CHANCE, damage);
+			log->apply();
+				
+			if (damage->final > 0)
+			{
+				string name = "Chill";
+				Effect* effect = new Effect(current, battle, name, target);
+
+				Status* status = new StatusChill(effect, name, target, 1);
+
+				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
+				log->apply();
+			
+				effect->applyEffect();
+			}
+		}
+		targeters.push_back(targeter);
+	}
+}
+
+void LightningBolt::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+	
+	int rowRange = 2;
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	
+	if (targets.size() > 0)
+	{
+		Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, allyGroup->getTargetOrder(), true);
+		targeter->set(1);
+
+		if (checkpoint(current)) return;
+        
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+			targeter->provoked = true;
+				
+			Damage* damage = new Damage(this, target, current->getCurrentMagicAttack(), DAMAGE_MEDIUM, DAMAGE_LIGHTNING);
+			
+			Event* log = new EventCauseDamage(this, Event::MAGIC_HIT_CHANCE, damage);
+			log->apply();
+				
+			if (damage->final > 0)
+			{
+				string name = "Stun";
+				Effect* effect = new Effect(current, battle, name, target);
+
+				Status* status = new StatusStun(effect, name, target, 1);
+
+				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
+				log->apply();
+			
+				effect->applyEffect();
+			}
 		}
 		targeters.push_back(targeter);
 	}

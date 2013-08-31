@@ -17,6 +17,8 @@ int bound(int value, AttributeType type)
 			return bound(value, 0, 999);
 		case VALUE_SPEED:
 			return bound(value, 0, 10);
+		case VALUE_DAMAGE: 
+			return bound(value, 0, 999);
 		case VALUE_PHYSICAL_ATTACK: 
 			return bound(value, 0, 999);
 		case VALUE_MAGIC_ATTACK:

@@ -45,12 +45,16 @@ void DamageNode::modify(Unit* target)
 
 int DamageNode::apply(Unit* target)
 {
+	cout << final << endl;
+
 	final = bound(amount, VALUE_DAMAGE);
 	int val = target->getCurrentHealth();
 	if (type != DAMAGE_HEALING) val -= final;
 	else val += final;
 	target->setCurrentHealth(val);
 	
+	cout << final << endl;
+
 	int totalDamage = final;
 	if (next)
 		totalDamage += next->apply(target);
@@ -92,8 +96,9 @@ void Damage::apply()
 	}
 
 	// Apply the final damage
-	if (head)
-		final += head->apply(target);
+	if (target->isAlive())
+		if (head)
+			final += head->apply(target);
 
 	// Post Damage Effects
 	for (int i = 0; i < target->getCurrentStatus().size(); ++i)

@@ -393,16 +393,16 @@ void StatusPoison::applyTimedDamage()
 	log->apply();
 
 	/*
-     // Has a nice idea for divided damage, however poison is one type
-     int dividedAmount = amount / damageTypes.size();
-     int dividedRemainder = amount % damageTypes.size();
-     for (int i = 0; i < damageTypes.size(); ++i)
-     {
-     if (i < dividedRemainder)
-     Damage(this, dividedAmount + 1, damageTypes[i]).apply(target);
-     else
-     Damage(this, dividedAmount, damageTypes[i]).apply(target);
-     }
+    // Has a nice idea for divided damage, however poison is one type
+    int dividedAmount = amount / damageTypes.size();
+    int dividedRemainder = amount % damageTypes.size();
+    for (int i = 0; i < damageTypes.size(); ++i)
+    {
+		if (i < dividedRemainder)
+			Damage(this, dividedAmount + 1, damageTypes[i]).apply(target);
+		else
+			Damage(this, dividedAmount, damageTypes[i]).apply(target);
+    }
      */
 }
 
@@ -413,6 +413,133 @@ void StatusPoison::onRound()
 	Status::onRound();
     
 	applyTimedDamage();
+}
+
+StatusMergeResult StatusBleed::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
+void StatusBleed::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
+}
+
+void StatusBleed::applyTimedDamage()
+{
+	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
+	
+	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
+	log->apply();
+}
+
+void StatusBleed::onRound()
+{
+	if (hasExpired())
+		return;
+	Status::onRound();
+    
+	applyTimedDamage();
+}
+
+StatusMergeResult StatusBurn::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
+void StatusBurn::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
+}
+
+void StatusBurn::applyTimedDamage()
+{
+	cout << "amount: " << amount << endl;
+	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_FIRE);
+	
+	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
+	log->apply();
+}
+
+void StatusBurn::onRound()
+{
+	if (hasExpired())
+		return;
+	Status::onRound();
+    
+	applyTimedDamage();
+}
+
+StatusMergeResult StatusRegeneration::getMergeResult() const
+{
+	StatusMergeResult res;
+	return res;
+}
+
+void StatusRegeneration::onMerge(const StatusMergeResult & mergeResult)
+{
+}
+
+void StatusRegeneration::applyTimedHeal()
+{
+	Damage* damage = new Damage(effect, target, Damage::getDamageValue(DAMAGE_LOW, stacks * effect->getSource()->getCurrentMagicAttack()), DAMAGE_HEALING));
+	
+	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
+	log->apply();
+}
+
+void StatusRegeneration::onRound()
+{
+	if (hasExpired())
+		return;
+	Status::onRound();
+    
+	applyTimedHeal();
+}
+
+StatusMergeResult StatusPolymorph::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
+void StatusPolymorph::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
+}
+
+void StatusPolymorph::onPostReceiveDamage(Damage* applier)
+{
+    if (hasExpired())
+        return;
+    
+    if (applier->final > 0)
+        onKill();
+}
+
+void StatusPolymorph::onCheckpoint(Ability* ability)
+{
+    if (hasExpired())
+        return;
+    Status::onCheckpoint(ability);
+    
+    if (ability->isInterruptible())
+        ability->setCancelled(true);
+}
+
+void StatusPolymorph::onSelectAbility(Unit* caster)
+{
+    if (hasExpired())
+        return;
+	Status::onSelectAbility(caster);
+
+	if (caster->getCurrentTier() > 0)
+		caster->setCurrentTier(0);
 }
 
 StatusMergeResult StatusBlind::getMergeResult() const
@@ -558,7 +685,7 @@ void StatusBattleShout::onMerge(const StatusMergeResult & mergeResult)
 
 	/*
 	// This is in case Battle Shout lasts for more than 1 turn, if it does, the damage will begin stacking
-	// So, under the assumption that the amount is the same for each stack. this cancel with onSpawn.
+	// So, uncommenting this will only keep a stack of 10 power
 	int val = target->getCurrentPhysicalAttack();
 	val -= amount;
 	target->setCurrentPhysicalAttack(val);
@@ -578,6 +705,60 @@ void StatusBattleShout::onKill()
 	int val = target->getCurrentPhysicalAttack();
 	val -= amount;
 	target->setCurrentPhysicalAttack(val);
+	Status::onKill();
+}
+
+StatusMergeResult StatusBarrier::getMergeResult() const
+{
+	StatusMergeResult res;
+	res.timer = timer;
+	return res;
+}
+
+void StatusBarrier::onMerge(const StatusMergeResult & mergeResult)
+{
+	timer += mergeResult.timer;
+}
+
+void StatusBarrier::onSpawn()
+{
+	Status::onSpawn();
+	int val;
+	val = target->getCurrentFireDefense();
+	val += amount;
+	target->setCurrentFireDefense(val);
+	val = target->getCurrentWaterDefense();
+	val += amount;
+	target->setCurrentWaterDefense(val);
+	val = target->getCurrentEarthDefense();
+	val += amount;
+	target->setCurrentEarthDefense(val);
+	val = target->getCurrentIceDefense();
+	val += amount;
+	target->setCurrentIceDefense(val);
+	val = target->getCurrentLightningDefense();
+	val += amount;
+	target->setCurrentLightningDefense(val);
+}
+
+void StatusBarrier::onKill()
+{
+	int val;
+	val = target->getCurrentFireDefense();
+	val -= amount;
+	target->setCurrentFireDefense(val);
+	val = target->getCurrentWaterDefense();
+	val -= amount;
+	target->setCurrentWaterDefense(val);
+	val = target->getCurrentEarthDefense();
+	val -= amount;
+	target->setCurrentEarthDefense(val);
+	val = target->getCurrentIceDefense();
+	val -= amount;
+	target->setCurrentIceDefense(val);
+	val = target->getCurrentLightningDefense();
+	val -= amount;
+	target->setCurrentLightningDefense(val);
 	Status::onKill();
 }
 
@@ -603,6 +784,32 @@ void StatusHaste::onKill()
 {
 	int val = target->getCurrentSpeed();
 	val -= amount;
+	target->setCurrentSpeed(val);
+	Status::onKill();
+}
+
+StatusMergeResult StatusChill::getMergeResult() const
+{
+	StatusMergeResult res;
+	return res;
+}
+
+void StatusChill::onMerge(const StatusMergeResult & mergeResult)
+{
+}
+
+void StatusChill::onSpawn()
+{
+	Status::onSpawn();
+	int val = target->getCurrentSpeed();
+	val -= amount;
+	target->setCurrentSpeed(val);
+}
+
+void StatusChill::onKill()
+{
+	int val = target->getCurrentSpeed();
+	val += amount;
 	target->setCurrentSpeed(val);
 	Status::onKill();
 }

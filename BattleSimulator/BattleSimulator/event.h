@@ -12,6 +12,7 @@ struct Event
 	static const int AUTO_HIT_CHANCE = 100;
 	static const int MELEE_HIT_CHANCE = 100;
 	static const int RANGE_HIT_CHANCE = 100;
+	static const int MAGIC_HIT_CHANCE = 100;
 	static const int HEAL_HIT_CHANCE = 100;
 	static const int BUFF_HIT_CHANCE = 100;
 	static const int DEBUFF_HIT_CHANCE = 50;

@@ -18,7 +18,6 @@ Fighter::Fighter(const string & name, ElementType favoredElement, int upkeep)
 		BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
 		BASE_SIZE, favoredElement, upkeep)
 {
-	backSkills.push_back(TAUNT);
 	backSkills.push_back(BATTLE_SHOUT);
 	midSkills.push_back(STRIKE);
 	midSkills.push_back(BLOCK);
@@ -40,4 +39,32 @@ Scout::Scout(const string & name, ElementType favoredElement, int upkeep)
 	frontSkills.push_back(TANGLE_TRAP);
 	frontSkills.push_back(SCOPE);
 	basicSkill = SHOOT;
+}
+
+Acolyte::Acolyte(const string & name, ElementType favoredElement, int upkeep)
+	: Character(name, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
+		BASE_PHYSICAL_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+		BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
+		BASE_SIZE, favoredElement, upkeep)
+{
+	backSkills.push_back(HEAL);
+	backSkills.push_back(CLEANSE);
+	midSkills.push_back(HEAL);
+	midSkills.push_back(REJUVENATE);
+	frontSkills.push_back(HEAL);
+	frontSkills.push_back(BLIND);
+	basicSkill = NO_STANDARD_SKILL;
+}
+
+Mage::Mage(const string & name, ElementType favoredElement, int upkeep)
+	: Character(name, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
+		BASE_PHYSICAL_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+		BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
+		BASE_SIZE, favoredElement, upkeep)
+{
+	// TODO, Skills should be set by favored element
+	backSkills.push_back(BARRIER);
+	midSkills.push_back(POLYMORPH);
+	frontSkills.push_back(BARRIER);
+	basicSkill = NO_STANDARD_SKILL;
 }

@@ -37,6 +37,7 @@ Battle* battle = NULL;
 Renderer* renderer = new Renderer(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
 
 void initialize() {
+	//int seed = 1377511528;
 	int seed = time(0);
 	srand(seed);
 	/*
@@ -45,17 +46,16 @@ void initialize() {
 		MIDDLE	[0,1] [1,1] [2,1]
 		BACK	[0,2] [1,2] [2,2]
 		
-		        100Bl       100Bl
-		        Shoot Shoot Shoot
-					  Scope       
+		        Barr        Barr 
+		              Shoot
+					  Heal       
 	*/
-	formA->setCharacterAt(0, 0, new Fighter("fighter1A"), HUNDRED_BLADES, STRIKE, TAUNT);
-	formA->setCharacterAt(2, 0, new Fighter("fighter2A"), HUNDRED_BLADES, STRIKE, TAUNT);
-	formA->setCharacterAt(0, 1, new Scout("scout1A"), SHOOT, SHOOT, SCOPE);
+	formA->setCharacterAt(0, 0, new Mage("mage1A"), BARRIER, POLYMORPH, POLYMORPH);
+	formA->setCharacterAt(2, 0, new Mage("mage1A"), BARRIER, POLYMORPH, POLYMORPH);
+	formA->setCharacterAt(1, 0, new Scout("scout1A"), HASTE, SHOOT, SCOPE);
 	formA->setCharacterAt(1, 1, new Scout("scout2A"), SHOOT, SHOOT, SCOPE);
-	formA->setCharacterAt(2, 1, new Scout("scout3A"), SHOOT, SHOOT, SCOPE);
-	formA->setCharacterAt(1, 2, new Scout("scout4A"), SHOOT, SHOOT, SCOPE);
-	formA->setLeaderPosition(1, 1);
+	formA->setCharacterAt(1, 2, new Acolyte("acolyte1A"), HEAL, HEAL, HEAL);
+	formA->setLeaderPosition(1, 2);
 	formA->setTargetOrder(TARGET_LEADER);
 	groupA = new Group(formA);
 
@@ -65,17 +65,16 @@ void initialize() {
 		MIDDLE	[2,1] [1,1] [0,1]
 		FRONT	[2,0] [1,0] [0,0]
 		
-		              BShout
-		        Shoot		Shoot
-		        TgTrp Block TgTrp
+		              Taunt
+		              Regen
+		        Blind 100Bl Blind
 	*/
 
-	formB->setCharacterAt(1, 0, new Fighter("fighter1B"), BLOCK, STRIKE, TAUNT);
-	formB->setCharacterAt(1, 2, new Fighter("fighter2B"), BLOCK, STRIKE, BATTLE_SHOUT);
-	formB->setCharacterAt(2, 0, new Scout("scout1B"), TANGLE_TRAP, SHOOT, SCOPE);
-	formB->setCharacterAt(0, 0, new Scout("scout2B"), TANGLE_TRAP, SHOOT, SCOPE);
-	formB->setCharacterAt(2, 1, new Scout("scout3B"), HASTE, SHOOT, SCOPE);
-	formB->setCharacterAt(0, 1, new Scout("scout4B"), HASTE, SHOOT, SCOPE);
+	formB->setCharacterAt(1, 2, new Fighter("fighter1B"), HUNDRED_BLADES, BLOCK, TAUNT);
+	formB->setCharacterAt(0, 0, new Mage("mage1B"), FIREBALL, FIREBALL, POLYMORPH);
+	formB->setCharacterAt(2, 0, new Mage("mage2B"), FROST_SHARD, FROST_SHARD, POLYMORPH);
+	formB->setCharacterAt(0, 1, new Mage("mage3B"), WATER_JET, WATER_JET, POLYMORPH);
+	formB->setCharacterAt(2, 1, new Mage("mage4B"), WATER_JET, WATER_JET, POLYMORPH);
 	formB->setLeaderPosition(1, 2);
 	formB->setTargetOrder(TARGET_LEADER);
 	groupB = new Group(formB);

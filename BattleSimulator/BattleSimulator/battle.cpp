@@ -110,7 +110,10 @@ void Battle::executeTurn()
 	respondAbility = NULL;
 	if (mainAbility != NULL)
 	{
-		Targeter* mainTargeter = mainAbility->retrieveFirstPrimaryTargeter();
+		//Targeter* mainTargeter = mainAbility->retrieveFirstPrimaryTargeter();
+		Targeter* mainTargeter = NULL;
+		if (mainAbility->getTargeters().size() > 0)
+			mainTargeter = mainAbility->getTargeters()[0];
 		if (mainTargeter != NULL)
 		{
 			respondUnit = mainTargeter->getPrimary();
@@ -127,7 +130,7 @@ void Battle::executeTurn()
 				respondUnit->setCurrentSkill(Ability::selectSkill(respondUnit));
 
 				respondAbility = Ability::getAbility(respondUnit->getCurrentSkill());
-				if (Ability::isAbleToRespond(mainAbility, respondAbility))
+				if (Ability::isAbleToRespond(mainAbility, respondAbility) && respondAbility->getAbilityType() != ABILITY_NONE)
 					respondAbility->action(mainAbility, respondUnit, this);
 			}
 		}
@@ -139,15 +142,16 @@ void Battle::executeTurn()
 	// Determine whether an end result has occurred
 	if (!group1->groupIsAvailable() || !group2->groupIsAvailable())
 		isOver = true;
-	
-    print();
     
-	// Increment to the next turn
-	mainUnit->setDone(true);
-	++turnIndex;
 	
 	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
 	sort(unitOrder.begin() + turnIndex, unitOrder.end(), compareSpeed);
+	
+    print();
+
+	// Increment to the next turn
+	mainUnit->setDone(true);
+	++turnIndex;
 }
 
 void Battle::cleanupTurn()

@@ -89,6 +89,10 @@ public:
 		this->maxHealth = maxHealth;
 		setCurrentHealth(currentHealth);
 	}
+	
+	double getPercentHealth() const {
+		return static_cast<double>(currentHealth) / maxHealth;
+	}
 
 	int getCurrentPhysicalAttack() const {
 		return currentPhysicalAttack;

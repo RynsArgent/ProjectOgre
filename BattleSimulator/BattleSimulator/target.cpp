@@ -5,13 +5,21 @@
 #include "status.h"
 
 // Comparator functions to determine strongest/weakest unit
-bool compareLifePreferLess(Unit* lhs, Unit* rhs) {
+bool compareCurrentLifePreferLess(Unit* lhs, Unit* rhs) {
 	return lhs->getCurrentHealth() < rhs->getCurrentHealth() ||
 		(lhs->getCurrentHealth() == rhs->getCurrentHealth() && lhs->getRValue() < rhs->getRValue());
 }
-bool compareLifePreferMore(Unit* lhs, Unit* rhs) {
+bool compareCurrentLifePreferMore(Unit* lhs, Unit* rhs) {
 	return lhs->getCurrentHealth() > rhs->getCurrentHealth() ||
 		(lhs->getCurrentHealth() == rhs->getCurrentHealth() && lhs->getRValue() > rhs->getRValue());
+}
+bool comparePercentLifePreferLess(Unit* lhs, Unit* rhs) {
+	return lhs->getPercentHealth() < rhs->getPercentHealth() ||
+		(lhs->getPercentHealth() == rhs->getPercentHealth() && lhs->getRValue() < rhs->getRValue());
+}
+bool comparePercentLifePreferMore(Unit* lhs, Unit* rhs) {
+	return lhs->getPercentHealth() > rhs->getPercentHealth() ||
+		(lhs->getPercentHealth() == rhs->getPercentHealth() && lhs->getRValue() > rhs->getRValue());
 }
 bool compareNumBuffsLess(Unit* lhs, Unit* rhs) {
 	return lhs->getNumBuffs() < rhs->getNumBuffs() ||
@@ -125,7 +133,7 @@ void Targeter::set(int n)
 		{
 			for (int i = 0; i < cand.size(); ++i)
 				cand[i]->setRValue();
-			sort(cand.begin(), cand.end(), compareLifePreferLess);
+			sort(cand.begin(), cand.end(), compareCurrentLifePreferLess);
 			for (; ni < n && cand.size() > 0; ++ni) {
 				chosen.push_back(cand[ni]);
 			}
@@ -135,7 +143,7 @@ void Targeter::set(int n)
 		{
 			for (int i = 0; i < cand.size(); ++i)
 				cand[i]->setRValue();
-			sort(cand.begin(), cand.end(), compareLifePreferMore);
+			sort(cand.begin(), cand.end(), compareCurrentLifePreferMore);
 			for (; ni < n && cand.size() > 0; ++ni)
 				chosen.push_back(cand[ni]);
 			break;
@@ -159,6 +167,15 @@ void Targeter::set(int n)
 				cand[randIndex] = cand[cand.size() - 1];
 				cand.pop_back();
 			}
+			break;
+		}
+	case TARGET_HEALING:
+		{
+			for (int i = 0; i < cand.size(); ++i)
+				cand[i]->setRValue();
+			sort(cand.begin(), cand.end(), comparePercentLifePreferLess);
+			for (; ni < n && cand.size() > 0; ++ni)
+				chosen.push_back(cand[ni]);
 			break;
 		}
 	case TARGET_MOST_DEBUFFS:

@@ -16,6 +16,7 @@ private:
 	int turnIndex;
 	vector<Unit*> unitOrder;
 
+	Unit* globaltrigger;
 	Unit* mainUnit;
 	Unit* respondUnit;
 	Ability* mainAbility;

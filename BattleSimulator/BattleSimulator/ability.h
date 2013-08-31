@@ -62,7 +62,8 @@ protected:
 	static const int COST = 1;
 public:
 	NoSkill() : Ability("No Skill", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
-	virtual void action(Unit* previous, Unit* current, Battle* battle) {};
+	virtual void action(Ability* previous, Unit* current, Battle* battle) {
+	}
 	~NoSkill() {}
 };
 
@@ -229,6 +230,141 @@ public:
 	Cleanse() : Ability("Cleanse", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
 	~Cleanse() {}
+};
+
+class Rejuvenate : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = true;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Rejuvenate() : Ability("Rejuvenate", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Rejuvenate() {}
+};
+
+class Blind : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = true;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Blind() : Ability("Blind", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Blind() {}
+};
+
+class Barrier : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Barrier() : Ability("Barrier", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Barrier() {}
+};
+
+class Polymorph : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Polymorph() : Ability("Polymorph", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Polymorph() {}
+};
+
+class Fireball : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Fireball() : Ability("Fireball", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Fireball() {}
+};
+
+class WaterJet : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	WaterJet() : Ability("Water Jet", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~WaterJet() {}
+};
+
+class AcidDart : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	AcidDart() : Ability("Acid Dart", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~AcidDart() {}
+};
+
+class FrostShard : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	FrostShard() : Ability("Frost Shard", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~FrostShard() {}
+};
+
+class LightningBolt : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	LightningBolt() : Ability("Lightning Bolt", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~LightningBolt() {}
 };
 
 #endif

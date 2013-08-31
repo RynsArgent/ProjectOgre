@@ -29,7 +29,9 @@ protected:
 	StatusBenefit benefit;
 	Unit* target;
 	
-    // unimplemented
+	int stacks;
+	int maxStacks;
+	bool stackableSelf; // onSpawn status that modify unit stats must have this set if status should not stack
     bool dispellable;
 
 	bool timed;
@@ -39,7 +41,7 @@ protected:
 public:
 	Status(Effect* effect, const string & subname, StatusBenefit benefit = NEUTRAL, Unit* target = NULL)
 		: effect(effect), subname(subname), benefit(benefit), target(target),
-		dispellable(true), timed(false), timer(0), clean(false)
+		stacks(0), maxStacks(0), stackableSelf(true), dispellable(true), timed(false), timer(0), clean(false)
 	{
 	}
 
@@ -59,6 +61,22 @@ public:
 		return target;
 	}
 	
+	void setStacks(int value) {
+		stacks = value;
+	}
+
+	bool getStacks() const {
+		return stacks;
+	}
+
+	void setStackableSelf(bool value) {
+		stackableSelf = value;
+	}
+
+	bool isStackableSelf() const {
+		return stackableSelf;
+	}
+
 	void setDispellable(bool value) {
 		dispellable = value;
 	}
@@ -66,7 +84,7 @@ public:
 	bool isDispellable() const {
 		return dispellable;
 	}
-	
+
 	void setTimed(bool value1, int value2) {
 		timed = value1;
 		timer = value2;
@@ -187,8 +205,8 @@ class StatusStun : public Status
 private:
     
 public:
-    StatusStun(Effect* effect, const string & subname, Unit* target)
-        : Status(effect, subname, DEBUFF, target)
+    StatusStun(Effect* effect, const string & subname, Unit* target, int stacks)
+        : Status(effect, subname, DEBUFF, target, stacks)
     {}
     
 	// Main Function
@@ -200,14 +218,13 @@ public:
     ~StatusStun() {}
 };
 
-
 class StatusSleep : public Status
 {
 private:
     
 public:
-    StatusSleep(Effect* effect, const string & subname, Unit* target)
-		: Status(effect, subname, DEBUFF, target)
+    StatusSleep(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks)
     {}
     
 	// Main Function
@@ -225,8 +242,8 @@ class StatusFlee : public Status
 private:
     
 public:
-    StatusFlee(Effect* effect, const string & subname, Unit* target)
-		: Status(effect, subname, DEBUFF, target)
+    StatusFlee(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks)
     {}
     
 	// Main Function
@@ -245,8 +262,8 @@ class StatusConfusion : public Status
 private:
     
 public:
-    StatusConfusion(Effect* effect, const string & subname, Unit* target)
-		: Status(effect, subname, DEBUFF, target)
+    StatusConfusion(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks)
     {}
     
 	// Main Function
@@ -263,8 +280,8 @@ class StatusCharm : public Status
 private:
     
 public:
-    StatusCharm(Effect* effect, const string & subname, Unit* target)
-		: Status(effect, subname, DEBUFF, target)
+    StatusCharm(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks)
     {}
     
 	// Main Function
@@ -282,8 +299,8 @@ class StatusPoison : public Status
 protected:
 	int amount;
 public:
-	StatusPoison(Effect* effect, const string & subname, Unit* target, int amount)
-		: Status(effect, subname, DEBUFF, target), amount(amount)
+	StatusPoison(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks), amount(10)
 	{}
 	
 	// Helper Functions
@@ -300,12 +317,81 @@ public:
 	~StatusPoison() {}
 };
 
+class StatusBleed : public Status
+{
+protected:
+	int amount;
+public:
+	StatusBleed(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks), amount(20)
+	{}
+	
+	// Helper Functions
+	void applyTimedDamage();
+	
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onRound();
+
+	// Set Status Specific Variables
+	void setAmount(int value) { amount = value; }
+    
+	~StatusBleed() {}
+};
+
+class StatusBurn : public Status
+{
+protected:
+	int amount;
+public:
+	StatusBurn(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks), amount(30)
+	{}
+	
+	// Helper Functions
+	void applyTimedDamage();
+	
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onRound();
+
+	// Set Status Specific Variables
+	void setAmount(int value) { amount = value; }
+    
+	~StatusBurn() {}
+};
+
+class StatusRegeneration : public Status
+{
+protected:
+	int amount;
+public:
+	StatusRegeneration(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, BUFF, target, stacks), amount(amount)
+	{}
+	
+	// Helper Functions
+	void applyTimedHeal();
+	
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onRound();
+
+	// Set Status Specific Variables
+	void setAmount(int value) { amount = value; }
+    
+	~StatusRegeneration() {}
+};
+
 class StatusBlind : public Status
 {
 protected:
 public:
-	StatusBlind(Effect* effect, const string & subname, Unit* target)
-		: Status(effect, subname, DEBUFF, target)
+	StatusBlind(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks)
 	{}
 	
 	// Main Function
@@ -316,13 +402,32 @@ public:
 	~StatusBlind() {}
 };
 
+class StatusPolymorph : public Status
+{
+private:
+    
+public:
+    StatusPolymorph(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks)
+    {}
+    
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onPostReceiveDamage(Damage* applier);
+	virtual void onCheckpoint(Ability* ability);
+    virtual void onSelectAbility(Unit* caster);
+    
+    ~StatusPolymorph() {}
+};
+
 class StatusMortality : public Status
 {
 protected:
 	int amount;
 public:
-	StatusMortality(Effect* effect, const string & subname, Unit* target, int amount)
-		: Status(effect, subname, DEBUFF, target), amount(amount)
+	StatusMortality(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, DEBUFF, target, stacks), amount(10)
 	{}
 
 	// Main Function
@@ -343,8 +448,8 @@ private:
 	bool limited; // If set, amount will drop on use and expire at 0. Otherwise, amount will not drop
 	int amount;
 public:
-	StatusBlock(Effect* effect, const string & subname, Unit* target, bool limited, int amount)
-		: Status(effect, subname, BUFF, target), limited(limited), amount(amount)
+	StatusBlock(Effect* effect, const string & subname, Unit* target, bool limited, int stacks)
+		: Status(effect, subname, BUFF, target, stacks), limited(limited), amount(30)
 	{}
 	
 	// Helper Functions
@@ -368,8 +473,8 @@ class StatusTaunt : public Status
 protected:
 	Unit* focus; 
 public:
-	StatusTaunt(Effect* effect, const string & subname, Unit* target, Unit* focus)
-		: Status(effect, subname, NEUTRAL, target), focus(focus)
+	StatusTaunt(Effect* effect, const string & subname, Unit* target, int stacks, Unit* focus)
+		: Status(effect, subname, NEUTRAL, target, stacks), focus(focus)
 	{
 		dispellable = false;
 	}
@@ -393,9 +498,11 @@ class StatusBattleShout : public Status
 protected:
 	int amount;
 public:
-	StatusBattleShout(Effect* effect, const string & subname, Unit* target, int amount)
-		: Status(effect, subname, BUFF, target), amount(amount)
-	{}
+	StatusBattleShout(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, BUFF, target, stacks), amount(10)
+	{
+		stackableSelf = false;
+	}
 
 	// Helper Functions
 	
@@ -411,14 +518,41 @@ public:
 	~StatusBattleShout() {}
 };
 
+class StatusBarrier : public Status
+{
+protected:
+	int amount;
+public:
+	StatusBarrier(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, BUFF, target, stacks), amount(10)
+	{
+		stackableSelf = false;
+	}
+
+	// Helper Functions
+	
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onSpawn();
+	virtual void onKill();
+
+	// Set Status Specific Variables
+	void setAmount(int value) { amount = value; }
+
+	~StatusBarrier() {}
+};
+
 class StatusHaste : public Status
 {
 protected:
 	int amount;
 public:
-	StatusHaste(Effect* effect, const string & subname, Unit* target, int amount)
-		: Status(effect, subname, BUFF, target), amount(amount)
-	{}
+	StatusHaste(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, BUFF, target, stacks), amount(1)
+	{
+		stackableSelf = false;
+	}
 
 	// Helper Functions
 	
@@ -434,13 +568,38 @@ public:
 	~StatusHaste() {}
 };
 
+class StatusChill : public Status
+{
+protected:
+	int amount;
+public:
+	StatusChill(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, BUFF, target, stacks), amount(1)
+	{
+		stackableSelf = false;
+	}
+
+	// Helper Functions
+	
+	// Main Function
+	virtual StatusMergeResult getMergeResult() const;
+	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual void onSpawn();
+	virtual void onKill();
+
+	// Set Status Specific Variables
+	void setAmount(int value) { amount = value; }
+
+	~StatusChill() {}
+};
+
 class StatusScope : public Status
 {
 protected:
 	int amount;
 public:
-	StatusScope(Effect* effect, const string & subname, Unit* target, int amount)
-		: Status(effect, subname, BUFF, target), amount(amount)
+	StatusScope(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, BUFF, target), amount(10)
 	{}
 
 	// Helper Functions
@@ -460,8 +619,8 @@ class StatusTangleTrap : public Status
 {
 protected:
 public:
-	StatusTangleTrap(Effect* effect, const string & subname, Unit* target)
-		: Status(effect, subname, BUFF, target)
+	StatusTangleTrap(Effect* effect, const string & subname, Unit* target, int stacks)
+		: Status(effect, subname, BUFF, target, stacks)
 	{}
 
 	// Helper Functions
@@ -562,7 +721,10 @@ public:
 		// Do not do onKill(...), for the merged buff should cancel it,
 		// however, we do have to unlink it
 		dominant->onMerge(res);
-		recessive->Status::onKill();
+		if (recessive->isStackableSelf())
+			recessive->Status::onKill();
+		else
+			recessive->onKill();
 	}
 
 	void merge(Effect* old) 

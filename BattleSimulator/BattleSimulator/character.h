@@ -218,7 +218,7 @@ class Scout : public Character
 protected:
 	const static int BASE_HEALTH = 80;
 	const static int BASE_PHYSICAL_ATTACK = 20;
-	const static int BASE_MAGIC_ATTACK = 10;
+	const static int BASE_MAGIC_ATTACK = 20;
 	const static int BASE_SPEED = 5;
 	
 	const static int BASE_PHYSICAL_DEFENSE = 0;
@@ -233,6 +233,50 @@ public:
 	Scout(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
 
 	~Scout() {}
+};
+
+class Acolyte : public Character
+{
+protected:
+	const static int BASE_HEALTH = 60;
+	const static int BASE_PHYSICAL_ATTACK = 10;
+	const static int BASE_MAGIC_ATTACK = 30;
+	const static int BASE_SPEED = 1;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+public:
+	Acolyte(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+
+	~Acolyte() {}
+};
+
+class Mage : public Character
+{
+protected:
+	const static int BASE_HEALTH = 40;
+	const static int BASE_PHYSICAL_ATTACK = 10;
+	const static int BASE_MAGIC_ATTACK = 30;
+	const static int BASE_SPEED = 1;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+public:
+	Mage(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+
+	~Mage() {}
 };
 
 #endif
