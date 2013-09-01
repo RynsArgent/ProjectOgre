@@ -210,7 +210,7 @@ void Block::action(Ability* previous, Unit* current, Battle* battle)
 			string name = "Block";
 			Effect* effect = new Effect(current, battle, name, current);
 			
-			Status* status = new StatusBlock(effect, name, target, true, 1);
+			Status* status = new StatusBlock(effect, target);
 			status->setTimed(true, 1);
 			
 			Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
@@ -283,7 +283,7 @@ void Taunt::action(Ability* previous, Unit* current, Battle* battle)
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status* status = new StatusTaunt(effect, name, targets[i], current, 1);
+		Status* status = new StatusTaunt(effect, targets[i], current);
 		
 		Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 		log->apply();
@@ -304,12 +304,7 @@ void BattleShout::action(Ability* previous, Unit* current, Battle* battle)
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status* status = new StatusBattleShout(effect, name, targets[i], 1);
-		//Status* status = new StatusConfusion(effect, "Confusion", targets[i], 1);
-		//Status* status = new StatusCharm(effect, "Charm", targets[i], 1);
-		//Status* status = new StatusStun(effect, "Stun", targets[i], 1);
-		//Status* status = new StatusSleep(effect, "Sleep", targets[i], 1);
-		//Status* status = new StatusFlee(effect, "Flee", targets[i], 1);
+		Status* status = new StatusBattleShout(effect, targets[i], 1);
 		status->setTimed(true, 1);
 
 		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
@@ -380,7 +375,7 @@ void Haste::action(Ability* previous, Unit* current, Battle* battle)
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status* status = new StatusHaste(effect, name, targets[i], 1);
+		Status* status = new StatusHaste(effect, targets[i], 1);
 		
 		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 		log->apply();
@@ -401,7 +396,7 @@ void Scope::action(Ability* previous, Unit* current, Battle* battle)
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status* status = new StatusScope(effect, name, targets[i], 1);
+		Status* status = new StatusScope(effect, targets[i], 1);
 		
 		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 		log->apply();
@@ -432,7 +427,7 @@ void TangleTrap::action(Ability* previous, Unit* current, Battle* battle)
 			string name = "TangleTrap";
 			Effect* effect = new Effect(current, battle, name, current);
 			
-			Status* status = new StatusTangleTrap(effect, name, target, 1);
+			Status* status = new StatusTangleTrap(effect, target);
 			
 			Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 			log->apply();
@@ -527,7 +522,7 @@ void Rejuvenate::action(Ability* previous, Unit* current, Battle* battle)
 		string name = "Regeneration";
 		Effect* effect = new Effect(current, battle, name, target);
 	
-		Status* status = new StatusRegeneration(effect, name, target, 1);
+		Status* status = new StatusRegeneration(effect, target, 1);
 
 		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 		log->apply();
@@ -551,9 +546,9 @@ void Rejuvenate::action(Ability* previous, Unit* current, Battle* battle)
 				Unit* target = targeter->chosen[0];
 
 				string name = "Regeneration";
-				Effect* effect = new Effect(current, battle, name, current);
+				Effect* effect = new Effect(current, battle, name, target);
 	
-				Status* status = new StatusRegeneration(effect, name, target, 1);
+				Status* status = new StatusRegeneration(effect, target, 1);
 	
 				Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 				log->apply();
@@ -580,7 +575,7 @@ void Blind::action(Ability* previous, Unit* current, Battle* battle)
 			string name = "Blind";
 			Effect* effect = new Effect(current, battle, name, target);
 	
-			Status* status = new StatusBlind(effect, name, target, 1);
+			Status* status = new StatusBlind(effect, target, 1);
 
 			Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 			log->apply();
@@ -607,7 +602,7 @@ void Blind::action(Ability* previous, Unit* current, Battle* battle)
 				string name = "Blind";
 				Effect* effect = new Effect(current, battle, name, target);
 	
-				Status* status = new StatusBlind(effect, name, target, 1);
+				Status* status = new StatusBlind(effect, target, 1);
 
 				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 				log->apply();
@@ -632,7 +627,7 @@ void Barrier::action(Ability* previous, Unit* current, Battle* battle)
 	Effect* effect = new Effect(current, battle, name, current);
 	for (int i = 0; i < targets.size(); ++i)
 	{
-		Status* status = new StatusBarrier(effect, name, targets[i], 1);
+		Status* status = new StatusBarrier(effect, targets[i], 1);
 
 		Event* log = new EventCauseStatus(this, Event::BUFF_HIT_CHANCE, status);
 		log->apply();
@@ -663,7 +658,7 @@ void Polymorph::action(Ability* previous, Unit* current, Battle* battle)
 			string name = "Polymorph";
 			Effect* effect = new Effect(current, battle, name, target);
 
-			Status* status = new StatusPolymorph(effect, name, target, 1);
+			Status* status = new StatusPolymorph(effect, target, 1);
 
 			Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 			log->apply();
@@ -708,7 +703,7 @@ void Fireball::action(Ability* previous, Unit* current, Battle* battle)
 				string name = "Burn";
 				Effect* effect = new Effect(current, battle, name, target);
 
-				Status* status = new StatusBurn(effect, name, target, 1);
+				Status* status = new StatusBurn(effect, target, 1);
 
 				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 				log->apply();
@@ -754,7 +749,7 @@ void WaterJet::action(Ability* previous, Unit* current, Battle* battle)
 				string name = "Flee";
 				Effect* effect = new Effect(current, battle, name, target);
 
-				Status* status = new StatusFlee(effect, name, target, 1);
+				Status* status = new StatusFlee(effect, target, 1);
 
 				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 				log->apply();
@@ -800,7 +795,7 @@ void AcidDart::action(Ability* previous, Unit* current, Battle* battle)
 				string name = "Poison";
 				Effect* effect = new Effect(current, battle, name, target);
 
-				Status* status = new StatusPoison(effect, name, target, 1);
+				Status* status = new StatusPoison(effect, target, 1);
 
 				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 				log->apply();
@@ -846,7 +841,7 @@ void FrostShard::action(Ability* previous, Unit* current, Battle* battle)
 				string name = "Chill";
 				Effect* effect = new Effect(current, battle, name, target);
 
-				Status* status = new StatusChill(effect, name, target, 1);
+				Status* status = new StatusChill(effect, target, 1);
 
 				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 				log->apply();
@@ -892,7 +887,7 @@ void LightningBolt::action(Ability* previous, Unit* current, Battle* battle)
 				string name = "Stun";
 				Effect* effect = new Effect(current, battle, name, target);
 
-				Status* status = new StatusStun(effect, name, target, 1);
+				Status* status = new StatusStun(effect, target, 1);
 
 				Event* log = new EventCauseStatus(this, Event::DEBUFF_HIT_CHANCE, status);
 				log->apply();

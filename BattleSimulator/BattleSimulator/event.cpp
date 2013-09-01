@@ -133,18 +133,18 @@ void EventRemoveStatus::apply()
 	determineSuccess();
 	if (!success && !target->isAvailable())
 		return;
-
+	
 	// Removes the most recent status effect of the matching type
-	for (int i = target->getCurrentStatus().size() - 1; i >= 0; --i) {
-		Status* rstatus = target->getCurrentStatus()[i];
-		if (rstatus->getBenefit() == removingType &&
-			rstatus->isDispellable())
-		{
-			removedResult = rstatus;
-			rstatus->onKill();
-			break;
-		}
+	vector<Status*> candidateStatusList = target->getDispellableStatusByBenefit(removingType);
+	vector<Status*> targetStatusList;
+	if (candidateStatusList.size() > 0)
+	{
+		string subname = candidateStatusList[candidateStatusList.size() - 1]->getSubname();
+		vector<Status*> targetStatusList = target->getDispellableStatusBySubname(subname);
 	}
+	// Remove all status effects with the same name
+	for (int i = 0; i < targetStatusList.size(); ++i)
+		targetStatusList[i]->onKill();
 }
 
 void EventRemoveStatus::print(ostream& out) const

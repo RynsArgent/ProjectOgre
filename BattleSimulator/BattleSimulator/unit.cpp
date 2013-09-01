@@ -45,14 +45,35 @@ bool Unit::hasStatus(StatusBenefit benefit) const
 	return false;
 }
 
-vector<Status*> Unit::getCurrentStatus(StatusBenefit benefit) const
+vector<Status*> Unit::getDispellableStatusByBenefit(StatusBenefit benefit) const
 {
 	vector<Status*> ret;
 	for (int i = 0; i < currentStatus.size(); ++i)
 		if (currentStatus[i]->getBenefit() == benefit &&
-			!currentStatus[i]->hasExpired())
+			!currentStatus[i]->hasExpired() &&
+			currentStatus[i]->isDispellable())
 			ret.push_back(currentStatus[i]);
 	return ret;
+}
+
+vector<Status*> Unit::getDispellableStatusBySubname(const string & subname) const
+{
+	vector<Status*> ret;
+	for (int i = 0; i < currentStatus.size(); ++i)
+		if (currentStatus[i]->getSubname() == subname &&
+			!currentStatus[i]->hasExpired() &&
+			currentStatus[i]->isDispellable())
+			ret.push_back(currentStatus[i]);
+	return ret;
+}
+
+Status* Unit::getMatchingStatus(Status* value) const
+{
+	for (int i = 0; i < currentStatus.size(); ++i) {
+		if (currentStatus[i]->canMergeWith(value))
+			return currentStatus[i];
+	}
+	return NULL;
 }
 
 void Unit::processEffects()

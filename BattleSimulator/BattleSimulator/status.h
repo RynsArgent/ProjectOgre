@@ -11,14 +11,12 @@
 // All Status Effects share this result object when merging data
 // The value variables are ambiguous and can be used for anything 
 // and are specified based on the derived class
-struct StatusMergeResult
+struct StatusInstance
 {
 	int timer;
-	int val1;
-	int val2;
-	int val3;
+	int stacks;
 
-	StatusMergeResult() : timer(0), val1(0), val2(0), val3(0) {}
+	StatusInstance() : timer(0), stacks(0) {}
 };
 
 class Status
@@ -26,22 +24,24 @@ class Status
 protected:
 	Effect* effect;
 	string subname;
-	StatusBenefit benefit;
 	Unit* target;
-	
-	int stacks;
+	StatusBenefit benefit;
+	StatusMatch match;
+
+	int numStacks;
 	int maxStacks;
-	bool stackableSelf; // onSpawn status that modify unit stats must have this set if status should not stack
     bool dispellable;
 
 	bool timed;
 	int timer;
 
-	bool clean; // Used for efficient memory cleaning
+	// Used for efficient memory usage
+	bool clean; 
+	Status* merger;
 public:
-	Status(Effect* effect, const string & subname, StatusBenefit benefit = NEUTRAL, Unit* target = NULL)
-		: effect(effect), subname(subname), benefit(benefit), target(target),
-		stacks(0), maxStacks(0), stackableSelf(true), dispellable(true), timed(false), timer(0), clean(false)
+	Status(Effect* effect, const string & subname, Unit* target = NULL, StatusBenefit benefit = NEUTRAL, StatusMatch match = STATUS_UNMATCHABLE, bool dispellable = true, bool timed = false, int timer = 0, int numStacks = 0, int maxStacks = 20)
+		: effect(effect), subname(subname), target(target), benefit(benefit), match(match), 
+		numStacks(numStacks), maxStacks(maxStacks), dispellable(dispellable), timed(false), timer(timer), clean(false), merger(NULL)
 	{
 	}
 
@@ -61,20 +61,20 @@ public:
 		return target;
 	}
 	
-	void setStacks(int value) {
-		stacks = value;
+	void setNumStacks(int value) {
+		numStacks = value;
 	}
 
-	bool getStacks() const {
-		return stacks;
+	int getNumStacks() const {
+		return numStacks;
+	}
+	
+	void setMaxStacks(int value) {
+		maxStacks = value;
 	}
 
-	void setStackableSelf(bool value) {
-		stackableSelf = value;
-	}
-
-	bool isStackableSelf() const {
-		return stackableSelf;
+	int getMaxStacks() const {
+		return maxStacks;
 	}
 
 	void setDispellable(bool value) {
@@ -106,21 +106,44 @@ public:
 		return timer;
 	}
     
+	void setMerger(Status* value) {
+		merger = value;
+	}
+
+	Status* getMerger() const {
+		return merger;
+	}
+
 	bool needsCleaning() const {
 		return clean;
+	}
+	
+	// Adds to numStacks and returns the actual number added (due to a max limit),
+	// NOTE: the number returned is assumed that this object is added its stacks to the original
+	int addStacks(int stacks) {
+		int add = numStacks;
+		if (stacks + add > maxStacks)
+			add = maxStacks - stacks;
+		stacks += add;
+		numStacks = stacks;
+		return add;
 	}
 
 	// Base function that at its most basic updates the timer, Status Effects will extend
 	// the functions they need
 	virtual bool hasExpired() const;
 	
+	// Checks to see if two status effects can be merged together. 
+	// Assumption: The two status effects have the same target
+	bool canMergeWith(Status* rhs) const;
+
 	// This merges by "Effect trigger unit" Statuses, If different
 	// Poison trigger Status are applied for example, this is not used.
 	//
 	// Note: Instead of stacking, resetting the buff can be done by not using
-	//		StatusMergeResults
-	virtual StatusMergeResult getMergeResult() const = 0;
-	virtual void onMerge(const StatusMergeResult & mergeResult) = 0;
+	//		StatusInstances
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult) = 0;
 
 	// This deals with Status Effects that have effects that do something at the moment of creation or disappearance
 	// (i.e. Doom III, Unit dies after it expires; would have to check timer == 0 in case of it activity on a dispel)
@@ -203,15 +226,19 @@ public:
 class StatusStun : public Status
 {
 private:
-    
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
 public:
-    StatusStun(Effect* effect, const string & subname, Unit* target, int stacks)
-        : Status(effect, subname, DEBUFF, target, stacks)
+    StatusStun(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Stun", target, BENEFIT, MATCH, DISPELLABLE, TIMED, stacks, MAX_STACKS, MAX_STACKS)
     {}
     
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onCheckpoint(Ability* ability);
     virtual void onSelectAbility(Unit* caster);
 	
@@ -221,15 +248,19 @@ public:
 class StatusSleep : public Status
 {
 private:
-    
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
 public:
-    StatusSleep(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks)
+    StatusSleep(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Sleep", target, BENEFIT, MATCH, DISPELLABLE, TIMED, stacks, MAX_STACKS, MAX_STACKS)
     {}
     
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onCheckpoint(Ability* ability);
     virtual void onSelectAbility(Unit* caster);
@@ -240,15 +271,19 @@ public:
 class StatusFlee : public Status
 {
 private:
-    
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
 public:
-    StatusFlee(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks)
+    StatusFlee(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Flee", target, BENEFIT, MATCH, DISPELLABLE, TIMED, stacks, MAX_STACKS, MAX_STACKS)
     {}
     
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onSpawn();
 	virtual void onCheckpoint(Ability* ability);
     virtual void onKill();
@@ -260,15 +295,19 @@ public:
 class StatusConfusion : public Status
 {
 private:
-    
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;    
 public:
-    StatusConfusion(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks)
+    StatusConfusion(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Confusion", target, BENEFIT, MATCH, DISPELLABLE, TIMED, stacks, MAX_STACKS, MAX_STACKS)
     {}
     
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onPreFindTarget(Targeter* system);
     virtual void onSelectAbility(Unit* caster);
 
@@ -278,15 +317,19 @@ public:
 class StatusCharm : public Status
 {
 private:
-    
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
 public:
-    StatusCharm(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks)
+    StatusCharm(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Charm", target, BENEFIT, MATCH, DISPELLABLE, TIMED, stacks, MAX_STACKS, MAX_STACKS)
     {}
     
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onPreFindTarget(Targeter* system);
     virtual void onSelectAbility(Unit* caster);
@@ -297,45 +340,57 @@ public:
 class StatusPoison : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 5;
+	static const bool DISPELLABLE = true;
+
+	static const int TIMER = 3;
+	static const int AMOUNT = 10;
+
 	int amount;
 public:
-	StatusPoison(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks), amount(10)
+	StatusPoison(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Poison", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, stacks, MAX_STACKS), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
 	void applyTimedDamage();
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onRound();
 
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
-    
 	~StatusPoison() {}
 };
 
 class StatusBleed : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 5;
+	static const bool DISPELLABLE = true;
+	
+	static const int TIMER = 3;
+	static const int AMOUNT = 20;
+
 	int amount;
 public:
-	StatusBleed(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks), amount(20)
+	StatusBleed(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Bleed", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, stacks, MAX_STACKS), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
 	void applyTimedDamage();
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onRound();
-
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
     
 	~StatusBleed() {}
 };
@@ -343,22 +398,28 @@ public:
 class StatusBurn : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 5;
+	static const bool DISPELLABLE = true;
+	
+	static const int TIMER = 3;
+	static const int AMOUNT = 30;
+
 	int amount;
 public:
-	StatusBurn(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks), amount(30)
+	StatusBurn(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Burn", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, stacks, MAX_STACKS), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
 	void applyTimedDamage();
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onRound();
-
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
     
 	~StatusBurn() {}
 };
@@ -366,22 +427,25 @@ public:
 class StatusRegeneration : public Status
 {
 protected:
-	int amount;
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 5;
+	static const bool DISPELLABLE = true;
+	
+	static const int TIMER = 3;
 public:
-	StatusRegeneration(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, BUFF, target, stacks), amount(amount)
+	StatusRegeneration(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Regeneration", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, stacks, MAX_STACKS)
 	{}
 	
 	// Helper Functions
 	void applyTimedHeal();
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onRound();
-
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
     
 	~StatusRegeneration() {}
 };
@@ -389,14 +453,19 @@ public:
 class StatusBlind : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
 public:
-	StatusBlind(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks)
+	StatusBlind(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Blind", target, BENEFIT, MATCH, DISPELLABLE, TIMED, stacks, MAX_STACKS, MAX_STACKS)
 	{}
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onPrePerformHit(Event* event);
 
 	~StatusBlind() {}
@@ -405,15 +474,19 @@ public:
 class StatusPolymorph : public Status
 {
 private:
-    
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
 public:
-    StatusPolymorph(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks)
+    StatusPolymorph(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Polymorph", target, BENEFIT, MATCH, DISPELLABLE, TIMED, stacks, MAX_STACKS, MAX_STACKS)
     {}
     
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onCheckpoint(Ability* ability);
     virtual void onSelectAbility(Unit* caster);
@@ -424,20 +497,29 @@ public:
 class StatusMortality : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 20;
+	static const bool DISPELLABLE = true;
+
+	static const int TIMER = 3;
+	static const int AMOUNT = 10;
+
 	int amount;
 public:
-	StatusMortality(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, DEBUFF, target, stacks), amount(10)
+	StatusMortality(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Mortality", target, BENEFIT, MATCH, DISPELLABLE, TIMED, stacks, MAX_STACKS, MAX_STACKS), amount(AMOUNT)
 	{}
 
+	// Helper Functions
+	void modifyAttributes(int dvalue);
+
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onSpawn();
 	virtual void onKill();
-	
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
 
 	~StatusMortality() {}
 };
@@ -445,11 +527,21 @@ public:
 class StatusBlock : public Status
 {
 private:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
+
+	static const int TIMER = 1;
+	static const bool LIMITED = true;
+	static const int AMOUNT = 30;
+
 	bool limited; // If set, amount will drop on use and expire at 0. Otherwise, amount will not drop
 	int amount;
 public:
-	StatusBlock(Effect* effect, const string & subname, Unit* target, bool limited, int stacks)
-		: Status(effect, subname, BUFF, target, stacks), limited(limited), amount(30)
+	StatusBlock(Effect* effect, Unit* target)
+        : Status(effect, "Block", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, MAX_STACKS, MAX_STACKS), limited(LIMITED), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -457,13 +549,9 @@ public:
 	void applyDamagePrevention(Damage* applier);
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onPreReceiveDamage(Damage* applier);
-
-	// Set Status Specific Variables
-	void setLimited(bool value) { limited = value; }
-	void setAmount(int value) { amount = value; }
 
 	~StatusBlock() {}
 };
@@ -471,24 +559,28 @@ public:
 class StatusTaunt : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = NEUTRAL;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = false;
+
+	static const int TIMER = 1;
+
 	Unit* focus; 
 public:
-	StatusTaunt(Effect* effect, const string & subname, Unit* target, int stacks, Unit* focus)
-		: Status(effect, subname, NEUTRAL, target, stacks), focus(focus)
+	StatusTaunt(Effect* effect, Unit* target, Unit* focus)
+        : Status(effect, "Taunt", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, MAX_STACKS, MAX_STACKS), focus(focus)
 	{
-		dispellable = false;
 	}
 	
 	// Helper Functions
 	void addToPriorityList(Targeter* system) const;
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onPreFindTarget(Targeter* system);
-
-	// Set Status Specific Variables
-	void setFocus(Unit* value) { focus = value; }
 
 	~StatusTaunt();
 };
@@ -496,24 +588,30 @@ public:
 class StatusBattleShout : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
+
+	static const int TIMER = 1;
+	static const int AMOUNT = 10;
+
 	int amount;
 public:
-	StatusBattleShout(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, BUFF, target, stacks), amount(10)
+	StatusBattleShout(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "BattleShout", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, stacks, MAX_STACKS), amount(AMOUNT)
 	{
-		stackableSelf = false;
 	}
 
 	// Helper Functions
+	void modifyAttributes(int dvalue);
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onSpawn();
 	virtual void onKill();
-
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
 
 	~StatusBattleShout() {}
 };
@@ -521,24 +619,30 @@ public:
 class StatusBarrier : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
+
+	static const int TIMER = 1;
+	static const int AMOUNT = 10;
+
 	int amount;
 public:
-	StatusBarrier(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, BUFF, target, stacks), amount(10)
+	StatusBarrier(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Barrier", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, stacks, MAX_STACKS), amount(AMOUNT)
 	{
-		stackableSelf = false;
 	}
-
+	
 	// Helper Functions
+	void modifyAttributes(int dvalue);
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onSpawn();
 	virtual void onKill();
-
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
 
 	~StatusBarrier() {}
 };
@@ -546,24 +650,30 @@ public:
 class StatusHaste : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
+
+	static const int TIMER = 3;
+	static const int AMOUNT = 1;
+
 	int amount;
 public:
-	StatusHaste(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, BUFF, target, stacks), amount(1)
+	StatusHaste(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Haste", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, stacks, MAX_STACKS), amount(AMOUNT)
 	{
-		stackableSelf = false;
 	}
-
+	
 	// Helper Functions
+	void modifyAttributes(int dvalue);
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onSpawn();
 	virtual void onKill();
-
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
 
 	~StatusHaste() {}
 };
@@ -571,24 +681,30 @@ public:
 class StatusChill : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
+
+	static const int TIMER = 3;
+	static const int AMOUNT = 1;
+
 	int amount;
 public:
-	StatusChill(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, BUFF, target, stacks), amount(1)
+	StatusChill(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Chill", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, stacks, MAX_STACKS), amount(AMOUNT)
 	{
-		stackableSelf = false;
 	}
-
+	
 	// Helper Functions
+	void modifyAttributes(int dvalue);
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onSpawn();
 	virtual void onKill();
-
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
 
 	~StatusChill() {}
 };
@@ -596,21 +712,27 @@ public:
 class StatusScope : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
+
+	static const int TIMER = 1;
+	static const int AMOUNT = 10;
+
 	int amount;
 public:
-	StatusScope(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, BUFF, target), amount(10)
+	StatusScope(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Scope", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, stacks, MAX_STACKS), amount(AMOUNT)
 	{}
 
 	// Helper Functions
 	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onPreApplyDamage(Damage* applier);
-
-	// Set Status Specific Variables
-	void setAmount(int value) { amount = value; }
 
 	~StatusScope() {}
 };
@@ -618,19 +740,22 @@ public:
 class StatusTangleTrap : public Status
 {
 protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool TIMED = true;
+	static const int MAX_STACKS = 1;
+	static const bool DISPELLABLE = true;
+
+	static const int TIMER = 1;
 public:
-	StatusTangleTrap(Effect* effect, const string & subname, Unit* target, int stacks)
-		: Status(effect, subname, BUFF, target, stacks)
+	StatusTangleTrap(Effect* effect, Unit* target)
+        : Status(effect, "TangleTrap", target, BENEFIT, MATCH, DISPELLABLE, TIMED, TIMER, MAX_STACKS, MAX_STACKS)
 	{}
 
-	// Helper Functions
-	
 	// Main Function
-	virtual StatusMergeResult getMergeResult() const;
-	virtual void onMerge(const StatusMergeResult & mergeResult);
+	virtual StatusInstance getMergeResult() const;
+	virtual void onMerge(const StatusInstance & mergeResult);
 	virtual void onPostBecomeTarget(Targeter* system);
-
-	// Set Status Specific Variables
 
 	~StatusTangleTrap() {}
 };
@@ -694,7 +819,8 @@ public:
 		status = nstatus;
 	}
 
-	Status* findStatus(const string & subname, Unit* target)
+	/*
+	Status* findMatchingStatus(Status* value)
 	{
 		for (int i = 0; i < status.size(); ++i) {
 			if (status[i]->getSubname() == subname && 
@@ -705,7 +831,7 @@ public:
 		return NULL;
 	}
 	
-	vector<Effect*> findEffects(const string & value)
+	vector<Effect*> findEffects(const string & value)	
 	{
 		vector<Effect*> ret;
 		for (int i = 0; i < trigger->getCurrentEffects().size(); ++i) 
@@ -714,33 +840,45 @@ public:
 				ret.push_back(trigger->getCurrentEffects()[i]);
 		return ret;
 	}
-
-	void merge(Status* dominant, Status* recessive) {
-		StatusMergeResult res = recessive->getMergeResult();
-
-		// Do not do onKill(...), for the merged buff should cancel it,
-		// however, we do have to unlink it
-		dominant->onMerge(res);
-		if (recessive->isStackableSelf())
-			recessive->Status::onKill();
-		else
-			recessive->onKill();
-	}
-
+	
 	void merge(Effect* old) 
 	{
 		// Inefficient, but manageable for now
 		for (int i = 0; i < status.size(); ++i)
 		{
 			Status* keep = status[i];
-			Status* replace = old->findStatus(keep->getSubname(), keep->getTarget());
+			Status* replace = old->findMatchingStatus(keep->getSubname(), keep->getTarget());
 			if (replace != NULL) merge(keep, replace);
 		}
 		old->cleanStatus();
 	}
+	*/
+
+	void merge(Status* dominant, Status* recessive) {
+		StatusInstance res = recessive->getMergeResult();
+
+		// Do not do onKill(...), for the onMerge should handle it
+		dominant->onMerge(res);
+		recessive->Status::onKill(); // and Unlink
+		dominant->Status::onSpawn(); // Link 
+	}
+
 
 	void applyEffect()
 	{
+		for (int i = 0; i < status.size(); ++i)
+			status[i]->setMerger(status[i]->getTarget()->getMatchingStatus(status[i]));
+		
+		for (int i = 0; i < status.size(); ++i)
+		{
+			if (status[i]->getMerger() != NULL)
+			{
+				merge(status[i], status[i]->getMerger());
+			}
+			else
+				status[i]->onSpawn();
+		}
+		/*
 		for (int i = 0; i < status.size(); ++i) 
 			status[i]->onSpawn();
 	
@@ -751,6 +889,7 @@ public:
 		for (int i = 0; i < matches.size(); ++i) {
 			merge(matches[i]);
 		}
+		*/
 
 		if (trigger != NULL) trigger->currentEffects.push_back(this);
 	}

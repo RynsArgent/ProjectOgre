@@ -45,15 +45,11 @@ void DamageNode::modify(Unit* target)
 
 int DamageNode::apply(Unit* target)
 {
-	cout << final << endl;
-
 	final = bound(amount, VALUE_DAMAGE);
 	int val = target->getCurrentHealth();
 	if (type != DAMAGE_HEALING) val -= final;
 	else val += final;
 	target->setCurrentHealth(val);
-	
-	cout << final << endl;
 
 	int totalDamage = final;
 	if (next)

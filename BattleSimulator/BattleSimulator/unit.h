@@ -349,7 +349,9 @@ public:
 	}
 
 	bool hasStatus(StatusBenefit benefit) const;
-	vector<Status*> getCurrentStatus(StatusBenefit benefit) const;
+	vector<Status*> getDispellableStatusByBenefit(StatusBenefit benefit) const;
+	vector<Status*> getDispellableStatusBySubname(const string & subname) const;
+	Status* getMatchingStatus(Status* value) const;
 
 	// Process all Effects that have originated from this unit
 	void processEffects();
