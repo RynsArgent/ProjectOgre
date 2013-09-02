@@ -78,18 +78,9 @@ void Damage::apply()
 
 	// Pre Damage Effects
     Unit* applier = action->getSource();
-	if (applier != NULL) {
-		for (int i = 0; i < applier->getCurrentStatus().size(); ++i)
-		{
-			Status* status = applier->getCurrentStatus()[i];
-			status->onPreApplyDamage(this);
-		}
-	}
-	for (int i = 0; i < target->getCurrentStatus().size(); ++i)
-	{
-		Status* status = target->getCurrentStatus()[i];
-		status->onPreReceiveDamage(this);
-	}
+	if (applier != NULL)
+		applier->activateOnPreApplyDamage(this);
+	target->activateOnPreReceiveDamage(this);
 
 	// Apply the final damage
 	if (target->isAlive())
@@ -97,18 +88,9 @@ void Damage::apply()
 			final += head->apply(target);
 
 	// Post Damage Effects
-	for (int i = 0; i < target->getCurrentStatus().size(); ++i)
-	{
-		Status* status = target->getCurrentStatus()[i];
-		status->onPostReceiveDamage(this);
-	}
-	if (applier != NULL) {
-		for (int i = 0; i < applier->getCurrentStatus().size(); ++i)
-		{
-			Status* status = applier->getCurrentStatus()[i];
-			status->onPostApplyDamage(this);
-		}
-	}
+	target->activateOnPostReceiveDamage(this);
+	if (applier != NULL)
+		applier->activateOnPostApplyDamage(this);
 }
 
 void Damage::print(ostream& out) const

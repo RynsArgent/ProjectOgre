@@ -29,38 +29,18 @@ void Event::determineSuccess(Unit* target)
 	Unit* source = ref->getSource();
 
 	// Trigger Pre on hit status effects
-	if (source != NULL) {
-		for (int i = 0; i < source->getCurrentStatus().size(); ++i)
-		{
-			Status* status = source->getCurrentStatus()[i];
-			status->onPrePerformHit(this);
-		}
-	}
-	if (target != NULL) {
-		for (int i = 0; i < target->getCurrentStatus().size(); ++i)
-		{
-			Status* status = target->getCurrentStatus()[i];
-			status->onPreReactHit(this);
-		}
-	}
+	if (source != NULL)
+		source->activateOnPrePerformHit(this);
+	target->activateOnPreReactHit(this);
 
 	// Determine if roll was a success out of a 100%
 	int roll = rand() % 100 + 1;
 	success = roll <= chance;
 	
 	// Trigger Post on hit status effects
-	for (int i = 0; i < target->getCurrentStatus().size(); ++i)
-	{
-		Status* status = target->getCurrentStatus()[i];
-		status->onPostReactHit(this);
-	}
-	if (source != NULL) {
-		for (int i = 0; i < source->getCurrentStatus().size(); ++i)
-		{
-			Status* status = source->getCurrentStatus()[i];
-			status->onPostPerformHit(this);
-		}
-	}
+	target->activateOnPostReactHit(this);
+	if (source != NULL)
+		source->activateOnPostPerformHit(this);
 }
 
 void Event::apply()
@@ -135,16 +115,20 @@ void EventRemoveStatus::apply()
 		return;
 	
 	// Removes the most recent status effect of the matching type
-	vector<Status*> candidateStatusList = target->getDispellableStatusByBenefit(removingType);
-	vector<Status*> targetStatusList;
+	vector<StatusGroup*> candidateStatusList = target->getDispellableStatusByBenefit(removingType);
+	vector<StatusGroup*> targetStatusList;
 	if (candidateStatusList.size() > 0)
 	{
 		string subname = candidateStatusList[candidateStatusList.size() - 1]->getSubname();
-		vector<Status*> targetStatusList = target->getDispellableStatusBySubname(subname);
+		vector<StatusGroup*> targetStatusList = target->getDispellableStatusBySubname(subname);
 	}
+
 	// Remove all status effects with the same name
-	for (int i = 0; i < targetStatusList.size(); ++i)
-		targetStatusList[i]->onKill();
+	for (int i = 0; i < targetStatusList.size(); ++i) {
+		vector<Status*> instances = targetStatusList[i]->getInstances();
+		for (int j = 0; j < instances.size(); ++j)
+			instances[j]->onKill();
+	}
 }
 
 void EventRemoveStatus::print(ostream& out) const

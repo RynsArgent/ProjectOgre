@@ -65,6 +65,7 @@ struct Event;
 struct Damage;
 class Effect;
 class Status;
+class StatusGroup;
 struct Targeter;
 class Ability;
 struct GridPoint;

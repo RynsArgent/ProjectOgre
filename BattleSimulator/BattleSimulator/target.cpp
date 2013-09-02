@@ -67,18 +67,8 @@ void Targeter::set(int n)
     
 	// OnPreTarget Methods
     for (int i = 0; i < candidates.size(); ++i)
-    {
-        for (int j = 0; j < candidates[i]->getCurrentStatus().size(); ++j)
-        {
-            Status* status = candidates[i]->getCurrentStatus()[j];
-            status->onPreBecomeTarget(this);
-        }
-    }
-	for (int i = 0; i < ref->getSource()->getCurrentStatus().size(); ++i)
-	{
-		Status* status = ref->getSource()->getCurrentStatus()[i];
-		status->onPreFindTarget(this);
-	}
+		candidates[i]->activateOnPreBecomeTarget(this);
+	ref->getSource()->activateOnPreFindTarget(this);
 
 	vector<Unit*> cand = candidates;
 	vector<int> prio = priorities;
@@ -199,19 +189,9 @@ void Targeter::set(int n)
 	}
             
     // OnPostTarget Methods
-	for (int i = 0; i < ref->getSource()->getCurrentStatus().size(); ++i)
-	{
-		Status* status = ref->getSource()->getCurrentStatus()[i];
-		status->onPostFindTarget(this);
-	}
+	ref->getSource()->activateOnPostFindTarget(this);
     for (int i = 0; i < chosen.size(); ++i)
-    {
-        for (int j = 0; j < chosen[i]->getCurrentStatus().size(); ++j)
-        {
-            Status* status = chosen[i]->getCurrentStatus()[j];
-            status->onPostBecomeTarget(this);
-        }
-    }
+		chosen[i]->activateOnPostBecomeTarget(this);
 }
 
 void Targeter::print() const

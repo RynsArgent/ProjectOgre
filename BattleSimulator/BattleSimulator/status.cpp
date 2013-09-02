@@ -1,6 +1,5 @@
 #include "status.h"
 
-#include <cstdlib>
 #include "action.h"
 #include "ability.h"
 #include "damage.h"
@@ -8,9 +7,34 @@
 #include "target.h"
 #include "group.h"
 #include "battle.h"
+#include <cstdlib>
+
+int Status::addStacks(int oldstacks)
+{
+	int add = stacks;
+	if (oldstacks + add > this->getMaxSingleStacks())
+		add = this->getMaxSingleStacks() - oldstacks;
+	oldstacks += add;
+	stacks = oldstacks;
+	return add;
+}
 
 bool Status::hasExpired() const {
-	return clean || numStacks <= 0 || (timed && timer <= 0);
+	return clean || stacks <= 0 || (timed && timer <= 0);
+}
+
+void Status::findSetMerger() 
+{
+	vector<StatusGroup*> statusGroups = target->getStatusBySubname(subname);
+
+	merger = NULL;
+	for (int i = 0; i < statusGroups.size(); ++i) {
+		Status* partner = statusGroups[i]->getMatchingStatus(this);
+		if (partner != NULL) {
+			merger = partner;
+			break;
+		}
+	}
 }
 
 bool Status::canMergeWith(Status* rhs) const {
@@ -28,9 +52,11 @@ bool Status::canMergeWith(Status* rhs) const {
 	switch (match) 
 	{
 	case STATUS_UNMATCHABLE:
+		// Cannot not merge with any status
 		return false;
 	case STATUS_SELFMATCHABLE:
 		{
+			// Only merge with similar status of same source
 			if (subname != rhs->subname)
 				return false;
 			Unit* lhsSource = effect->getSource();
@@ -40,88 +66,63 @@ bool Status::canMergeWith(Status* rhs) const {
 			return lhsSource->getName() == rhsSource->getName();
 		}
 	case STATUS_ALLMATCHABLE:
+		// Merge with any similar status
 		return subname == rhs->subname;
 	}
 	return false;
 }
 
+int Status::onMerge(Status* status)
+{
+	int appliedStacks = 0;
+	grouplist = status->grouplist;
+	if (instancing) {
+		// Add a new instance
+		appliedStacks = grouplist->addInstance(this);
+	} else {
+		// Merge the two instances
+		appliedStacks = addStacks(status->getStacks());
+		status->Status::onKill();
+	}
+
+	// Refresh the order
+	if (target != NULL && grouplist != NULL) {
+		target->eraseStatusGroup(grouplist);
+		target->addStatusGroup(grouplist);
+	}
+	
+	return appliedStacks;
+}
+
 void Status::onSpawn()
 {
-	if (target != NULL) 
-	{
-		switch (benefit) 
-		{
-			case BUFF:
-			{
-				int val = target->getNumBuffs();
-				val += 1;
-				target->setNumBuffs(val);
-				break;
-			}
-			case DEBUFF:
-			{
-				int val = target->getNumDebuffs();
-				val += 1;
-				target->setNumDebuffs(val);
-				break;
-			}
-			case NEUTRAL:
-			{
-				int val = target->getNumNeutrals();
-				val += 1;
-				target->setNumNeutrals(val);
-				break;
-			}
+	grouplist = new StatusGroup(subname, target, benefit, match, dispellable, instancing, collective,
+		this->getMaxSingleStacks(), this->getMaxGroupStacks());
+	grouplist->addInstance(this);
+	if (target != NULL && grouplist != NULL)
+		target->addStatusGroup(grouplist);
+}
+
+void Status::onKill() 
+{
+	// Remove Status buff/debuff link from target
+	if (!clean) {
+		grouplist->removeInstance(this);
+
+		// Deallocate the grouplist if it contains no stacks
+		if (grouplist->getTotalStacks() <= 0) {
+			if (target != NULL)
+				target->eraseStatusGroup(grouplist);
+			delete grouplist;
 		}
-		target->currentStatus.push_back(this);
 	}
+	setCleaning();
 }
 
 void Status::onRound() 
 {	
 	if (timed && timer > 0)
 		--timer;
-}
-
-void Status::onKill() 
-{
-	// Remove Status buff/debuff link from target
-	if (!clean && target != NULL) {
-		switch (benefit) 
-		{
-			case BUFF:
-			{
-				int val = target->getNumBuffs();
-				val -= 1;
-				target->setNumBuffs(val);
-				break;
-			}
-			case DEBUFF:
-			{
-				int val = target->getNumDebuffs();
-				val -= 1;
-				target->setNumDebuffs(val);
-				break;
-			}
-			case NEUTRAL:
-			{
-				int val = target->getNumNeutrals();
-				val -= 1;
-				target->setNumNeutrals(val);
-				break;
-			}
-		}
-		target->currentStatus.erase(find(target->currentStatus.begin(), target->currentStatus.end(), this));
-	}
-	clean = true;
-}
-
-StatusInstance Status::getMergeResult() const
-{
-	StatusInstance res;
-	res.timer = timer;
-	res.stacks = numStacks;
-	return res;
 }
 
 void Status::onPrePerformHit(Event* event)
@@ -180,15 +181,11 @@ void Status::onSelectAbility(Unit* caster)
 {
 }
 
-StatusInstance StatusStun::getMergeResult() const
+int StatusStun::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusStun::onMerge(const StatusInstance & mergeResult)
-{
-	timer += mergeResult.timer;
+	int appliedStacks = Status::onMerge(status);
+	timer += status->getTimer();
+	return appliedStacks;
 }
 
 void StatusStun::onCheckpoint(Ability* ability)
@@ -211,15 +208,11 @@ void StatusStun::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(0);
 }
 
-StatusInstance StatusSleep::getMergeResult() const
+int StatusSleep::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusSleep::onMerge(const StatusInstance & mergeResult)
-{
-	timer += mergeResult.timer;
+	int appliedStacks = Status::onMerge(status);
+	timer += status->getTimer();
+	return appliedStacks;
 }
 
 void StatusSleep::onPostReceiveDamage(Damage* applier)
@@ -251,15 +244,12 @@ void StatusSleep::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(0);
 }
 
-StatusInstance StatusFlee::getMergeResult() const
-{
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
 
-void StatusFlee::onMerge(const StatusInstance & mergeResult)
+int StatusFlee::onMerge(Status* status)
 {
-	timer += mergeResult.timer;
+	int appliedStacks = Status::onMerge(status);
+	timer += status->getTimer();
+	return appliedStacks;
 }
 
 void StatusFlee::onSpawn()
@@ -316,15 +306,12 @@ void StatusFlee::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(0);
 }
 
-StatusInstance StatusConfusion::getMergeResult() const
-{
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
 
-void StatusConfusion::onMerge(const StatusInstance & mergeResult)
+int StatusConfusion::onMerge(Status* status)
 {
-	timer += mergeResult.timer;
+	int appliedStacks = Status::onMerge(status);
+	timer += status->getTimer();
+	return appliedStacks;
 }
 
 void StatusConfusion::onPreFindTarget(Targeter* system)
@@ -360,15 +347,11 @@ void StatusConfusion::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(1);
 }
 
-StatusInstance StatusCharm::getMergeResult() const
+int StatusCharm::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusCharm::onMerge(const StatusInstance & mergeResult)
-{
-	timer += mergeResult.timer;
+	int appliedStacks = Status::onMerge(status);
+	timer += status->getTimer();
+	return appliedStacks;
 }
 
 void StatusCharm::onPostReceiveDamage(Damage* applier)
@@ -408,20 +391,15 @@ void StatusCharm::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(1);
 }
 
-StatusInstance StatusPoison::getMergeResult() const
+int StatusPoison::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusPoison::onMerge(const StatusInstance & mergeResult)
-{
-	addStacks(mergeResult.stacks);
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
 }
 
 void StatusPoison::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, numStacks * amount, DAMAGE_MEDIUM, DAMAGE_EARTH);
+	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_EARTH);
 	
 	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
 	log->apply();
@@ -449,20 +427,15 @@ void StatusPoison::onRound()
 	applyTimedDamage();
 }
 
-StatusInstance StatusBleed::getMergeResult() const
+int StatusBleed::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusBleed::onMerge(const StatusInstance & mergeResult)
-{
-	addStacks(mergeResult.stacks);
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
 }
 
 void StatusBleed::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, numStacks * amount, DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
+	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
 	
 	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
 	log->apply();
@@ -477,20 +450,15 @@ void StatusBleed::onRound()
 	applyTimedDamage();
 }
 
-StatusInstance StatusBurn::getMergeResult() const
+int StatusBurn::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusBurn::onMerge(const StatusInstance & mergeResult)
-{
-	addStacks(mergeResult.stacks);
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
 }
 
 void StatusBurn::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, numStacks * amount, DAMAGE_MEDIUM, DAMAGE_FIRE);
+	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_FIRE);
 	
 	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
 	log->apply();
@@ -505,20 +473,15 @@ void StatusBurn::onRound()
 	applyTimedDamage();
 }
 
-StatusInstance StatusRegeneration::getMergeResult() const
+int StatusRegeneration::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusRegeneration::onMerge(const StatusInstance & mergeResult)
-{
-	addStacks(mergeResult.stacks);
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
 }
 
 void StatusRegeneration::applyTimedHeal()
 {
-	int healAmount = numStacks * effect->getSource()->getCurrentMagicAttack();
+	int healAmount = stacks * effect->getSource()->getCurrentMagicAttack();
 	Damage* damage = new Damage(effect, target, healAmount, DAMAGE_LOW, DAMAGE_HEALING);
 	
 	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
@@ -534,15 +497,11 @@ void StatusRegeneration::onRound()
 	applyTimedHeal();
 }
 
-StatusInstance StatusPolymorph::getMergeResult() const
+int StatusPolymorph::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusPolymorph::onMerge(const StatusInstance & mergeResult)
-{
-	timer += mergeResult.timer;
+	int appliedStacks = Status::onMerge(status);
+	timer += status->getTimer();
+	return appliedStacks;
 }
 
 void StatusPolymorph::onPostReceiveDamage(Damage* applier)
@@ -574,15 +533,11 @@ void StatusPolymorph::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(0);
 }
 
-StatusInstance StatusBlind::getMergeResult() const
+int StatusBlind::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusBlind::onMerge(const StatusInstance & mergeResult)
-{
-	timer += mergeResult.timer;
+	int appliedStacks = Status::onMerge(status);
+	timer += status->getTimer();
+	return appliedStacks;
 }
 
 void StatusBlind::onPrePerformHit(Event* event)
@@ -609,38 +564,29 @@ void StatusMortality::modifyAttributes(int dvalue)
 	target->setMaxHealth(val);
 }
 
-StatusInstance StatusMortality::getMergeResult() const
+int StatusMortality::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusMortality::onMerge(const StatusInstance & mergeResult)
-{
-	int stacks = addStacks(mergeResult.stacks);
-	modifyAttributes(-stacks * amount);
+	int appliedStacks = Status::onMerge(status);
+	modifyAttributes(-appliedStacks * amount);
+	return appliedStacks;
 }
 
 void StatusMortality::onSpawn()
 {
 	Status::onSpawn();
-	modifyAttributes(-numStacks * amount);
+	modifyAttributes(-stacks * amount);
 }
 
 void StatusMortality::onKill()
 {
-	modifyAttributes(numStacks * amount);
+	modifyAttributes(stacks * amount);
 	Status::onKill();
 }
 
-StatusInstance StatusBlock::getMergeResult() const
+int StatusBlock::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusBlock::onMerge(const StatusInstance & mergeResult)
-{
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
 }
 
 bool StatusBlock::hasExpired() const
@@ -650,7 +596,7 @@ bool StatusBlock::hasExpired() const
 
 void StatusBlock::applyDamagePrevention(Damage* applier)
 { 
-	int currentPrevention = numStacks * amount;
+	int currentPrevention = stacks * amount;
 	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
 		if (n->type == DAMAGE_PHYSICAL) {
 			int startingDamage = n->amount;
@@ -677,14 +623,10 @@ void StatusBlock::onPreReceiveDamage(Damage* applier)
 		onKill();
 }
 
-StatusInstance StatusTaunt::getMergeResult() const
+int StatusTaunt::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusTaunt::onMerge(const StatusInstance & mergeResult)
-{
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
 }
 
 void StatusTaunt::addToPriorityList(Targeter* system) const
@@ -711,27 +653,22 @@ void StatusBattleShout::modifyAttributes(int dvalue)
 	target->setCurrentPhysicalAttack(val);
 }
 
-StatusInstance StatusBattleShout::getMergeResult() const
+int StatusBattleShout::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusBattleShout::onMerge(const StatusInstance & mergeResult)
-{
-	int stacks = addStacks(mergeResult.stacks);
-	modifyAttributes(stacks * amount);
+	int appliedStacks = Status::onMerge(status);
+	modifyAttributes(appliedStacks * amount);
+	return appliedStacks;
 }
 
 void StatusBattleShout::onSpawn()
 {
 	Status::onSpawn();
-	modifyAttributes(numStacks * amount);
+	modifyAttributes(stacks * amount);
 }
 
 void StatusBattleShout::onKill()
 {
-	modifyAttributes(-numStacks * amount);
+	modifyAttributes(-stacks * amount);
 	Status::onKill();
 }
 
@@ -755,28 +692,22 @@ void StatusBarrier::modifyAttributes(int dvalue)
 	target->setCurrentLightningDefense(val);
 }
 
-StatusInstance StatusBarrier::getMergeResult() const
+int StatusBarrier::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusBarrier::onMerge(const StatusInstance & mergeResult)
-{
-	cout << "Merging " << endl;
-	int stacks = addStacks(mergeResult.stacks);
-	modifyAttributes(stacks * amount);
+	int appliedStacks = Status::onMerge(status);
+	modifyAttributes(appliedStacks * amount);
+	return appliedStacks;
 }
 
 void StatusBarrier::onSpawn()
 {
 	Status::onSpawn();
-	modifyAttributes(numStacks * amount);
+	modifyAttributes(stacks * amount);
 }
 
 void StatusBarrier::onKill()
 {
-	modifyAttributes(-numStacks * amount);
+	modifyAttributes(-stacks * amount);
 	Status::onKill();
 }
 
@@ -787,27 +718,22 @@ void StatusHaste::modifyAttributes(int dvalue)
 	target->setCurrentSpeed(val);
 }
 
-StatusInstance StatusHaste::getMergeResult() const
+int StatusHaste::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusHaste::onMerge(const StatusInstance & mergeResult)
-{
-	int stacks = addStacks(mergeResult.stacks);
-	modifyAttributes(stacks * amount);
+	int appliedStacks = Status::onMerge(status);
+	modifyAttributes(appliedStacks * amount);
+	return appliedStacks;
 }
 
 void StatusHaste::onSpawn()
 {
 	Status::onSpawn();
-	modifyAttributes(numStacks * amount);
+	modifyAttributes(stacks * amount);
 }
 
 void StatusHaste::onKill()
 {
-	modifyAttributes(-numStacks * amount);
+	modifyAttributes(-stacks * amount);
 	Status::onKill();
 }
 
@@ -818,39 +744,29 @@ void StatusChill::modifyAttributes(int dvalue)
 	target->setCurrentSpeed(val);
 }
 
-StatusInstance StatusChill::getMergeResult() const
+int StatusChill::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusChill::onMerge(const StatusInstance & mergeResult)
-{
-	int stacks = addStacks(mergeResult.stacks);
-	modifyAttributes(-stacks * amount);
+	int appliedStacks = Status::onMerge(status);
+	modifyAttributes(-appliedStacks * amount);
+	return appliedStacks;
 }
 
 void StatusChill::onSpawn()
 {
 	Status::onSpawn();
-	modifyAttributes(-numStacks * amount);
+	modifyAttributes(-stacks * amount);
 }
 
 void StatusChill::onKill()
 {
 	int val = target->getCurrentSpeed();
-	modifyAttributes(numStacks * amount);
+	modifyAttributes(stacks * amount);
 }
 
-StatusInstance StatusScope::getMergeResult() const
+int StatusScope::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusScope::onMerge(const StatusInstance & mergeResult)
-{
-	addStacks(mergeResult.stacks);
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
 }
 
 void StatusScope::onPreApplyDamage(Damage* applier)
@@ -863,8 +779,8 @@ void StatusScope::onPreApplyDamage(Damage* applier)
 		applier->size <= 0)
 		return;
 	
-	int div = (numStacks * amount) / applier->size;
-	int rem = (numStacks * amount) % applier->size;
+	int div = (stacks * amount) / applier->size;
+	int rem = (stacks * amount) % applier->size;
 
 	for (DamageNode* node = applier->head; node != NULL; node = node->next) {
 		if (node == applier->head)
@@ -875,14 +791,10 @@ void StatusScope::onPreApplyDamage(Damage* applier)
 	}
 }
 
-StatusInstance StatusTangleTrap::getMergeResult() const
+int StatusTangleTrap::onMerge(Status* status)
 {
-	StatusInstance res = Status::getMergeResult();
-	return res;
-}
-
-void StatusTangleTrap::onMerge(const StatusInstance & mergeResult)
-{
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
 }
 
 void StatusTangleTrap::onPostBecomeTarget(Targeter* system)

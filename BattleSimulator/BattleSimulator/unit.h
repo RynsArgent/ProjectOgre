@@ -46,11 +46,7 @@ private:
 	int gridY;
 
 	vector<Effect*> currentEffects;
-	vector<Status*> currentStatus;
-
-	int numDebuffs;
-	int numBuffs;
-	int numNeutrals;
+	vector<StatusGroup*> currentStatus;
 
 	bool leader;
 	bool done;
@@ -299,7 +295,7 @@ public:
 		return currentEffects;
 	}
 
-	vector<Status*> getCurrentStatus() const {
+	vector<StatusGroup*> getCurrentStatus() const {
 		return currentStatus;
 	}
 
@@ -315,30 +311,6 @@ public:
 	bool isAvailable() const {
 		return isAlive();
 	}
-	
-	int getNumDebuffs() const {
-		return numDebuffs;
-	}
-
-	void setNumDebuffs(int value) {
-		numDebuffs = value;
-	}
-
-	int getNumBuffs() const {
-		return numBuffs;
-	}
-	
-	void setNumBuffs(int value) {
-		numBuffs = value;
-	}
-
-	int getNumNeutrals() const {
-		return numNeutrals;
-	}
-
-	void setNumNeutrals(int value) {
-		numNeutrals = value;
-	}
 
 	void setRValue() {
 		rValue = rand();
@@ -348,10 +320,31 @@ public:
 		return rValue;
 	}
 
+	void addStatusGroup(StatusGroup* group);
+	void eraseStatusGroup(StatusGroup* group);
+	int getNumDebuffs() const;
+	int getNumBuffs() const;
+	int getNumNeutrals() const;
 	bool hasStatus(StatusBenefit benefit) const;
-	vector<Status*> getDispellableStatusByBenefit(StatusBenefit benefit) const;
-	vector<Status*> getDispellableStatusBySubname(const string & subname) const;
-	Status* getMatchingStatus(Status* value) const;
+	vector<StatusGroup*> getStatusBySubname(const string & subname) const;
+	vector<StatusGroup*> getDispellableStatusByBenefit(StatusBenefit benefit) const;
+	vector<StatusGroup*> getDispellableStatusBySubname(const string & subname) const;
+
+	void activateOnRound();
+	void activateOnPrePerformHit(Event* event);
+	void activateOnPostPerformHit(Event* event);
+	void activateOnPreReactHit(Event* event);
+	void activateOnPostReactHit(Event* event);
+	void activateOnPreApplyDamage(Damage* applier);
+	void activateOnPostApplyDamage(Damage* applier);
+	void activateOnPreReceiveDamage(Damage* applier);
+	void activateOnPostReceiveDamage(Damage* applier);
+	void activateOnPreFindTarget(Targeter* system);
+    void activateOnPostFindTarget(Targeter* system);
+	void activateOnPreBecomeTarget(Targeter* system);
+	void activateOnPostBecomeTarget(Targeter* system);
+	void activateOnCheckpoint(Ability* ability);
+    void activateOnSelectAbility(Unit* caster);
 
 	// Process all Effects that have originated from this unit
 	void processEffects();

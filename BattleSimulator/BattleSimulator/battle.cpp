@@ -95,9 +95,7 @@ void Battle::executeTurn()
 		mainUnit->setCurrentTier(2);
 
 		// Activate any status effects that occur on preparing for abilities
-		for (int i = 0; i < mainUnit->getCurrentStatus().size(); ++i) {
-			mainUnit->getCurrentStatus()[i]->onSelectAbility(mainUnit);
-		}
+		mainUnit->activateOnSelectAbility(mainUnit);
 
 		mainUnit->setCurrentSkill(Ability::selectSkill(mainUnit));
 
@@ -123,9 +121,7 @@ void Battle::executeTurn()
 				respondUnit->setCurrentTier(1);
 
 				// Activate any status effects that occur on preparing for abilities
-				for (int i = 0; i < respondUnit->getCurrentStatus().size(); ++i) {
-					respondUnit->getCurrentStatus()[i]->onSelectAbility(respondUnit);
-				}
+				respondUnit->activateOnSelectAbility(respondUnit);
 				
 				respondUnit->setCurrentSkill(Ability::selectSkill(respondUnit));
 

@@ -37,8 +37,8 @@ Battle* battle = NULL;
 Renderer* renderer = new Renderer(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
 
 void initialize() {
-	//int seed = 1377511528;
-	int seed = time(0);
+	int seed = 1377511528;
+	//int seed = time(0);
 	srand(seed);
 	/*
 		*********GROUP A*********
@@ -71,10 +71,10 @@ void initialize() {
 	*/
 
 	formB->setCharacterAt(1, 2, new Fighter("fighter1B"), HUNDRED_BLADES, BLOCK, TAUNT);
-	formB->setCharacterAt(0, 0, new Mage("mage1B"), FIREBALL, FIREBALL, POLYMORPH);
-	formB->setCharacterAt(2, 0, new Mage("mage2B"), FROST_SHARD, FROST_SHARD, POLYMORPH);
-	formB->setCharacterAt(0, 1, new Mage("mage3B"), WATER_JET, WATER_JET, POLYMORPH);
-	formB->setCharacterAt(2, 1, new Mage("mage4B"), WATER_JET, WATER_JET, POLYMORPH);
+	formB->setCharacterAt(0, 0, new Mage("mage1B"), ACID_DART, ACID_DART, POLYMORPH);
+	formB->setCharacterAt(2, 0, new Mage("mage2B"), ACID_DART, ACID_DART, POLYMORPH);
+	formB->setCharacterAt(0, 1, new Mage("mage3B"), ACID_DART, ACID_DART, POLYMORPH);
+	formB->setCharacterAt(2, 1, new Mage("mage4B"), ACID_DART, ACID_DART, POLYMORPH);
 	formB->setLeaderPosition(1, 2);
 	formB->setTargetOrder(TARGET_LEADER);
 	groupB = new Group(formB);

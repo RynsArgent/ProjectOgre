@@ -128,8 +128,7 @@ Targeter* Ability::retrieveFirstPrimaryTargeter() const
 // true means that the ability can continue as planned.
 bool Ability::checkpoint(Unit* current)
 {
-    for (int i = 0; i < current->getCurrentStatus().size(); ++i)
-        current->getCurrentStatus()[i]->onCheckpoint(this);
+	current->activateOnCheckpoint(this);
     return isCancelled();
 }
 
