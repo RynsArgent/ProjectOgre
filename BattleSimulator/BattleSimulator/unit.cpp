@@ -46,6 +46,16 @@ void Unit::eraseStatusGroup(StatusGroup* statusGroup)
 	currentStatus.erase(find(currentStatus.begin(), currentStatus.end(), statusGroup));
 }
 
+void Unit::addEffect(Effect* effect)
+{
+	currentEffects.push_back(effect);
+}
+
+void Unit::eraseEffect(Effect* effect)
+{
+	currentEffects.erase(find(currentEffects.begin(), currentEffects.end(), effect));
+}
+
 int Unit::getNumDebuffs() const 
 {
 	int count = 0;
@@ -124,27 +134,33 @@ void Unit::activateOnRound()
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onRound();
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
-void Unit::activateOnPrePerformHit(Event* event)
+void Unit::activateOnPrePerformHit(Event* evt)
 {
 	for (int i = 0; i < currentStatus.size(); ++i) {
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
-			instances[j]->onPrePerformHit(event);
+			instances[j]->onPrePerformHit(evt);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
-void Unit::activateOnPostPerformHit(Event* event)
+void Unit::activateOnPostPerformHit(Event* evt)
 {
 	for (int i = 0; i < currentStatus.size(); ++i) {
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
-			instances[j]->onPostPerformHit(event);
+			instances[j]->onPostPerformHit(evt);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -154,7 +170,9 @@ void Unit::activateOnPreReactHit(Event* event)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPreReactHit(event);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -164,7 +182,9 @@ void Unit::activateOnPostReactHit(Event* event)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPostReactHit(event);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -174,7 +194,9 @@ void Unit::activateOnPreApplyDamage(Damage* applier)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPreApplyDamage(applier);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -184,7 +206,9 @@ void Unit::activateOnPostApplyDamage(Damage* applier)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPostApplyDamage(applier);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -194,7 +218,9 @@ void Unit::activateOnPreReceiveDamage(Damage* applier)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPreReceiveDamage(applier);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -204,7 +230,9 @@ void Unit::activateOnPostReceiveDamage(Damage* applier)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPostReceiveDamage(applier);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -214,7 +242,9 @@ void Unit::activateOnPreFindTarget(Targeter* system)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPreFindTarget(system);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -224,7 +254,9 @@ void Unit::activateOnPostFindTarget(Targeter* system)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPostFindTarget(system);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -234,7 +266,9 @@ void Unit::activateOnPreBecomeTarget(Targeter* system)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPreBecomeTarget(system);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -244,7 +278,9 @@ void Unit::activateOnPostBecomeTarget(Targeter* system)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onPostBecomeTarget(system);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -254,7 +290,9 @@ void Unit::activateOnCheckpoint(Ability* ability)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onCheckpoint(ability);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -264,7 +302,9 @@ void Unit::activateOnSelectAbility(Unit* caster)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onSelectAbility(caster);
+			currentStatus[i]->setExecuted(true);
 		}
+		currentStatus[i]->setExecuted(false);
 	}
 }
 
@@ -274,6 +314,11 @@ void Unit::processEffects()
 	{
 		Effect* effect = currentEffects[i];
 		effect->processRound();
+	}
+	for (int i = 0; i < currentEffects.size(); ++i)
+	{
+		Effect* effect = currentEffects[i];
+		effect->resetStatusFlag();
 	}
 }
 

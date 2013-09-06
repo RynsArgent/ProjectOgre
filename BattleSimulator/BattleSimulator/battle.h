@@ -21,7 +21,9 @@ private:
 	Unit* respondUnit;
 	Ability* mainAbility;
 	Ability* respondAbility;
+
 	vector<Event*> eventStack;
+	vector<StatusGroup*> cleanup;
 
 	bool isOver;
 public:
@@ -39,7 +41,8 @@ public:
 	void newUnitOrder();
 	void executeTurn();
 	void cleanupTurn();
-    void addToEventStack(Event* event);
+    void addToEventStack(Event* value);
+    void addToCleanup(StatusGroup* value);
     
 	void simulate();
 	

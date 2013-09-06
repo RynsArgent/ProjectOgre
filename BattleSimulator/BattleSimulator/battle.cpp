@@ -19,7 +19,7 @@ bool compareSpeed(Unit* lhs, Unit* rhs) {
 Battle::Battle(int seed, Group* group1, Group* group2)
 	: seed(seed), group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), 
 	mainUnit(NULL), respondUnit(NULL), mainAbility(NULL), respondAbility(NULL),
-	eventStack(), isOver(false)
+	eventStack(), cleanup(), isOver(false)
 {
 	group1->turnToFace(FACING_FORWARD);
 	group2->turnToFace(FACING_FORWARD);
@@ -156,6 +156,9 @@ void Battle::cleanupTurn()
 	for (int i = 0; i < eventStack.size(); ++i)
 		delete eventStack[i];
 	eventStack.clear();
+	for (int i = 0; i < cleanup.size(); ++i)
+		delete cleanup[i];
+	cleanup.clear();
     if (mainAbility) {
 		delete mainAbility;
 		mainAbility = NULL;
@@ -169,8 +172,12 @@ void Battle::cleanupTurn()
 	if (mainUnit) mainUnit->cleanEffects();
 }
 
-void Battle::addToEventStack(Event* event) {
-    eventStack.push_back(event);
+void Battle::addToEventStack(Event* value) {
+    eventStack.push_back(value);
+}
+
+void Battle::addToCleanup(StatusGroup* value) {
+    cleanup.push_back(value);
 }
 
 void Battle::simulate()

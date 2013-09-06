@@ -119,13 +119,8 @@ void EventRemoveStatus::apply()
 	vector<StatusGroup*> targetStatusList;
 	if (candidateStatusList.size() > 0)
 	{
-		string subname = candidateStatusList[candidateStatusList.size() - 1]->getSubname();
-		vector<StatusGroup*> targetStatusList = target->getDispellableStatusBySubname(subname);
-	}
-
-	// Remove all status effects with the same name
-	for (int i = 0; i < targetStatusList.size(); ++i) {
-		vector<Status*> instances = targetStatusList[i]->getInstances();
+		removedResult = candidateStatusList[candidateStatusList.size() - 1];
+		vector<Status*> instances = removedResult->getInstances();
 		for (int j = 0; j < instances.size(); ++j)
 			instances[j]->onKill();
 	}

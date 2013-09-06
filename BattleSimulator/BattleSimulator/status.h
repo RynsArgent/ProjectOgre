@@ -9,6 +9,46 @@
 #include "event.h"
 #include "unit.h"
 
+// Status: This defines an instance of a certain status effect, all status effect types are
+//			derived off of this to share similar information. A status effect registers itself
+//			to base event handlers to perform specific needs. These are modifiable information
+//
+// StatusBenefit BENEFIT = { BUFF, DEBUFF, NEUTRAL };
+// A description of a status effect to determine whether it helps/hurts/meh the target it is
+// attached to.
+//
+// StatusMatch MATCH = { STATUS_UNMATCHABLE, STATUS_SELFMATCHABLE, STATUS_ALLMATCHABLE };
+// Determines how the same status applied to the same target will behave. Unmatchable will
+// have same name status not merge at all and appear as its own status on target. Self matchable
+// will only merge with same name status. All matchable will merge any status with the same name.
+// Note that the merge behavior can be defined uniquely in the onMerge event handler.
+//
+// bool DISPELLABLE = { false, true };
+// A flag to determine whether a status can be removed by special means. 
+//
+// bool INSTANCING = { false, true };
+// Determines whether a merging status should call onMerge, or become its own copy in
+// a Status Group. This is particularly useful when it is desired that you need to group a set
+// of status effects, but each need to keep their individual expiration timer.
+//
+// bool COLLECTIVE = { false, true }
+// This is particularly important for status that do instancing 
+// (any status that uses Status Group). calls to useStacks() will not use the instance's stacks
+// but the total stacks that belong to Status Group. This allows only a single instance to
+// only execute the important parts with access to all stacks 
+// (i.e. don't need to show 5 Damage Events from 5 stacks of poison but only one)
+//
+// bool TIMED = { false, true };
+// Tells whether a status effect will expire through a timer.
+//
+// int MAX_SINGLE_STACKS = { -inf, inf }
+// A limit for Self Merging Status Effects.
+//
+// int MAX_GROUP_STACKS = { -inf, inf }
+// A limit for Status Group total stacks (instancing), the most recent instances will overwrite
+// the older instances.
+//
+
 class Status
 {
 protected:
@@ -118,6 +158,7 @@ public:
 	}
 
 	int useStacks() const;
+
 	// Adds to numStacks and returns the actual number added (due to a max limit),
 	// NOTE: the number returned is assumed that this object is added its stacks to the original
 	int addStacks(int oldstacks);
@@ -155,19 +196,19 @@ public:
     
 	// This deals with events that can have a roller's chance to succeed or fail
 	// (i.e. Blind will affect the chances of success for an attack)
-	virtual void onPrePerformHit(Event* event);
+	virtual void onPrePerformHit(Event* evt);
 
 	// This deals with events that have already determined a roller's chance of success or fail
 	// (i.e. Convert a miss for an attack to an auto-hit)
-	virtual void onPostPerformHit(Event* event);
+	virtual void onPostPerformHit(Event* evt);
 	
 	// This deals with events that can have a target be victim to a chance of success or fail
 	// (i.e. Evasion increases chance of failure for an attack to succeed on self)
-	virtual void onPreReactHit(Event* event);
+	virtual void onPreReactHit(Event* evt);
 	
 	// This deals with events that have already a target be victim to a chance of success or fail
 	// (i.e. Convert a successful hit to an auto-miss)
-	virtual void onPostReactHit(Event* event);
+	virtual void onPostReactHit(Event* evt);
 
 	// This deals with the triggers after damage is applied. 
 	// (i.e. Extra damage against beasts)
@@ -375,7 +416,7 @@ protected:
 	static const int MAX_GROUP_STACKS = 5;
 
 	static const int TIMER = 3;
-	static const int AMOUNT = 10;
+	static const int AMOUNT = 5;
 
 	int amount;
 public:
@@ -408,7 +449,7 @@ protected:
 	static const int MAX_GROUP_STACKS = 5;
 	
 	static const int TIMER = 2;
-	static const int AMOUNT = 15;
+	static const int AMOUNT = 10;
 
 	int amount;
 public:
@@ -441,7 +482,7 @@ protected:
 	static const int MAX_GROUP_STACKS = 5;
 	
 	static const int TIMER = 1;
-	static const int AMOUNT = 20;
+	static const int AMOUNT = 15;
 
 	int amount;
 public:
@@ -513,7 +554,7 @@ public:
 
 	// Main Function
 	virtual int onMerge(Status* status);
-	virtual void onPrePerformHit(Event* event);
+	virtual void onPrePerformHit(Event* evt);
 
 	~StatusBlind() {}
 };
@@ -867,12 +908,13 @@ private:
 	// The list of instances
 	vector<Status*> instances;
 	int totalStacks;
+	bool executed;
 public:
 	StatusGroup(const string & subname, Unit* target = NULL, StatusBenefit benefit = NEUTRAL, StatusMatch match = STATUS_UNMATCHABLE, 
 		bool dispellable = true, bool instancing = false, bool collective = false, int maxSingleStacks = 0, int maxGroupStacks = 0)
 		: subname(subname), target(target), benefit(benefit), 
 		match(match), dispellable(dispellable), instancing(instancing), collective(collective), maxSingleStacks(maxSingleStacks), maxGroupStacks(maxGroupStacks),
-		instances(), totalStacks(0)
+		instances(), totalStacks(0), executed(false)
 	{}
 
 	string getSubname() const {
@@ -911,6 +953,14 @@ public:
 		totalStacks = value;
 	}
 	
+	bool isExecuted() const {
+		return executed;
+	}
+	
+	void setExecuted(bool value) {
+		executed = value;
+	}
+
 	Status* getMatchingStatus(Status* value) const {
 		for (int i = 0; i < instances.size(); ++i) {
 			if (instances[i]->canMergeWith(value))
@@ -977,7 +1027,7 @@ public:
 	bool isExpired() const {
 		return status.size() <= 0;
 	}
-    
+	
     Unit* getTrigger() const {
         return trigger;
     }
@@ -992,6 +1042,7 @@ public:
 		for (int i = 0; i < status.size(); ++i) {
 			// Process the Status effect
 			status[i]->onRound();
+			status[i]->grouplist->setExecuted(true);
 
 			// Sets the clean flag and on End effects
 			if (status[i]->hasExpired()) {
@@ -1000,6 +1051,14 @@ public:
 		}
 	}
 	
+	void resetStatusFlag() {
+		// Reset Status Group has executed flag back to false
+		for (int i = 0; i < status.size(); ++i) {
+			if (!status[i]->hasExpired())
+				status[i]->grouplist->setExecuted(false);
+		}
+	}
+
 	// Cleans up any expired status effects, removing links and trigger onKill
 	void cleanStatus() 
 	{
@@ -1044,7 +1103,7 @@ public:
 		}
 
 		// Add the status effect to the trigger list for onRound processing
-		if (trigger != NULL) trigger->currentEffects.push_back(this);
+		if (trigger != NULL) trigger->addEffect(this);
 	}
     
 	virtual void print(ostream& out) const;

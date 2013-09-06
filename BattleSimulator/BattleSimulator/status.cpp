@@ -9,6 +9,13 @@
 #include "battle.h"
 #include <cstdlib>
 
+int Status::useStacks() const
+{
+	if (collective)
+		return grouplist->getTotalStacks();
+	return stacks;
+}
+
 int Status::addStacks(int oldstacks)
 {
 	int add = stacks;
@@ -79,6 +86,11 @@ int Status::onMerge(Status* status)
 	if (instancing) {
 		// Add a new instance
 		appliedStacks = grouplist->addInstance(this);
+		
+		// Refresh effect order of old status;
+		Effect* mergeEffect = status->getEffect();
+		mergeEffect->getTrigger()->eraseEffect(mergeEffect);
+		mergeEffect->getTrigger()->addEffect(mergeEffect);
 	} else {
 		// Merge the two instances
 		appliedStacks = addStacks(status->getStacks());
@@ -90,7 +102,7 @@ int Status::onMerge(Status* status)
 		target->eraseStatusGroup(grouplist);
 		target->addStatusGroup(grouplist);
 	}
-	
+
 	return appliedStacks;
 }
 
@@ -113,7 +125,7 @@ void Status::onKill()
 		if (grouplist->getTotalStacks() <= 0) {
 			if (target != NULL)
 				target->eraseStatusGroup(grouplist);
-			delete grouplist;
+			effect->getBattle()->addToCleanup(grouplist);
 		}
 	}
 	setCleaning();
@@ -125,19 +137,19 @@ void Status::onRound()
 		--timer;
 }
 
-void Status::onPrePerformHit(Event* event)
+void Status::onPrePerformHit(Event* evt)
 {
 }
 
-void Status::onPostPerformHit(Event* event)
+void Status::onPostPerformHit(Event* evt)
 {
 }
 
-void Status::onPreReactHit(Event* event)
+void Status::onPreReactHit(Event* evt)
 {
 }
 
-void Status::onPostReactHit(Event* event)
+void Status::onPostReactHit(Event* evt)
 {
 }
 
@@ -399,7 +411,7 @@ int StatusPoison::onMerge(Status* status)
 
 void StatusPoison::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_EARTH);
+	Damage* damage = new Damage(effect, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_EARTH);
 	
 	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
 	log->apply();
@@ -424,7 +436,8 @@ void StatusPoison::onRound()
 		return;
 	Status::onRound();
     
-	applyTimedDamage();
+	if (target->isAlive() && (!collective || !grouplist->isExecuted()))
+		applyTimedDamage();
 }
 
 int StatusBleed::onMerge(Status* status)
@@ -435,7 +448,7 @@ int StatusBleed::onMerge(Status* status)
 
 void StatusBleed::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
+	Damage* damage = new Damage(effect, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
 	
 	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
 	log->apply();
@@ -447,7 +460,8 @@ void StatusBleed::onRound()
 		return;
 	Status::onRound();
     
-	applyTimedDamage();
+	if (target->isAlive() && (!collective || !grouplist->isExecuted()))
+		applyTimedDamage();
 }
 
 int StatusBurn::onMerge(Status* status)
@@ -458,7 +472,7 @@ int StatusBurn::onMerge(Status* status)
 
 void StatusBurn::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, amount, DAMAGE_MEDIUM, DAMAGE_FIRE);
+	Damage* damage = new Damage(effect, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_FIRE);
 	
 	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
 	log->apply();
@@ -470,7 +484,8 @@ void StatusBurn::onRound()
 		return;
 	Status::onRound();
     
-	applyTimedDamage();
+	if (target->isAlive() && (!collective || !grouplist->isExecuted()))
+		applyTimedDamage();
 }
 
 int StatusRegeneration::onMerge(Status* status)
@@ -481,8 +496,8 @@ int StatusRegeneration::onMerge(Status* status)
 
 void StatusRegeneration::applyTimedHeal()
 {
-	int healAmount = stacks * effect->getSource()->getCurrentMagicAttack();
-	Damage* damage = new Damage(effect, target, healAmount, DAMAGE_LOW, DAMAGE_HEALING);
+	int healAmount = useStacks() * effect->getSource()->getCurrentMagicAttack();
+	Damage* damage = new Damage(effect, target, useStacks() * healAmount, DAMAGE_LOW, DAMAGE_HEALING);
 	
 	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
 	log->apply();
@@ -494,7 +509,8 @@ void StatusRegeneration::onRound()
 		return;
 	Status::onRound();
     
-	applyTimedHeal();
+	if (target->isAlive() && (!collective || !grouplist->isExecuted()))
+		applyTimedHeal();
 }
 
 int StatusPolymorph::onMerge(Status* status)
@@ -540,19 +556,19 @@ int StatusBlind::onMerge(Status* status)
 	return appliedStacks;
 }
 
-void StatusBlind::onPrePerformHit(Event* event)
+void StatusBlind::onPrePerformHit(Event* evt)
 {
 	if (hasExpired())
 		return;
-	Status::onPrePerformHit(event);
+	Status::onPrePerformHit(evt);
 
-	Action* act = event->ref;
+	Action* act = evt->ref;
 	if (act != NULL) {
 		AbilityType type = act->getAbilityType();
 		if (type == ABILITY_ATTACK_MELEE ||
 			type == ABILITY_ATTACK_RANGE)
 		{
-			event->chance -= 50;
+			evt->chance -= 50;
 		}
 	}
 }
@@ -596,7 +612,7 @@ bool StatusBlock::hasExpired() const
 
 void StatusBlock::applyDamagePrevention(Damage* applier)
 { 
-	int currentPrevention = stacks * amount;
+	int currentPrevention = useStacks() * amount;
 	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
 		if (n->type == DAMAGE_PHYSICAL) {
 			int startingDamage = n->amount;
@@ -779,8 +795,8 @@ void StatusScope::onPreApplyDamage(Damage* applier)
 		applier->size <= 0)
 		return;
 	
-	int div = (stacks * amount) / applier->size;
-	int rem = (stacks * amount) % applier->size;
+	int div = (useStacks() * amount) / applier->size;
+	int rem = (useStacks() * amount) % applier->size;
 
 	for (DamageNode* node = applier->head; node != NULL; node = node->next) {
 		if (node == applier->head)

@@ -15,7 +15,7 @@ struct Event
 	static const int MAGIC_HIT_CHANCE = 100;
 	static const int HEAL_HIT_CHANCE = 100;
 	static const int BUFF_HIT_CHANCE = 100;
-	static const int DEBUFF_HIT_CHANCE = 50;
+	static const int DEBUFF_HIT_CHANCE = 100;
 	static const int UNBUFF_HIT_CHANCE = 100;
 	static const int CLEANSE_HIT_CHANCE = 100;
 
@@ -71,7 +71,7 @@ struct EventRemoveStatus : public Event
 	Unit* target;
 	StatusBenefit removingType;
 
-	Status* removedResult;
+	StatusGroup* removedResult;
 	
 	EventRemoveStatus(Action* ref = NULL, int chance = 100, Unit* target = NULL, StatusBenefit removingType = DEBUFF)
 		: Event(ref, chance), target(target), removingType(removingType), removedResult(NULL)

@@ -50,8 +50,8 @@ void initialize() {
 		              Shoot
 					  Heal       
 	*/
-	formA->setCharacterAt(0, 0, new Mage("mage1A"), BARRIER, POLYMORPH, POLYMORPH);
-	formA->setCharacterAt(2, 0, new Mage("mage2A"), BARRIER, POLYMORPH, POLYMORPH);
+	formA->setCharacterAt(0, 0, new Acolyte("acolyte1B"), CLEANSE, CLEANSE, CLEANSE);
+	formA->setCharacterAt(2, 0, new Acolyte("acolyte1C"), CLEANSE, CLEANSE, CLEANSE);
 	formA->setCharacterAt(1, 0, new Scout("scout1A"), HASTE, SHOOT, SCOPE);
 	formA->setCharacterAt(1, 1, new Scout("scout2A"), SHOOT, SHOOT, SCOPE);
 	formA->setCharacterAt(1, 2, new Acolyte("acolyte1A"), HEAL, HEAL, HEAL);

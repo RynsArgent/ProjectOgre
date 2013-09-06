@@ -322,6 +322,8 @@ public:
 
 	void addStatusGroup(StatusGroup* group);
 	void eraseStatusGroup(StatusGroup* group);
+	void addEffect(Effect* effect);
+	void eraseEffect(Effect* effect);
 	int getNumDebuffs() const;
 	int getNumBuffs() const;
 	int getNumNeutrals() const;
@@ -331,10 +333,10 @@ public:
 	vector<StatusGroup*> getDispellableStatusBySubname(const string & subname) const;
 
 	void activateOnRound();
-	void activateOnPrePerformHit(Event* event);
-	void activateOnPostPerformHit(Event* event);
-	void activateOnPreReactHit(Event* event);
-	void activateOnPostReactHit(Event* event);
+	void activateOnPrePerformHit(Event* evt);
+	void activateOnPostPerformHit(Event* evt);
+	void activateOnPreReactHit(Event* evt);
+	void activateOnPostReactHit(Event* evt);
 	void activateOnPreApplyDamage(Damage* applier);
 	void activateOnPostApplyDamage(Damage* applier);
 	void activateOnPreReceiveDamage(Damage* applier);
