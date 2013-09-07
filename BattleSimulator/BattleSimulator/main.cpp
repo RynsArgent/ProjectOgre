@@ -37,8 +37,8 @@ Battle* battle = NULL;
 Renderer* renderer = new Renderer(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
 
 void initialize() {
-	int seed = 1377511528;
-	//int seed = time(0);
+	//int seed = 1377511528;
+	int seed = time(0);
 	srand(seed);
 	/*
 		*********GROUP A*********

@@ -302,7 +302,7 @@ void Unit::activateOnSelectAbility(Unit* caster)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onSelectAbility(caster);
-			currentStatus[i]->setExecuted(true);
+            currentStatus[i]->setExecuted(true);
 		}
 		currentStatus[i]->setExecuted(false);
 	}

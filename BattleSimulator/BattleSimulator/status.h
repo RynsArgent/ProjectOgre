@@ -154,7 +154,7 @@ public:
 		stacks = 0;
 		timer = 0;
 		clean = true;
-		grouplist = NULL;
+        grouplist = NULL;
 	}
 
 	int useStacks() const;
@@ -1042,12 +1042,14 @@ public:
 		for (int i = 0; i < status.size(); ++i) {
 			// Process the Status effect
 			status[i]->onRound();
-			status[i]->grouplist->setExecuted(true);
+            if (status[i]->grouplist)
+                status[i]->grouplist->setExecuted(true);
 
 			// Sets the clean flag and on End effects
-			if (status[i]->hasExpired()) {
+			if (status[i]->hasExpired())
 				status[i]->onKill();
-			}
+			else
+                status[i]->grouplist->setExecuted(true);
 		}
 	}
 	

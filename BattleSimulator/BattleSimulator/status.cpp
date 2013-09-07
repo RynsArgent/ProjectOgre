@@ -435,7 +435,7 @@ void StatusPoison::onRound()
 	if (hasExpired())
 		return;
 	Status::onRound();
-    
+
 	if (target->isAlive() && (!collective || !grouplist->isExecuted()))
 		applyTimedDamage();
 }
