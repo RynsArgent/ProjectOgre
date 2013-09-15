@@ -1,9 +1,13 @@
+var mapdata = require('../resources/tmp.map.1.js');
+
 var game = function () {
     var terrain_dicitonary,
     
-        createTile, createMap, createPlayer,
+        createTile, createMap, createPlayer, createSettlement,
         
-        players = [];
+        players = [],
+        map,
+        settlements = [];
         
     terrain_dictionary = (function () {
         var dict = {
@@ -114,7 +118,7 @@ var game = function () {
                             index : i * columns + j,    // index = row * columns + col
                             width : tileWidthInPixels,
                             height : tileHeightInPixels,
-                            bgImage : terrain_dictionary.getImageObject(k)
+                            bgImage : terrain_dictionary.getImagePath(k)
                         }));
                     }
                     tilemap.push(row);
@@ -186,6 +190,57 @@ var game = function () {
         };
     };
     /////////////////////////////////////////////////////////
+    createSettlement = function (data) {
+         var imgsrc = data.imgsrc,
+            imgkey = data.imagekey,
+            size = data.size,   // size of settlement is determined by tiles
+                                // small : 1 tile, medium : 2x2 tiles, large : 3x3 tiles
+            containingTiles = data.containingTiles, // an array of the tile locations in which contains this settlement
+            
+            // attributes
+            population = data.population || Math.random() * 100,
+            happiness = data.happiness || Math.random() * 100,
+            income = data.income || Math.random() * 100,
+            harvest = data.harvest || Math.random() * 100,
+            gold = data.gold || Math.random() * 100,
+            food = data.food || Math.random() * 100,
+            order = data.order || Math.random() * 100,
+            
+            owner = null;
+            
+            return {
+                ownedBy : function () {
+                    return owner;
+                },
+                
+                getSize : function () {
+                    return size;
+                },
+                
+                containedInTiles : function () {
+                    return containingTiles;
+                },
+                
+                getImageSource : function () {
+                    return imgsrc;
+                },
+                
+                containingTiles : containingTiles,
+                owner : owner,
+                size : size,
+                imagesource : imgsrc,
+                imagekey : imgkey,
+                
+                Population : population,
+                Happiness : happiness,
+                Income : income,
+                Harvest : harvest,
+                Gold : gold,
+                Food : food,
+                Order : order
+            };
+    };
+    /////////////////////////////////////////////////////////
     createPlayer = function (data) {
         var id, name, ip;
         
@@ -200,7 +255,55 @@ var game = function () {
             }
         };
     };
-};
+    
+    
+    return {
+        // This is where a game instance is initialized
+        // the data passed in would probably be the map
+        // data file or the location to the map.
+        initialize : function (params) {
+            map = createMap(params.mapdata);
+            this.seedSettlements(Math.random() * 100);
+        },
+        
+        seedSettlements : function (seed) {
+            var i, node, usedTiles = [], t;
+                t = {row:Math.random() * map.numberOfRows, col:Math.random() * map.numberOfColumns};
+            
+            console.log('seeding settlements');
+            for (i = 0; i < seed; i += 1) {
+                do {
+                    t = {row:Math.random() * map.numberOfRows, col:Math.random() * map.numberOfColumns};
+                } while (usedTiles.indexOf(t) >= 0);
+                
+                node = createSettlement({
+                    imgsrc : 'images/CastleRed.png',
+                    imagekey : 'CastleRed',
+                    size : 'medium',
+                    containingTiles : [t, {row:t.row+1, col:t.col}, {row:t.row, col:t.col+1}, {row:t.row+1, col:t.col+1}]
+                });
+                
+                usedTiles.push(t);
+                usedTiles.push({row:t.row+1, col:t.col});
+                usedTiles.push({row:t.row, col:t.col+1});
+                usedTiles.push({row:t.row+1, col:t.col+1});
+                
+                settlements.push(node);
+            }
+            console.log(' Settlements established : ' + settlements.length);
+        },
+        
+        addPlayer : function (player) {
+            if (players.indexOf(player) < 0) {
+                players.push(player);
+            }
+        },
+        
+        getSettlements : function () {
+            return settlements;
+        }
+    };
+};  // end game
 
 
 var game_server = module.exports = (function () {
@@ -209,7 +312,13 @@ var game_server = module.exports = (function () {
         onPlayerDisconnect,
         tick,
         update,
+        games = [],
         players = {};
+    
+    // initialize a game
+    
+    games[0] = game();
+    games[0].initialize({mapdata:mapdata});
         
     // define privileged functions
     return {
@@ -232,10 +341,14 @@ var game_server = module.exports = (function () {
             if (players[client.userid] !== undefined) {
                 players[client.userid] = client;
             }
+            
+            games[0].addPlayer(client);
+            
             callback({
                 status : "success", 
                 msg : client.userid + " logged in as " + client.username + " from " + client.handshake.address.address,
-                username : client.username
+                username : client.username,
+                settlements : games[0].getSettlements()
             });
         }
     };

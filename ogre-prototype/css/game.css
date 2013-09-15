@@ -83,6 +83,11 @@ div#log_container {
 	
 	border: 2px solid black;
 	
+	background-color: black;
+	opacity: 0.9;
+	
+	color: white;
+	
 	position: absolute;
 	right: 0;
 	top: 0;
@@ -92,6 +97,11 @@ div#log_container {
 div#tools_container {
 	margin: 0;
 	border: 2px solid black;
+	
+	background-color: black;
+	opacity: 0.9;
+	color: white;
+	
 	
 	width: 100%;
 	height: 20%;

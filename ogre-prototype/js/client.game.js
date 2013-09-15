@@ -10,6 +10,38 @@ if (typeof Object.create !== 'function') {
     };
 }
 ///////////////////////////////////////////////////////////////////////////////
+var resources = (function () {
+    var dict = {
+        'CastleRed' : {label: 'CasteRed', image: 'images/CastleRed.png', width: 32, height: 32}
+    }
+    
+    return {
+        preloadAll : function () {
+            var keys = Object.keys(dict),
+                i,
+                img;
+            for(i = 0; i < keys.length; i += 1) {
+                img = new Image();
+                img.src = dict[ keys[i] ].image;
+                dict[ keys[i] ].imageObject = img;
+            }
+        },
+        
+        getImageObject : function (key) {
+            var img;
+            if (dict[key].imageObject === undefined) {
+                img = new Image();
+                img.src = dict[key].image;
+                dict[key].imageObject = img;
+            }
+            return dict[key].imageObject;
+        },
+        
+        getLabelFor : function (key) {
+            return dict[key].label;
+        }
+    }
+}());
 
 var terrain_dictionary = (function () {
     var dict = {
@@ -218,11 +250,32 @@ var createMap = function (data) {//(rows, columns, tileWidthInPixels, tileHeight
     };
 };
 
-///////////////////////////////////////////////////////////////////////////////
-
-jQuery(document).ready(function () {
-    'use strict';
-    var gameClient,
+var createClient = function () {
+    // Declare private variables and methods
+    var that, player,
+        
+        tick, update, animate, draw,
+        
+        handleInput, resizeScreen,
+        
+        //socket = io.connect(),
+        
+        bgCanvas = jQuery("#bg").get(0),
+        stCanvas = jQuery("#st").get(0),
+        mainCanvas = jQuery("#main").get(0),
+        fgCanvas = jQuery("#fg").get(0),
+        
+        bgContext = bgCanvas.getContext('2d'),
+        stContext = stCanvas.getContext('2d'),
+        mainContext = mainCanvas.getContext('2d'),
+        fgContext = fgCanvas.getContext('2d'),
+        
+        gamescreen = {},
+        
+        scroll = {x: 0, y: 0},
+        
+        map, settlements,
+        
         Keys = {
 	        UP : 38,
 	        DOWN : 40,
@@ -237,74 +290,140 @@ jQuery(document).ready(function () {
 	        a : 97,
 	        d : 100
         };
-    
-    jQuery("#enterBtn").click(function(ev) {
-        var username = jQuery("#username").val();
-        gameClient.requestLogin(username);
+        
+    resizeScreen = function (dimensions) {
+        gamescreen.width = dimensions.width;
+        gamescreen.height = dimensions.height;
+        
+        bgCanvas.width = gamescreen.width;
+        bgCanvas.height = gamescreen.height;
+        
+        stCanvas.width = gamescreen.width;
+        stCanvas.height = gamescreen.height;
+        
+        mainCanvas.width = gamescreen.width;
+        mainCanvas.height = gamescreen.height;
+        
+        fgCanvas.width = gamescreen.width;
+        fgCanvas.height = gamescreen.height;
+    };
+        
+
+    resizeScreen({
+        width : document.body.clientWidth,
+        height : document.body.clientHeight
     });
 
-    gameClient = (function () {
-        // Declare private variables and methods
-        var that, player,
+    ///////////////////////////////
+    
+    tick = function () {
+        requestAnimationFrame(tick);
+        
+        console.log( 'gameClient: called tick' );
+    };
+    
+    draw = function () {
+        requestAnimationFrame(draw);
+        
+        bgContext.fillStyle = '#ffffff';
+        bgContext.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+        
+        //stContext.fillStyle = '#ffffff';
+        //stContext.fillRect(0, 0, stCanvas.width, stCanvas.height);
+        stContext.clearRect(0, 0, stCanvas.width, stCanvas.height);
+        
+        var startRow = Math.floor(scroll.x / map.getTileWidthInPixels()), 
+            startCol = Math.floor(scroll.y / map.getTileHeightInPixels()), 
             
-            tick, update, animate, draw,
-            
-            handleInput, resizeScreen,
-            
-            socket = io.connect(),
-            
-            bgCanvas = jQuery("#bg").get(0),
-            stCanvas = jQuery("#st").get(0),
-            mainCanvas = jQuery("#main").get(0),
-            fgCanvas = jQuery("#fg").get(0),
-            
-            bgContext = bgCanvas.getContext('2d'),
-            stContext = stCanvas.getContext('2d'),
-            mainContext = mainCanvas.getContext('2d'),
-            fgContext = fgCanvas.getContext('2d'),
-            
-            gamescreen = {},
-            
-            scroll = {x: 0, y: 0},
-            
-            map;
-            
-        resizeScreen = function (dimensions) {
-            gamescreen.width = dimensions.width;
-            gamescreen.height = dimensions.height;
-            
-            bgCanvas.width = gamescreen.width;
-            bgCanvas.height = gamescreen.height;
-            
-            stCanvas.width = gamescreen.width;
-            stCanvas.height = gamescreen.height;
-            
-            mainCanvas.width = gamescreen.width;
-            mainCanvas.height = gamescreen.height;
-            
-            fgCanvas.width = gamescreen.width;
-            fgCanvas.height = gamescreen.height;
-        };
-            
+            rowCount = startRow + Math.floor(bgCanvas.width / map.getTileWidthInPixels()) + 1, 
+            colCount = startCol + Math.floor(bgCanvas.height / map.getTileHeightInPixels()) + 1,
 
-        resizeScreen({
-            width : document.body.clientWidth,
-            height : document.body.clientHeight
-        });
-
-        // connection communications //
-        // Handle when we connect to the server, showing state and storing id's.
-        socket.on('onconnected', function (data) {
-            console.log('gameClient : onconnected');
-            console.log(data);
+            row, col,
+            tilePositionX, tilePositionY,
+            tile, img;
             
+        if ((startRow + rowCount) > map.numberOfRows) {
+            rowCount = map.numberOfRows;
+        }
+        
+        if ((startCol + colCount) > map.numberOfColumns) {
+            colCount = map.numberOfColumns;
+        }
+        /*console.log({
+            label : "executing draw",
+            scroll : scroll,
+            tilepixelwidth : map.getTileWidthInPixels(),
+            tilepixelheight : map.getTileHeightInPixels(),
+            startRow : startRow,
+            startCol : startCol,
+            rowCount : rowCount,
+            colCount : colCount,
+            numOfRows : map.numberOfRows,
+            numOfCols : map.numberOfColumns
+        });*/
+        for (row = startRow; row < rowCount && row < map.numberOfRows; row += 1) {
+            for (col = startCol; col < colCount && col < map.numberOfColumns; col += 1) {
+                tilePositionX = map.getTileWidthInPixels() * row;
+                tilePositionY = map.getTileHeightInPixels() * col;
+                
+                tilePositionX -= scroll.x;
+                tilePositionY -= scroll.y;
+                
+                tile = map.getTileAt(row, col);
+                img = tile.getBackgroundImage();
+                
+                bgContext.drawImage(img,
+                    tilePositionX, 
+                    tilePositionY,
+                    map.getTileWidthInPixels(),
+                    map.getTileHeightInPixels());
+            }
+        }
+        
+        /// draw settlements
+        var i, j, shoulddraw;
+        
+        for (i = 0; i < settlements.length; i +=1 ) {
+            shoulddraw = false;
+            for (j = 0; j < settlements[i].containingTiles.length; j += 1) {
+                if (settlements[i].containingTiles[j].row >= startRow && 
+                    settlements[i].containingTiles[j].row <= rowCount &&
+                    settlements[i].containingTiles[j].col >= startCol &&
+                    settlements[i].containingTiles[j].col <= colCount) {
+                    
+                    shoulddraw = true;
+                }
+            }
+            
+            if (shoulddraw) {
+                img = resources.getImageObject(settlements[i].imagekey);
+                
+                //tilePositionX = settlements[i].containingTiles[0].row * 64;
+                //tilePositionY = settlements[i].containingTiles[0].col * 64;
+                
+                stContext.drawImage(img,
+                    settlements[i].containingTiles[0].row * 32,
+                    settlements[i].containingTiles[0].col * 32,
+                    64,
+                    64);
+            }
+        }
+    };  // end draw
+
+    // define privileged functions
+    return {
+        onconnected : function (data, callback) {
             player = {
                 userid : data.userid,
                 userip : data.userip
             };
-        });
+            
+            if (callback !== undefined) {
+                callback();
+            }
+        },
         
-        socket.on('onloggedin', function (data) {
+        onloggedin : function (data, callback) {
             console.log('gameClient : onloggedin');
             console.log(data);
             
@@ -315,134 +434,98 @@ jQuery(document).ready(function () {
                 // but for now we are going to cheat and use a pre-defined
                 // map data file
                 map = createMap(tmp_data);
+                settlements = data.settlements;
                 
                 //tick();
                 draw();
                 
-                jQuery("div#frontPage").hide("slide", { direction: "left" }, "slow", function() {
-                    jQuery("div#gamePage").show("slide", { direction: "right" }, "slow");
-                });
+                if (callback !== undefined) {
+                    callback(data);
+                }
             }
+        },
+        
+        screenDimension : function () {
+            return gamescreen;
+        },
+        
+        scroll : function () {
+            return scroll;
+        },
+        
+        screenResize : function (dimensions) {
+            resizeScreen(dimensions);
+        },
+        
+        handleKeyboard : function (event) {
+            switch (event.keyCode) {
+                case Keys.W:
+                case Keys.w:
+                case Keys.UP:
+                    if (scroll.y - map.getTileHeightInPixels() >= 0) {
+                        scroll.y -= map.getTileHeightInPixels();
+                    }
+                    break;
+                case Keys.S:
+                case Keys.s:
+                case Keys.DOWN:
+                    if (scroll.y + map.getTileHeightInPixels() <= 
+                        map.getHeightInPixels() - gamescreen.height) {
+                        
+                        scroll.y += map.getTileHeightInPixels();
+                    }
+                    break;
+                case Keys.A:
+                case Keys.a:
+                case Keys.LEFT:
+                    if (scroll.x - map.getTileWidthInPixels() >= 0) {
+                        scroll.x -= map.getTileWidthInPixels();
+                    }
+                    break;
+                case Keys.D:
+                case Keys.d:
+                case Keys.RIGHT:
+                    if (scroll.x + map.getTileWidthInPixels() <=
+                        map.getWidthInPixels() - gamescreen.width) {
+                        
+                        scroll.x += map.getTileWidthInPixels();   
+                    }
+                    break;
+            }
+            
+            jQuery("#scrollx").html(scroll.x);
+            jQuery("#scrolly").html(scroll.y);
+        }
+    };
+    
+}; // end gameClient
+
+///////////////////////////////////////////////////////////////////////////////
+
+jQuery(document).ready(function () {
+    'use strict';
+    var socket = io.connect(),
+        gameClient = createClient();
+    
+    jQuery("#enterBtn").click(function(ev) {
+        var username = jQuery("#username").val();
+        socket.emit('requestlogin', username);
+    });
+    
+    // connection communications //
+    // Handle when we connect to the server, showing state and storing id's.
+    socket.on('onconnected', function (data) {
+        gameClient.onconnected(data);
+    });
+    socket.on('onloggedin', function (data) {
+        gameClient.onloggedin(data, function () {
+            jQuery("div#frontPage").hide("slide", { direction: "left" }, "slow", function() {
+                jQuery("div#gamePage").show("slide", { direction: "right" }, "slow");
+            });
         });
-        ///////////////////////////////
-        
-        tick = function () {
-            requestAnimationFrame(tick);
-            
-            console.log( 'gameClient: called tick' );
-        };
-        
-        draw = function () {
-            requestAnimationFrame(draw);
-            
-            bgContext.fillStyle = '#ffffff';
-            bgContext.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-            
-            var startRow = Math.floor(scroll.x / map.getTileWidthInPixels()), 
-                startCol = Math.floor(scroll.y / map.getTileHeightInPixels()), 
-                
-                rowCount = startRow + Math.floor(bgCanvas.width / map.getTileWidthInPixels()) + 1, 
-                colCount = startCol + Math.floor(bgCanvas.height / map.getTileHeightInPixels()) + 1,
-
-                row, col,
-                tilePositionX, tilePositionY,
-                tile, img;
-                
-            if ((startRow + rowCount) > map.numberOfRows) {
-                rowCount = map.numberOfRows;
-            }
-            
-            if ((startCol + colCount) > map.numberOfColumns) {
-                colCount = map.numberOfColumns;
-            }
-            /*console.log({
-                label : "executing draw",
-                scroll : scroll,
-                tilepixelwidth : map.getTileWidthInPixels(),
-                tilepixelheight : map.getTileHeightInPixels(),
-                startRow : startRow,
-                startCol : startCol,
-                rowCount : rowCount,
-                colCount : colCount,
-                numOfRows : map.numberOfRows,
-                numOfCols : map.numberOfColumns
-            });*/
-            for (row = startRow; row < rowCount && row < map.numberOfRows; row += 1) {
-                for (col = startCol; col < colCount && col < map.numberOfColumns; col += 1) {
-                    tilePositionX = map.getTileWidthInPixels() * row;
-                    tilePositionY = map.getTileHeightInPixels() * col;
-                    
-                    tilePositionX -= scroll.x;
-                    tilePositionY -= scroll.y;
-                    
-                    tile = map.getTileAt(row, col);
-                    img = tile.getBackgroundImage();
-                    
-                    bgContext.drawImage(img,
-                        tilePositionX, 
-                        tilePositionY,
-                        map.getTileWidthInPixels(),
-                        map.getTileHeightInPixels());
-                }
-            }
-        };  // end draw
-
-        // define privileged functions
-        return {
-            requestLogin : function (username) {
-                socket.emit('requestlogin', username);
-            },
-            
-            screenDimension : function () {
-                return gamescreen;
-            },
-            
-            scroll : function () {
-                return scroll;
-            },
-            
-            screenResize : function (dimensions) {
-                resizeScreen(dimensions);
-            },
-            
-            handleKeyboard : function (event) {
-                switch (event.keyCode) {
-                    case Keys.W:
-                    case Keys.w:
-                        if (scroll.y - map.getTileHeightInPixels() >= 0) {
-                            scroll.y -= map.getTileHeightInPixels();
-                        }
-                        break;
-                    case Keys.S:
-                    case Keys.s:
-                        if (scroll.y + map.getTileHeightInPixels() <= 
-                            map.getHeightInPixels() - gamescreen.height) {
-                            
-                            scroll.y += map.getTileHeightInPixels();
-                        }
-                        break;
-                    case Keys.A:
-                    case Keys.a:
-                        if (scroll.x - map.getTileWidthInPixels() >= 0) {
-                            scroll.x -= map.getTileWidthInPixels();
-                        }
-                        break;
-                    case Keys.D:
-                    case Keys.d:
-                        if (scroll.x + map.getTileWidthInPixels() <=
-                            map.getWidthInPixels() - gamescreen.width) {
-                            
-                            scroll.x += map.getTileWidthInPixels();   
-                        }
-                        break;
-                }
-                
-                jQuery("#scrollx").html(scroll.x);
-                jQuery("#scrolly").html(scroll.y);
-            }
-        };
-        
-    }()); // end gameClient
+    });
+    
+    ////////////////////////////////////////////////////////////////////////////
     
     jQuery(window).keypress(function (event) {
         gameClient.handleKeyboard(event);
