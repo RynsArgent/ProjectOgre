@@ -9,7 +9,7 @@
 
 class Unit
 {
-private:
+protected:
 	Character* character;
 
 	int currentHealth;

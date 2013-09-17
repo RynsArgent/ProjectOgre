@@ -32,10 +32,11 @@ protected:
 	std::vector<Skill> backSkills;
 	std::vector<Skill> midSkills;
 	std::vector<Skill> frontSkills;
-	Skill basicSkill;
-	Skill backSkill;
-	Skill midSkill;
-	Skill frontSkill;
+	std::vector<Skill> basicSkills;
+	int backSkillIndex;
+	int midSkillIndex;
+	int frontSkillIndex;
+	int basicSkillIndex;
 
 	int baseUpkeep;
 public:
@@ -43,6 +44,8 @@ public:
 		int basePhysicalDefense = 0, int fireDefense = 0, int waterDefense = 0, 
 		int earthDefense = 0, int iceDefense = 0, int lightningDefense = 0,
 		int size = 0, ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+
+	virtual void init() = 0;
 
 	int getBasePhysicalAttack() const {
 		return basePhysicalAttack;
@@ -148,36 +151,52 @@ public:
 		this->favoredElement = favoredElement;
 	}
 
-	Skill getBasicSkill() const {
-		return basicSkill;
-	}
-	
-	void setBasicSkill(Skill value) {
-		basicSkill = value;
-	}
-
 	Skill getBackSkill() const {
-		return backSkill;
+		return backSkills[backSkillIndex];
 	}
 	
-	void setBackSkill(Skill value) {
-		backSkill = value;
-	}
-
 	Skill getMidSkill() const {
-		return midSkill;
-	}
-	
-	void setMidSkill(Skill value) {
-		midSkill = value;
+		return midSkills[midSkillIndex];
 	}
 	
 	Skill getFrontSkill() const {
-		return frontSkill;
+		return frontSkills[frontSkillIndex];
+	}
+	
+	Skill getBasicSkill() const {
+		return basicSkills[basicSkillIndex];
 	}
 
-	void setFrontSkill(Skill value) {
-		frontSkill = value;
+	void setBackSkillIndex(int value) {
+		backSkillIndex = value;
+	}
+	
+	int getBackSkillIndex() const {
+		return backSkillIndex;
+	}
+
+	void setMidSkillIndex(int value) {
+		midSkillIndex = value;
+	}
+	
+	int getMidSkillIndex() const {
+		return midSkillIndex;
+	}
+
+	void setFrontSkillIndex(int value) {
+		frontSkillIndex = value;
+	}
+	
+	int getFrontSkillIndex() const {
+		return frontSkillIndex;
+	}
+
+	void setBasicSkillIndex(int value) {
+		basicSkillIndex = value;
+	}
+	
+	int getBasicSkillIndex() const {
+		return basicSkillIndex;
 	}
 
 	const string& getName() const {
@@ -209,6 +228,7 @@ protected:
 	const static int BASE_SIZE = 1;
 public:
 	Fighter(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+	virtual void init();
 
 	~Fighter() {}
 };
@@ -231,6 +251,7 @@ protected:
 	const static int BASE_SIZE = 1;
 public:
 	Scout(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+	virtual void init();
 
 	~Scout() {}
 };
@@ -253,6 +274,7 @@ protected:
 	const static int BASE_SIZE = 1;
 public:
 	Acolyte(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+	virtual void init();
 
 	~Acolyte() {}
 };
@@ -275,6 +297,7 @@ protected:
 	const static int BASE_SIZE = 1;
 public:
 	Mage(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+	virtual void init();
 
 	~Mage() {}
 };

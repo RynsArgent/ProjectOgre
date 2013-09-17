@@ -35,6 +35,8 @@ enum Skill {
 	SHOOT, HASTE, SCOPE, TANGLE_TRAP, 
 	HEAL, CLEANSE, REJUVENATE, BLIND,
 	BARRIER, POLYMORPH, FIREBALL, WATER_JET, ACID_DART, FROST_SHARD, LIGHTNING_BOLT};
+enum SkillSet { SPELL1 };
+Skill retrieveSkill(SkillSet set, ElementType element);
 
 int bound(int value, int min, int max);
 int bound(int value, AttributeType type);

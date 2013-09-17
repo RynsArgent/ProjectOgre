@@ -108,26 +108,36 @@ void Battle::executeTurn()
 	respondAbility = NULL;
 	if (mainAbility != NULL)
 	{
+		// Look for the first able primary responder who can counter.
 		//Targeter* mainTargeter = mainAbility->retrieveFirstPrimaryTargeter();
 		Targeter* mainTargeter = NULL;
-		if (mainAbility->getTargeters().size() > 0)
-			mainTargeter = mainAbility->getTargeters()[0];
-		if (mainTargeter != NULL)
+		vector<Targeter*> targeters = mainAbility->getTargeters();
+		for (int i = 0; i < targeters.size(); ++i)
 		{
-			respondUnit = mainTargeter->getPrimary();
-			if (respondUnit != NULL && mainTargeter->provoked)
+			mainTargeter = targeters[i];
+			if (mainTargeter != NULL)
 			{
-				respondUnit->setCurrentSkill(NO_STANDARD_SKILL);
-				respondUnit->setCurrentTier(1);
+				respondUnit = mainTargeter->getPrimary();
+				if (respondUnit != NULL && mainTargeter->provoked)
+				{
+					respondUnit->setCurrentSkill(NO_STANDARD_SKILL);
+					respondUnit->setCurrentTier(1);
 
-				// Activate any status effects that occur on preparing for abilities
-				respondUnit->activateOnSelectAbility(respondUnit);
+					// Activate any status effects that occur on preparing for abilities
+					respondUnit->activateOnSelectAbility(respondUnit);
 				
-				respondUnit->setCurrentSkill(Ability::selectSkill(respondUnit));
+					respondUnit->setCurrentSkill(Ability::selectSkill(respondUnit));
 
-				respondAbility = Ability::getAbility(respondUnit->getCurrentSkill());
-				if (Ability::isAbleToRespond(mainAbility, respondAbility) && respondAbility->getAbilityType() != ABILITY_NONE)
-					respondAbility->action(mainAbility, respondUnit, this);
+					respondAbility = Ability::getAbility(respondUnit->getCurrentSkill());
+					if (Ability::isAbleToRespond(mainAbility, respondAbility) && respondAbility->getAbilityType() != ABILITY_NONE) {
+						respondAbility->action(mainAbility, respondUnit, this);
+						break; // found ability to counter used to counter, no need to look further
+					}
+					else {
+						delete respondAbility;
+						respondAbility = NULL;
+					}
+				}
 			}
 		}
 	}

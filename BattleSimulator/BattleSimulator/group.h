@@ -10,7 +10,7 @@
 
 class Group
 {
-private:
+protected:
 	int gid;
 	Formation* formation;
 

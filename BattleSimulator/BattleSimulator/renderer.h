@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __RENDERER_H__
+#define __RENDERER_H__
 
 #ifdef IN_WINDOWS
 #include <Windows.h>
@@ -11,29 +12,84 @@
 #endif
 
 #include "pch.h"
+#include "object.h"
+#include "battle.h"
+#include "setup.h"
 
-struct Color
+#include <vector>
+
+struct InfoBox
 {
-	double r;
-	double g;
-	double b;
-	double a;
+	Rect2D box;
+	bool highlighted;
 
-	Color() : r(1.0), g(1.0), b(1.0), a(0.0) {}
-	Color(double r, double g, double b, double a = 0.0)
-		: r(r), g(g), b(b), a(a)
-	{}
+	void setHighlighted(bool value);
+
+	InfoBox() : box(), highlighted() {}
+};
+
+struct CharacterInfoBox : public InfoBox
+{
+	Character* info;
+
+	CharacterInfoBox() : InfoBox(), info(NULL) {}
+};
+
+struct FormationInfoBox : public InfoBox
+{
+	Formation* info;
+	vector<vector<CharacterInfoBox> > characterInfos;
+
+	FormationInfoBox() : InfoBox(), info(NULL), characterInfos() {}
+};
+
+struct UnitInfoBox : public InfoBox
+{
+	Unit* info;
+	
+	UnitInfoBox() : InfoBox(), info(NULL) {}
+};
+
+struct GroupInfoBox : public InfoBox
+{
+	Group* info;
+	vector<vector<UnitInfoBox> > unitInfos;
+	
+	GroupInfoBox() : InfoBox(), info(NULL), unitInfos() {}
+};
+
+struct SetupInfoBox : public InfoBox
+{
+	Rect2D box;
+	Setup* info;
+
+	FormationInfoBox formAInfo;
+	FormationInfoBox formBInfo;
+
+	SetupInfoBox() : InfoBox(), info(NULL), formAInfo(), formBInfo() {}
+};
+
+struct BattleInfoBox : public InfoBox
+{
+	Battle* info;
+	GroupInfoBox groupAInfo;
+	GroupInfoBox groupBInfo;
+
+	BattleInfoBox() : InfoBox(), info(NULL), groupAInfo(), groupBInfo() {}
 };
 
 class Renderer
 {
-private:
+protected:
 	double edgeLeft;
 	double edgeRight;
 	double edgeTop;
 	double edgeBottom;
+	
+	SetupInfoBox setupInfo;
+	BattleInfoBox battleInfo;
 
-	Battle* battle;
+	InfoBox* selected;
 public:
 	//Outputs a string in graphics to point p with str and color (r,g,b) and font
 	static void GLoutputString(double x, double y, const string & str, 
@@ -47,11 +103,29 @@ public:
 	
 	double width() const { return edgeBottom - edgeTop; }
 	double height() const { return edgeRight - edgeLeft; }
+	
+	// Setup Function
+	void setCharacterBox(CharacterInfoBox* container, Character* character, double centerx, double centery, double width, double height);
+	void setFormationBox(FormationInfoBox* container, Formation* form, Direction dir, double centerx, double centery, double width, double height);
+	void initSetupRenderer(Setup* setup);
 
-	void render(Unit* unit, double centerx, double centery, double width, double height);
-	void render(Group* group, Direction dir, double centerx, double centery, double width, double height);
-	void render(Battle* battle);
+	void renderSetup(CharacterInfoBox* characterBox);
+	void renderSetup(FormationInfoBox* formBox);
+	void renderSetup();
 
+	void processMouseClickSetup(const Point2D & loc);
+	void processMouseMoveSetup(const Point2D & loc);
+
+	// Battle Function
+	void setUnitBox(UnitInfoBox* container, Unit* unit, double centerx, double centery, double width, double height);
+	void setGroupBox(GroupInfoBox* container, Group* group, Direction dir, double centerx, double centery, double width, double height);
+	void initBattleRenderer(Battle* battle);
+
+	void renderBattle(UnitInfoBox* unitBox);
+	void renderBattle(GroupInfoBox* groupBox);
+	void renderBattle();
 
 	~Renderer();
 };
+
+#endif

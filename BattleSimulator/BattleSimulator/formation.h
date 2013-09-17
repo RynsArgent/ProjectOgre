@@ -3,9 +3,9 @@
 
 #include "pch.h"
 
-#include <vector>
 #include "character.h"
 #include "gridpoint.h"
+#include <vector>
 
 class Formation
 {
@@ -38,18 +38,20 @@ public:
 		return grid[p.x][p.y];
 	}
     
-	void setCharacterAt(int x, int y, Character* character, Skill backSkill, Skill midSkill, Skill frontSkill) {
+	void setCharacterAt(int x, int y, Character* character, int backSkillIndex, int midSkillIndex, int frontSkillIndex, int basicSkillIndex = 0) {
 		grid[x][y] = character;
-		character->setBackSkill(backSkill);
-		character->setMidSkill(midSkill);
-		character->setFrontSkill(frontSkill);
+		character->setBackSkillIndex(backSkillIndex);
+		character->setMidSkillIndex(midSkillIndex);
+		character->setFrontSkillIndex(frontSkillIndex);
+		character->setBasicSkillIndex(basicSkillIndex);
 	}
     
-	void setCharacterAt(const GridPoint & p, Character* character, Skill backSkill, Skill midSkill, Skill frontSkill) {
+	void setCharacterAt(const GridPoint & p, Character* character, int backSkillIndex, int midSkillIndex, int frontSkillIndex, int basicSkillIndex = 0) {
 		grid[p.x][p.y] = character;
-		character->setBackSkill(backSkill);
-		character->setMidSkill(midSkill);
-		character->setFrontSkill(frontSkill);
+		character->setBackSkillIndex(backSkillIndex);
+		character->setMidSkillIndex(midSkillIndex);
+		character->setFrontSkillIndex(frontSkillIndex);
+		character->setBasicSkillIndex(basicSkillIndex);
 	}
 	
 	GridPoint getLeaderPosition() const {
@@ -62,6 +64,16 @@ public:
 
 	void setLeaderPosition(const GridPoint & value) {
 		leaderPosition = value;
+	}
+
+	vector<Character*> getCharacters() const {
+		vector<Character*> ret;
+		for (int i = 0; i < grid.size(); ++i)
+			for (int j = 0; j < grid[i].size(); ++j) {
+				if (grid[i][j] != NULL)
+					ret.push_back(grid[i][j]);
+			}
+		return ret;
 	}
 
 	Character* getLeader() const {

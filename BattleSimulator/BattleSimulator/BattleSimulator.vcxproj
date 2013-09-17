@@ -97,8 +97,10 @@
     <ClCompile Include="gridpoint.cpp" />
     <ClCompile Include="group.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="object.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="setup.cpp" />
     <ClCompile Include="status.cpp" />
     <ClCompile Include="target.cpp" />
     <ClCompile Include="unit.cpp" />
@@ -113,8 +115,10 @@
     <ClInclude Include="formation.h" />
     <ClInclude Include="gridpoint.h" />
     <ClInclude Include="group.h" />
+    <ClInclude Include="object.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="renderer.h" />
+    <ClInclude Include="setup.h" />
     <ClInclude Include="status.h" />
     <ClInclude Include="target.h" />
     <ClInclude Include="unit.h" />

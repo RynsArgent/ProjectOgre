@@ -79,11 +79,11 @@ Skill Ability::selectSkill(Unit* unit)
 			switch (row)
 			{
 			case 2:
-				return unit->getFrontSkill();
+				return unit->getBackSkill();
 			case 1:
 				return unit->getMidSkill();
 			case 0:
-				return unit->getBackSkill();
+				return unit->getFrontSkill();
 			}
 			return NO_STANDARD_SKILL;
 		}

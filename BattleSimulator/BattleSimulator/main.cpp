@@ -17,6 +17,8 @@
 #include "unit.h"
 #include "group.h"
 #include "battle.h"
+#include "setup.h"
+#include "object.h"
 #include "renderer.h"
 
 const int WINDOW_WIDTH = 800;
@@ -27,11 +29,19 @@ const double VIEWPORT_RIGHT = 1.0;
 const double VIEWPORT_TOP = 0.0;
 const double VIEWPORT_BOTTOM = 1.0;
 
+bool change = false;
+
 Formation* formA = new Formation();
 Formation* formB = new Formation();
 
+enum Mode { MODE_SETUP, MODE_BATTLE };
+Mode mode = MODE_SETUP;
+
+Setup* setup = NULL;
+
 Group* groupA = NULL;
 Group* groupB = NULL;
+
 Battle* battle = NULL;
 
 Renderer* renderer = new Renderer(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
@@ -45,40 +55,34 @@ void initialize() {
 		FRONT	[0,0] [1,0] [2,0]
 		MIDDLE	[0,1] [1,1] [2,1]
 		BACK	[0,2] [1,2] [2,2]
-		
-		        Barr        Barr 
-		              Shoot
-					  Heal       
 	*/
-	formA->setCharacterAt(0, 0, new Acolyte("acolyte1B"), CLEANSE, CLEANSE, CLEANSE);
-	formA->setCharacterAt(2, 0, new Acolyte("acolyte1C"), CLEANSE, CLEANSE, CLEANSE);
-	formA->setCharacterAt(1, 0, new Scout("scout1A"), HASTE, SHOOT, SCOPE);
-	formA->setCharacterAt(1, 1, new Scout("scout2A"), SHOOT, SHOOT, SCOPE);
-	formA->setCharacterAt(1, 2, new Acolyte("acolyte1A"), HEAL, HEAL, HEAL);
+	formA->setCharacterAt(0, 0, new Acolyte("acolyte1B"), 0, 0, 0);
+	formA->setCharacterAt(2, 0, new Acolyte("acolyte1C"), 0, 0, 0);
+	formA->setCharacterAt(1, 0, new Scout("scout1A"), 0, 0, 0);
+	formA->setCharacterAt(1, 1, new Scout("scout2A"), 0, 0, 0);
+	formA->setCharacterAt(1, 2, new Acolyte("acolyte1A"), 0, 0, 0);
 	formA->setLeaderPosition(1, 2);
 	formA->setTargetOrder(TARGET_LEADER);
-	groupA = new Group(formA);
 
 	/*
 		*********GROUP B*********
 		BACK	[2,2] [1,2] [0,2]
 		MIDDLE	[2,1] [1,1] [0,1]
 		FRONT	[2,0] [1,0] [0,0]
-		
-		              Taunt
-		              Regen
-		        Blind 100Bl Blind
 	*/
-
-	formB->setCharacterAt(1, 2, new Fighter("fighter1B"), HUNDRED_BLADES, BLOCK, TAUNT);
-	formB->setCharacterAt(0, 0, new Mage("mage1B"), ACID_DART, ACID_DART, POLYMORPH);
-	formB->setCharacterAt(2, 0, new Mage("mage2B"), ACID_DART, ACID_DART, POLYMORPH);
-	formB->setCharacterAt(0, 1, new Mage("mage3B"), ACID_DART, ACID_DART, POLYMORPH);
-	formB->setCharacterAt(2, 1, new Mage("mage4B"), ACID_DART, ACID_DART, POLYMORPH);
+	formB->setCharacterAt(1, 2, new Fighter("fighter1B"), 1, 0, 0);
+	formB->setCharacterAt(0, 0, new Mage("mage1B", ELEMENT_WATER), 0, 0, 0);
+	formB->setCharacterAt(2, 0, new Mage("mage2B", ELEMENT_WATER), 0, 0, 0);
+	formB->setCharacterAt(0, 1, new Mage("mage3B", ELEMENT_WATER), 0, 0, 0);
+	formB->setCharacterAt(2, 1, new Mage("mage4B", ELEMENT_WATER), 0, 0, 0);
 	formB->setLeaderPosition(1, 2);
 	formB->setTargetOrder(TARGET_LEADER);
+	
+	groupA = new Group(formA);
 	groupB = new Group(formB);
 
+	setup = new Setup(formA, formB);
+	renderer->initSetupRenderer(setup);
 	battle = new Battle(seed, groupA, groupB);
 }
 
@@ -100,7 +104,8 @@ void GLscreenToWindowCoordinates(double x, double y, double & rx, double & ry)
 }
 
 void GLrender();
-void GLprocessMouse(int button, int state, int x, int y);
+void GLprocessMouseClick(int button, int state, int x, int y);
+void GLprocessMouseMove(int x, int y);
 
 int main(int argc, char** argv)
 {
@@ -110,7 +115,8 @@ int main(int argc, char** argv)
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutCreateWindow("My Application");
 	glutDisplayFunc(GLrender);
-	glutMouseFunc(GLprocessMouse);
+	glutMouseFunc(GLprocessMouseClick);
+	glutPassiveMotionFunc(GLprocessMouseMove);
 	gluOrtho2D(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_BOTTOM, VIEWPORT_TOP);
 
 	initialize();
@@ -123,22 +129,49 @@ int main(int argc, char** argv)
 
 void GLrender()
 {
+	if (mode == MODE_BATTLE)
+		renderer->initBattleRenderer(battle);
+
 	glClear(GL_COLOR_BUFFER_BIT); 
 
 	//This is where we draw
-	renderer->render(battle);
+	if (mode == MODE_SETUP)
+		renderer->renderSetup();
+	else if (mode == MODE_BATTLE)
+		renderer->renderBattle();
 
 	glFlush();	
 	glutSwapBuffers();
 }
 
-
-void GLprocessMouse(int button, int state, int x, int y)
+void GLprocessMouseClick(int button, int state, int x, int y)
 {
+	Point2D loc; 
+	GLscreenToWindowCoordinates(x, y, loc.x, loc.y);
 	if (state == GLUT_DOWN)
 	{
-		battle->cleanupTurn();
-		battle->executeTurn();
-		GLrender();
+		if (mode == MODE_SETUP)
+		{
+			renderer->processMouseClickSetup(loc);
+			glutPostRedisplay();
+		}
+		else if (mode == MODE_BATTLE)
+		{
+			battle->cleanupTurn();
+			battle->executeTurn();
+			glutPostRedisplay();
+		}
 	}
+}
+
+void GLprocessMouseMove(int x, int y)
+{
+	Point2D loc; 
+	GLscreenToWindowCoordinates(x, y, loc.x, loc.y);
+	if (mode == MODE_SETUP) {
+		renderer->processMouseMoveSetup(loc);
+	}
+	if (change)
+		glutPostRedisplay();
+	change = false;
 }

@@ -2,6 +2,29 @@
 
 #include <sstream>
 
+Skill retrieveSkill(SkillSet set, ElementType element)
+{	
+	if (set == SPELL1) {
+		switch (element) {
+			case ELEMENT_NONE: 
+				return NO_STANDARD_SKILL;
+			case ELEMENT_PHYSICAL: 
+				return NO_STANDARD_SKILL;
+			case ELEMENT_FIRE:
+				return FIREBALL;
+			case ELEMENT_WATER: 
+				return WATER_JET;
+			case ELEMENT_EARTH: 
+				return ACID_DART;
+			case ELEMENT_ICE:
+				return FROST_SHARD;
+			case ELEMENT_LIGHTNING:
+				return LIGHTNING_BOLT;
+		}
+	}
+	return NO_STANDARD_SKILL;
+}
+
 int bound(int value, int min, int max)
 {
 	if (value < min) return min;
