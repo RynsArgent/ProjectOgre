@@ -46,7 +46,9 @@ var game = function () {
         var label, 
             index, row, col, 
             width, height,
-            bgImage, stImage;
+            bgImage, stImage,
+            objects = [],
+            settlements;
             
         label = params.label || '';
         row = params.row || -1;
@@ -89,6 +91,18 @@ var game = function () {
             },
             getStationaryImage : function () {
                 return stImage;
+            },
+            getObjects : function () {
+                return objects;
+            },
+            addObject : function (obj) {
+                objects.push(obj);
+            },
+            setSettlement : function (st) {
+                settlement = st;
+            },
+            getSettlement : function () {
+                return settlement;
             }
         };
     };
@@ -144,6 +158,7 @@ var game = function () {
                 return tilemap;
             },
             getTileAt : function (row, col) {
+                console.log(row + ' , ' + col);
                 return tilemap[row][col];
             },
             setTileAt : function (row, col, tile) {
@@ -198,13 +213,13 @@ var game = function () {
             containingTiles = data.containingTiles, // an array of the tile locations in which contains this settlement
             
             // attributes
-            population = data.population || Math.random() * 100,
-            happiness = data.happiness || Math.random() * 100,
-            income = data.income || Math.random() * 100,
-            harvest = data.harvest || Math.random() * 100,
-            gold = data.gold || Math.random() * 100,
-            food = data.food || Math.random() * 100,
-            order = data.order || Math.random() * 100,
+            population = data.population || Math.floor(Math.random() * 100),
+            happiness = data.happiness || Math.floor(Math.random() * 100),
+            income = data.income || Math.floor(Math.random() * 100),
+            harvest = data.harvest || Math.floor(Math.random() * 100),
+            gold = data.gold || Math.floor(Math.random() * 100),
+            food = data.food || Math.floor(Math.random() * 100),
+            order = data.order || Math.floor(Math.random() * 100),
             
             owner = null;
             
@@ -263,17 +278,17 @@ var game = function () {
         // data file or the location to the map.
         initialize : function (params) {
             map = createMap(params.mapdata);
-            this.seedSettlements(Math.random() * 100);
+            this.seedSettlements(Math.floor(Math.random() * 100));
         },
         
         seedSettlements : function (seed) {
             var i, node, usedTiles = [], t;
-                t = {row:Math.random() * map.numberOfRows, col:Math.random() * map.numberOfColumns};
+                t = {row:Math.floor(Math.random() * map.numberOfRows), col:Math.floor(Math.random() * map.numberOfColumns)};
             
             console.log('seeding settlements');
             for (i = 0; i < seed; i += 1) {
                 do {
-                    t = {row:Math.random() * map.numberOfRows, col:Math.random() * map.numberOfColumns};
+                    t = {row:Math.floor(Math.random() * map.numberOfRows), col:Math.floor(Math.random() * map.numberOfColumns)};
                 } while (usedTiles.indexOf(t) >= 0);
                 
                 node = createSettlement({
@@ -282,6 +297,11 @@ var game = function () {
                     size : 'medium',
                     containingTiles : [t, {row:t.row+1, col:t.col}, {row:t.row, col:t.col+1}, {row:t.row+1, col:t.col+1}]
                 });
+                
+                map.getTileAt(t.row, t.col).setSettlement(node);
+                map.getTileAt(t.row+1, t.col).setSettlement(node);
+                map.getTileAt(t.row, t.col+1).setSettlement(node);
+                map.getTileAt(t.row+1, t.col+1).setSettlement(node);
                 
                 usedTiles.push(t);
                 usedTiles.push({row:t.row+1, col:t.col});

@@ -106,7 +106,8 @@ var createTile = function (params) {
     var label, 
         index, row, col, 
         width, height,
-        bgImage, stImage;
+        bgImage, stImage,
+        settlement;
         
     label = params.label || '';
     row = params.row || -1;
@@ -149,6 +150,12 @@ var createTile = function (params) {
         },
         getStationaryImage : function () {
             return stImage;
+        },
+        setSettlement : function (st) {
+            settlement = st;
+        },
+        getSettlement : function () {
+            return settlement;
         }
     };
 };
@@ -377,10 +384,23 @@ var createClient = function () {
                     tilePositionY,
                     map.getTileWidthInPixels(),
                     map.getTileHeightInPixels());
+                    
+                if (map.getTileAt(row,col).getSettlement() !== undefined) {
+                    if (map.getTileAt(row,col).getSettlement().containingTiles[0].row === row &&
+                        map.getTileAt(row,col).getSettlement().containingTiles[0].col === col) {
+                        img = resources.getImageObject(map.getTileAt(row,col).getSettlement().imagekey);
+                        
+                        stContext.drawImage(img,
+                            tilePositionX,
+                            tilePositionY,
+                            64, 64);
+                    }
+                }
             }
         }
         
         /// draw settlements
+        /*
         var i, j, shoulddraw;
         
         for (i = 0; i < settlements.length; i +=1 ) {
@@ -408,6 +428,7 @@ var createClient = function () {
                     64);
             }
         }
+        */
     };  // end draw
 
     // define privileged functions
@@ -426,6 +447,7 @@ var createClient = function () {
         onloggedin : function (data, callback) {
             console.log('gameClient : onloggedin');
             console.log(data);
+            var i;
             
             if (data.status === 'success') {
                 player.username = data.username;
@@ -435,6 +457,13 @@ var createClient = function () {
                 // map data file
                 map = createMap(tmp_data);
                 settlements = data.settlements;
+                
+                for (i = 0; i < settlements.length; i += 1) {
+                    map.getTileAt(settlements[i].containingTiles[0].row, settlements[i].containingTiles[0].col).setSettlement(settlements[i]);
+                    map.getTileAt(settlements[i].containingTiles[1].row, settlements[i].containingTiles[1].col).setSettlement(settlements[i]);
+                    map.getTileAt(settlements[i].containingTiles[2].row, settlements[i].containingTiles[2].col).setSettlement(settlements[i]);
+                    map.getTileAt(settlements[i].containingTiles[3].row, settlements[i].containingTiles[3].col).setSettlement(settlements[i]);
+                }
                 
                 //tick();
                 draw();
