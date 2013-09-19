@@ -110,11 +110,11 @@ var createTile = function (params) {
         settlement;
         
     label = params.label || '';
-    row = params.row || -1;
-    col = params.col || -1;
-    index = params.index || -1;
-    width = params.width || 0;
-    height = params.height || 0;
+    row = params.row;
+    col = params.col;
+    index = params.index;
+    width = params.width;
+    height = params.height;
     
     if (params.bgImage !== undefined) {
         bgImage = params.bgImage;
@@ -524,6 +524,50 @@ var createClient = function () {
             
             jQuery("#scrollx").html(scroll.x);
             jQuery("#scrolly").html(scroll.y);
+        },
+        
+        handleMouseClick : function (event) {
+            // position of the mouse.x and mouse.y is relative to the left and top of the canvas
+	        // element. - At current 0,0. 
+	        // To calculate what cell within the matrix is clicked. We need to convert the
+	        // coordinate system into matrix coordinates.
+	        // 
+	        // mouse.x range from 0 to screen.width
+	        // mouse.y range from 0 to screen.height
+	        // 
+	        // absrow = mouse.x / game.map.TilePixelWidth : gives us the row coordinate
+	        // abscol = mouse.y / game.map.TilePixelHeight : gives us the col coordinate
+	        //
+	        // we need to offset for scrolling
+	        // relrow = (Scroll.x / game.map.TilePixelWidth) + absrow;
+	        // relcol = (Scroll.y / game.map.TilePixelHeight) + abscol;
+	        var absrow = Math.floor(scroll.x / map.getTileWidthInPixels()),
+	            relrow = absrow + Math.floor(event.clientX / map.getTileWidthInPixels()),
+	        
+	            abscol = Math.floor(scroll.y / map.getTileHeightInPixels()),
+	            relcol = abscol + Math.floor(event.clientY / map.getTileHeightInPixels()),
+	            
+	            cellAt = map.getTileAt(relrow, relcol);
+	        
+	        console.log(relrow + ',' + relcol);
+	        
+	        var sb = cellAt.getLabel() + '@[' +
+	                cellAt.getRow() + ',' +
+	                cellAt.getColumn() + '] : ';
+	        
+	        if (cellAt.getSettlement() !== undefined) {
+	            var keys = Object.keys(cellAt.getSettlement());
+	            
+	            for(var k in keys) {
+	                sb += keys[k] + ' ~ ' + cellAt.getSettlement()[keys[k]] + ' _ ';
+	            }
+	        }
+	        
+	        jQuery("#log").prepend(
+	            '<li>' + sb + '</li>'
+	        );
+	        
+            //jQuery("#log").append('<li>clicked</li>');
         }
     };
     
@@ -558,6 +602,11 @@ jQuery(document).ready(function () {
     
     jQuery(window).keypress(function (event) {
         gameClient.handleKeyboard(event);
+    });
+    
+    jQuery("#viewport_container").click(function (event) {
+        console.log('click');
+        gameClient.handleMouseClick(event);
     });
     
     jQuery(window).resize(function () {

@@ -283,12 +283,12 @@ var game = function () {
         
         seedSettlements : function (seed) {
             var i, node, usedTiles = [], t;
-                t = {row:Math.floor(Math.random() * map.numberOfRows), col:Math.floor(Math.random() * map.numberOfColumns)};
+                t = {row:Math.floor(Math.random() * (map.numberOfRows - 4)), col:Math.floor(Math.random() * (map.numberOfColumns - 4))};
             
             console.log('seeding settlements');
             for (i = 0; i < seed; i += 1) {
                 do {
-                    t = {row:Math.floor(Math.random() * map.numberOfRows), col:Math.floor(Math.random() * map.numberOfColumns)};
+                    t = {row:Math.floor(Math.random() * (map.numberOfRows - 4)), col:Math.floor(Math.random() * (map.numberOfColumns - 4))};
                 } while (usedTiles.indexOf(t) >= 0);
                 
                 node = createSettlement({

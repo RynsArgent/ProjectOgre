@@ -29,6 +29,8 @@ div#interface {
     left: 0;
     
     z-index: 50;
+    
+    pointer-events: none;
 }
 
 div#viewport_container {
