@@ -2,6 +2,8 @@
 
 #include "pch.h"
 
+#include <cmath>
+
 const double PI = 3.14159265;
 const double E = 2.7182818;
 const double EPSILON = pow(2.0, -3);
