@@ -257,6 +257,57 @@ var createMap = function (data) {//(rows, columns, tileWidthInPixels, tileHeight
     };
 };
 
+var createSettlement = function (data) {
+     var imgsrc = data.imgsrc,
+        imgkey = data.imagekey,
+        size = data.size,   // size of settlement is determined by tiles
+                            // small : 1 tile, medium : 2x2 tiles, large : 3x3 tiles
+        containingTiles = data.containingTiles, // an array of the tile locations in which contains this settlement
+        
+        // attributes
+        population = data.population || Math.floor(Math.random() * 100),
+        happiness = data.happiness || Math.floor(Math.random() * 100),
+        income = data.income || Math.floor(Math.random() * 100),
+        harvest = data.harvest || Math.floor(Math.random() * 100),
+        gold = data.gold || Math.floor(Math.random() * 100),
+        food = data.food || Math.floor(Math.random() * 100),
+        order = data.order || Math.floor(Math.random() * 100),
+        
+        owner = data.owner;
+        
+        return {
+            ownedBy : function () {
+                return owner;
+            },
+            
+            getSize : function () {
+                return size;
+            },
+            
+            containedInTiles : function () {
+                return containingTiles;
+            },
+            
+            getImageSource : function () {
+                return imgsrc;
+            },
+            
+            containingTiles : containingTiles,
+            owner : owner,
+            size : size,
+            imagesource : imgsrc,
+            imagekey : imgkey,
+            
+            Population : population,
+            Happiness : happiness,
+            Income : income,
+            Harvest : harvest,
+            Gold : gold,
+            Food : food,
+            Order : order
+        };
+};
+
 var createClient = function () {
     // Declare private variables and methods
     var that, player,
@@ -281,7 +332,7 @@ var createClient = function () {
         
         scroll = {x: 0, y: 0},
         
-        map, settlements,
+        map, settlements = [],
         
         Keys = {
 	        UP : 38,
@@ -335,8 +386,6 @@ var createClient = function () {
         bgContext.fillStyle = '#ffffff';
         bgContext.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
         
-        //stContext.fillStyle = '#ffffff';
-        //stContext.fillRect(0, 0, stCanvas.width, stCanvas.height);
         stContext.clearRect(0, 0, stCanvas.width, stCanvas.height);
         
         var startRow = Math.floor(scroll.x / map.getTileWidthInPixels()), 
@@ -356,18 +405,7 @@ var createClient = function () {
         if ((startCol + colCount) > map.numberOfColumns) {
             colCount = map.numberOfColumns;
         }
-        /*console.log({
-            label : "executing draw",
-            scroll : scroll,
-            tilepixelwidth : map.getTileWidthInPixels(),
-            tilepixelheight : map.getTileHeightInPixels(),
-            startRow : startRow,
-            startCol : startCol,
-            rowCount : rowCount,
-            colCount : colCount,
-            numOfRows : map.numberOfRows,
-            numOfCols : map.numberOfColumns
-        });*/
+
         for (row = startRow; row < rowCount && row < map.numberOfRows; row += 1) {
             for (col = startCol; col < colCount && col < map.numberOfColumns; col += 1) {
                 tilePositionX = map.getTileWidthInPixels() * row;
@@ -398,37 +436,6 @@ var createClient = function () {
                 }
             }
         }
-        
-        /// draw settlements
-        /*
-        var i, j, shoulddraw;
-        
-        for (i = 0; i < settlements.length; i +=1 ) {
-            shoulddraw = false;
-            for (j = 0; j < settlements[i].containingTiles.length; j += 1) {
-                if (settlements[i].containingTiles[j].row >= startRow && 
-                    settlements[i].containingTiles[j].row <= rowCount &&
-                    settlements[i].containingTiles[j].col >= startCol &&
-                    settlements[i].containingTiles[j].col <= colCount) {
-                    
-                    shoulddraw = true;
-                }
-            }
-            
-            if (shoulddraw) {
-                img = resources.getImageObject(settlements[i].imagekey);
-                
-                //tilePositionX = settlements[i].containingTiles[0].row * 64;
-                //tilePositionY = settlements[i].containingTiles[0].col * 64;
-                
-                stContext.drawImage(img,
-                    settlements[i].containingTiles[0].row * 32,
-                    settlements[i].containingTiles[0].col * 32,
-                    64,
-                    64);
-            }
-        }
-        */
     };  // end draw
 
     // define privileged functions
@@ -447,7 +454,7 @@ var createClient = function () {
         onloggedin : function (data, callback) {
             console.log('gameClient : onloggedin');
             console.log(data);
-            var i;
+            var i, j, settlement;
             
             if (data.status === 'success') {
                 player.username = data.username;
@@ -456,13 +463,35 @@ var createClient = function () {
                 // but for now we are going to cheat and use a pre-defined
                 // map data file
                 map = createMap(tmp_data);
-                settlements = data.settlements;
+                //settlements = data.settlements;
                 
-                for (i = 0; i < settlements.length; i += 1) {
-                    map.getTileAt(settlements[i].containingTiles[0].row, settlements[i].containingTiles[0].col).setSettlement(settlements[i]);
-                    map.getTileAt(settlements[i].containingTiles[1].row, settlements[i].containingTiles[1].col).setSettlement(settlements[i]);
-                    map.getTileAt(settlements[i].containingTiles[2].row, settlements[i].containingTiles[2].col).setSettlement(settlements[i]);
-                    map.getTileAt(settlements[i].containingTiles[3].row, settlements[i].containingTiles[3].col).setSettlement(settlements[i]);
+                for (i = 0; i < data.settlements.length; i += 1) {
+                    settlement = createSettlement({
+                        imgsrc : data.settlements[i].imagesource,
+                        imagekey : data.settlements[i].imagekey,
+                        containingTiles : data.settlements[i].containingTiles,
+                        
+                        owner : data.settlements[i].owner,
+                        size : data.settlements[i].size,
+                        
+                        population : data.settlements[i].Population,
+                        happiness : data.settlements[i].Happiness,
+                        income : data.settlements[i].Income,
+                        harvest : data.settlements[i].Harvest,
+                        gold : data.settlements[i].Gold,
+                        food : data.settlements[i].Food,
+                        order : data.settlements[i].Order
+                        
+                    });
+                    
+                    for (j = 0; j < 4; j += 1) {
+                        map.getTileAt(settlement.containingTiles[j].row, settlement.containingTiles[j].col).setSettlement(settlement);
+                    }
+                    settlements.push(settlement);
+                    //map.getTileAt(settlements[i].containingTiles[0].row, settlements[i].containingTiles[0].col).setSettlement(settlement);
+                    //map.getTileAt(settlements[i].containingTiles[1].row, settlements[i].containingTiles[1].col).setSettlement(settlement);
+                    //map.getTileAt(settlements[i].containingTiles[2].row, settlements[i].containingTiles[2].col).setSettlement(settlement);
+                    //map.getTileAt(settlements[i].containingTiles[3].row, settlements[i].containingTiles[3].col).setSettlement(settlement);
                 }
                 
                 //tick();
@@ -561,13 +590,30 @@ var createClient = function () {
 	            for(var k in keys) {
 	                sb += keys[k] + ' ~ ' + cellAt.getSettlement()[keys[k]] + ' _ ';
 	            }
+	            
+	            var settlement = cellAt.getSettlement();
+	            jQuery('<div></div>')
+	                .html(
+	                    '<ul>' + 
+	                        '<li><b>Owned by:</b> ' + settlement.owner + '</li>' +
+	                        '<li><b>Size:</b> ' + settlement.size + '</li>' +
+	                        '<li><b>Population:</b> ' + settlement.Population + '</li>' +
+	                        '<li><b>Order:</b> ' + settlement.Order + '</li>' +
+	                        '<li><b>Happiness:</b> ' + settlement.Happiness + '</li>' +
+	                        '<li><b>Food:</b> ' + settlement.Food + '</li>' +
+	                        '<li><b>Gold:</b> ' + settlement.Gold + '</li>' +
+	                        '<li><b>Harvest:</b> ' + settlement.Harvest + '</li>' +
+	                        '<li><b>Income:</b> ' + settlement.Income + '</li>' +
+	                    '</ul>'
+	                )
+	                .dialog({
+	                    title : 'Settlement Name goes here'
+	                });
 	        }
 	        
 	        jQuery("#log").prepend(
 	            '<li>' + sb + '</li>'
 	        );
-	        
-            //jQuery("#log").append('<li>clicked</li>');
         }
     };
     
@@ -600,7 +646,7 @@ jQuery(document).ready(function () {
     
     ////////////////////////////////////////////////////////////////////////////
     
-    jQuery(window).keypress(function (event) {
+    jQuery(window).keydown(function (event) {
         gameClient.handleKeyboard(event);
     });
     
