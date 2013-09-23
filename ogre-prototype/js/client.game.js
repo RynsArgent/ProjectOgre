@@ -264,6 +264,8 @@ var createSettlement = function (data) {
                             // small : 1 tile, medium : 2x2 tiles, large : 3x3 tiles
         containingTiles = data.containingTiles, // an array of the tile locations in which contains this settlement
         
+        name = data.name || '',
+        
         // attributes
         population = data.population || Math.floor(Math.random() * 100),
         happiness = data.happiness || Math.floor(Math.random() * 100),
@@ -293,6 +295,7 @@ var createSettlement = function (data) {
             },
             
             containingTiles : containingTiles,
+            Name : name,
             owner : owner,
             size : size,
             imagesource : imgsrc,
@@ -332,7 +335,7 @@ var createClient = function () {
         
         scroll = {x: 0, y: 0},
         
-        map, settlements = [],
+        map, settlements = [], owned_settlements = [],
         
         Keys = {
 	        UP : 38,
@@ -463,7 +466,6 @@ var createClient = function () {
                 // but for now we are going to cheat and use a pre-defined
                 // map data file
                 map = createMap(tmp_data);
-                //settlements = data.settlements;
                 
                 for (i = 0; i < data.settlements.length; i += 1) {
                     settlement = createSettlement({
@@ -471,6 +473,7 @@ var createClient = function () {
                         imagekey : data.settlements[i].imagekey,
                         containingTiles : data.settlements[i].containingTiles,
                         
+                        name : data.settlements[i].Name,
                         owner : data.settlements[i].owner,
                         size : data.settlements[i].size,
                         
@@ -488,10 +491,37 @@ var createClient = function () {
                         map.getTileAt(settlement.containingTiles[j].row, settlement.containingTiles[j].col).setSettlement(settlement);
                     }
                     settlements.push(settlement);
-                    //map.getTileAt(settlements[i].containingTiles[0].row, settlements[i].containingTiles[0].col).setSettlement(settlement);
-                    //map.getTileAt(settlements[i].containingTiles[1].row, settlements[i].containingTiles[1].col).setSettlement(settlement);
-                    //map.getTileAt(settlements[i].containingTiles[2].row, settlements[i].containingTiles[2].col).setSettlement(settlement);
-                    //map.getTileAt(settlements[i].containingTiles[3].row, settlements[i].containingTiles[3].col).setSettlement(settlement);
+                }
+                
+                for (i = 0; i < data.owned_settlements.length; i += 1) {
+                     settlement = createSettlement({
+                        imgsrc : data.settlements[i].imagesource,
+                        imagekey : data.settlements[i].imagekey,
+                        containingTiles : data.settlements[i].containingTiles,
+                        
+                        name : data.settlements[i].Name,
+                        owner : data.settlements[i].owner,
+                        size : data.settlements[i].size,
+                        
+                        population : data.settlements[i].Population,
+                        happiness : data.settlements[i].Happiness,
+                        income : data.settlements[i].Income,
+                        harvest : data.settlements[i].Harvest,
+                        gold : data.settlements[i].Gold,
+                        food : data.settlements[i].Food,
+                        order : data.settlements[i].Order
+                        
+                    });
+                    
+                    if (settlement.owner !== '') {
+                        console.log(settlement.Name + ' - ' + settlement.owner + ' @ ');
+                        console.log(settlement.containingTiles[0]);
+                    }
+                    
+                    for (j = 0; j < 4; j += 1) {
+                        map.getTileAt(settlement.containingTiles[j].row, settlement.containingTiles[j].col).setSettlement(settlement);
+                    }
+                    owned_settlements.push(settlement);
                 }
                 
                 //tick();
@@ -513,6 +543,23 @@ var createClient = function () {
         
         screenResize : function (dimensions) {
             resizeScreen(dimensions);
+        },
+        
+        handleObjectSelected : function (obj) {
+            jQuery('#stl_owner').html(obj.owner);
+            jQuery('#stl_size').html(obj.size);
+            jQuery('#stl_population').html(obj.Population);
+            jQuery('#stl_order').html(obj.Order);
+            jQuery('#stl_happiness').html(obj.Happiness);
+            jQuery('#stl_food').html(obj.Food);
+            jQuery('#stl_gold').html(obj.Gold);
+            jQuery('#stl_harvest').html(obj.Harvest);
+            jQuery('#stl_income').html(obj.Income);
+            
+            jQuery('#settlement_details')
+                .dialog({
+                    title : obj.Name
+                });
         },
         
         handleKeyboard : function (event) {
@@ -592,23 +639,8 @@ var createClient = function () {
 	            }
 	            
 	            var settlement = cellAt.getSettlement();
-	            jQuery('<div></div>')
-	                .html(
-	                    '<ul>' + 
-	                        '<li><b>Owned by:</b> ' + settlement.owner + '</li>' +
-	                        '<li><b>Size:</b> ' + settlement.size + '</li>' +
-	                        '<li><b>Population:</b> ' + settlement.Population + '</li>' +
-	                        '<li><b>Order:</b> ' + settlement.Order + '</li>' +
-	                        '<li><b>Happiness:</b> ' + settlement.Happiness + '</li>' +
-	                        '<li><b>Food:</b> ' + settlement.Food + '</li>' +
-	                        '<li><b>Gold:</b> ' + settlement.Gold + '</li>' +
-	                        '<li><b>Harvest:</b> ' + settlement.Harvest + '</li>' +
-	                        '<li><b>Income:</b> ' + settlement.Income + '</li>' +
-	                    '</ul>'
-	                )
-	                .dialog({
-	                    title : 'Settlement Name goes here'
-	                });
+	            
+	            this.handleObjectSelected(settlement);
 	        }
 	        
 	        jQuery("#log").prepend(

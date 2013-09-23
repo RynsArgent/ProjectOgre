@@ -1,4 +1,10 @@
+/* TODO */
 
+- In progress of assigning settlement on login, currently assigning a settlement seems to fail
+  we are getting null instead of the username
+- addPlayer / removePlayer --> need to make sure this is working correctly
+
+///////////
 
 4 canvas
 	* bg canvas : tile layer 

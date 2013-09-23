@@ -7,8 +7,15 @@ var game = function () {
         
         players = [],
         map,
-        settlements = [];
+        settlements = [],
+        owned_settlements = [];
         
+    tmp_random_names = ['Abasyn','Adelhyde','Arngrym','Alorika','Anaheim','Belorne','Bastok','Barduch','Boernisia','Balnor','Camlin','Coerthas','Canthor','Corinth',
+                        'Dagohba','Dalborym','Durahan','Dawnstar','Danburen','Dusken','Duskdale','Den of Thieves','Dan','Esterheim','Edelweiss','Elsinore','Eclidius',
+                        'Estheim','Eastvale','Eden','Fallbrook','Faust','Foghaven','Fogvale','Fafhalla','Felheim','Fairhaven','Fairbrook','Gridania',"San'doria",'Limsa Lominsa',
+                        "Ul'dah",'Windhurst','Figaro','Garden Grove','Vanaheim','Asgard','Midgard','Alfheim','Niflheim','Muspelm','Musplheim','Jotunheim','Ishgard','Isengarde',
+                        'Daltigoth','Deregoth','Guntz','Mysidia','Eblan','Goldshire','Darkshire','Neverwinter','Dragon Gate','Lion Gate','Wolf Gate',"Val'hal",'Stormwind',
+                        'Nordrassil','Yggdrassil','Teldrassil'];
     terrain_dictionary = (function () {
         var dict = {
             'p' : {label: 'Plains', image: 'images/Plains.png'},
@@ -48,7 +55,7 @@ var game = function () {
             width, height,
             bgImage, stImage,
             objects = [],
-            settlements;
+            settlement;
             
         label = params.label || '';
         row = params.row || -1;
@@ -212,6 +219,8 @@ var game = function () {
                                 // small : 1 tile, medium : 2x2 tiles, large : 3x3 tiles
             containingTiles = data.containingTiles, // an array of the tile locations in which contains this settlement
             
+            name = data.name || '',
+            
             // attributes
             population = data.population || Math.floor(Math.random() * 100),
             happiness = data.happiness || Math.floor(Math.random() * 100),
@@ -240,7 +249,12 @@ var game = function () {
                     return imgsrc;
                 },
                 
+                setOwner : function (player) {
+                    owner = player;
+                },
+                
                 containingTiles : containingTiles,
+                Name : name,
                 owner : owner,
                 size : size,
                 imagesource : imgsrc,
@@ -257,7 +271,9 @@ var game = function () {
     };
     /////////////////////////////////////////////////////////
     createPlayer = function (data) {
-        var id, name, ip;
+        var id = data.id, 
+            playername = data.playername, 
+            ip = [];
         
         ip = [];
         
@@ -295,6 +311,7 @@ var game = function () {
                     imgsrc : 'images/CastleRed.png',
                     imagekey : 'CastleRed',
                     size : 'medium',
+                    name : tmp_random_names[ Math.floor(Math.random() * tmp_random_names.length) ],
                     containingTiles : [t, {row:t.row+1, col:t.col}, {row:t.row, col:t.col+1}, {row:t.row+1, col:t.col+1}]
                 });
                 
@@ -314,13 +331,45 @@ var game = function () {
         },
         
         addPlayer : function (player) {
+            // We need to invoke createPlayer here
+            // before we push the resulting created player onto the
+            // array of players. We could probably assign 
+            // a random settlement here too?
+            var i, settlement;
+            
             if (players.indexOf(player) < 0) {
-                players.push(player);
+                //players.push(player);
+                players.push(createPlayer({
+                    id : player.userid,
+                    playername : player.username
+                }));
+                
+                i = Math.floor(Math.random() * settlements.length);
+                settlement = settlements[i];
+                settlement.setOwner(player.username);
+                
+                settlements.splice(i, 1);
+                owned_settlements.push(settlement);
+                
+            }
+        },
+        
+        removePlayer : function (player) {
+            var idx;// = players.indexOf(player);
+            
+            for (idx = 0; idx < players.length; idx += 1) {
+                if (players[idx].getPlayerId() === player.clientid) {
+                    players.splice(idx, 1);
+                }
             }
         },
         
         getSettlements : function () {
             return settlements;
+        },
+        
+        getOwnedSettlements : function () {
+            return owned_settlements;
         }
     };
 };  // end game
@@ -355,6 +404,16 @@ var game_server = module.exports = (function () {
 
         onPlayerDisconnect : function (client, data) {
             console.log( "\t :: game_server.onPlayerDisconnect :: " + client.userid );
+            var i;
+            
+            for (i = 0; i < players.length; i += 1) {
+                if (players[i] === client) {
+                    players.splice(i, 1);
+                    
+                    games.removePlayer(client);
+                    return;
+                }
+            }
         },
 
         onRequestLogin : function (client, callback) {
@@ -368,7 +427,8 @@ var game_server = module.exports = (function () {
                 status : "success", 
                 msg : client.userid + " logged in as " + client.username + " from " + client.handshake.address.address,
                 username : client.username,
-                settlements : games[0].getSettlements()
+                settlements : games[0].getSettlements(),
+                owned_settlements : games[0].getOwnedSettlements()
             });
         }
     };

@@ -115,3 +115,8 @@ div#tools_container {
 }
 
 ul#log { float: left }
+
+
+.head {
+    font-weight: bold
+}
