@@ -219,7 +219,7 @@ var game = function () {
                                 // small : 1 tile, medium : 2x2 tiles, large : 3x3 tiles
             containingTiles = data.containingTiles, // an array of the tile locations in which contains this settlement
             
-            name = data.name || '',
+            cityname = data.cityname || '',
             
             // attributes
             population = data.population || Math.floor(Math.random() * 100),
@@ -233,28 +233,57 @@ var game = function () {
             owner = null;
             
             return {
-                ownedBy : function () {
-                    return owner;
-                },
-                
-                getSize : function () {
-                    return size;
-                },
-                
                 containedInTiles : function () {
                     return containingTiles;
                 },
-                
                 getImageSource : function () {
                     return imgsrc;
+                },
+                getImageKey : function () {
+                    return imgkey;
+                },
+                getName : function () {
+                    return cityname;
+                },
+                ownedBy : function () {
+                    return owner;
+                },
+                getSize : function () {
+                    return size;
+                },
+                getPopulation : function () {
+                    return population;
+                },
+                getHappiness : function () {
+                    return happiness;
+                },
+                getOrder : function () {
+                    return order;
+                },
+                getFood : function () {
+                    return food;
+                },
+                getGold : function () {
+                    return gold;
+                },
+                getIncome : function () {
+                    return income;
+                },
+                getHarvest : function () {
+                    return harvest;
                 },
                 
                 setOwner : function (player) {
                     owner = player;
+                    console.log('set owner = player :: ' + owner + ' ; ' + player);
+                },
+                setGold : function (n) {
+                    gold = n;
                 },
                 
+                
                 containingTiles : containingTiles,
-                Name : name,
+                Name : cityname,
                 owner : owner,
                 size : size,
                 imagesource : imgsrc,
@@ -311,7 +340,7 @@ var game = function () {
                     imgsrc : 'images/CastleRed.png',
                     imagekey : 'CastleRed',
                     size : 'medium',
-                    name : tmp_random_names[ Math.floor(Math.random() * tmp_random_names.length) ],
+                    cityname : tmp_random_names[ Math.floor(Math.random() * tmp_random_names.length) ],
                     containingTiles : [t, {row:t.row+1, col:t.col}, {row:t.row, col:t.col+1}, {row:t.row+1, col:t.col+1}]
                 });
                 
@@ -347,7 +376,6 @@ var game = function () {
                 i = Math.floor(Math.random() * settlements.length);
                 settlement = settlements[i];
                 settlement.setOwner(player.username);
-                
                 settlements.splice(i, 1);
                 owned_settlements.push(settlement);
                 
@@ -358,7 +386,7 @@ var game = function () {
             var idx;// = players.indexOf(player);
             
             for (idx = 0; idx < players.length; idx += 1) {
-                if (players[idx].getPlayerId() === player.clientid) {
+                if (players[idx].getPlayerId() === player.userid) {
                     players.splice(idx, 1);
                 }
             }
@@ -370,6 +398,54 @@ var game = function () {
         
         getOwnedSettlements : function () {
             return owned_settlements;
+        },
+        
+        // these require building up an object to pass
+        // to the client
+        getSettlementsForClient : function () {
+            var ss = [], i;
+            for (i = 0; i < settlements.length; i += 1) {
+                ss.push({
+                    Name : settlements[i].getName(),
+                    owner : settlements[i].ownedBy(),
+                    size : settlements[i].getSize(),
+                    imagesource : settlements[i].getImageSource(),
+                    imagekey : settlements[i].getImageKey(),
+                    Population : settlements[i].getPopulation(),
+                    Happiness : settlements[i].getHappiness(),
+                    Income : settlements[i].getIncome(),
+                    Harvest : settlements[i].getHarvest(),
+                    Gold : settlements[i].getGold(),
+                    Food : settlements[i].getFood(),
+                    Order : settlements[i].getOrder(),
+                    containingTiles : settlements[i].containedInTiles()
+                });
+            }
+            
+            return ss;
+        },
+        
+        getOwnedSettlementsForClient : function () {
+            var ss = [], i;
+            for (i = 0; i < owned_settlements.length; i += 1) {
+                ss.push({
+                    Name : owned_settlements[i].getName(),
+                    owner : owned_settlements[i].ownedBy(),
+                    size : owned_settlements[i].getSize(),
+                    imagesource : owned_settlements[i].getImageSource(),
+                    imagekey : owned_settlements[i].getImageKey(),
+                    Population : owned_settlements[i].getPopulation(),
+                    Happiness : owned_settlements[i].getHappiness(),
+                    Income : owned_settlements[i].getIncome(),
+                    Harvest : owned_settlements[i].getHarvest(),
+                    Gold : owned_settlements[i].getGold(),
+                    Food : owned_settlements[i].getFood(),
+                    Order : owned_settlements[i].getOrder(),
+                    containingTiles : owned_settlements[i].containedInTiles()
+                });
+            }
+            
+            return ss;
         }
     };
 };  // end game
@@ -427,8 +503,8 @@ var game_server = module.exports = (function () {
                 status : "success", 
                 msg : client.userid + " logged in as " + client.username + " from " + client.handshake.address.address,
                 username : client.username,
-                settlements : games[0].getSettlements(),
-                owned_settlements : games[0].getOwnedSettlements()
+                settlements : games[0].getSettlementsForClient(),
+                owned_settlements : games[0].getOwnedSettlementsForClient()
             });
         }
     };

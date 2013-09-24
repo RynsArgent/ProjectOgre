@@ -264,7 +264,7 @@ var createSettlement = function (data) {
                             // small : 1 tile, medium : 2x2 tiles, large : 3x3 tiles
         containingTiles = data.containingTiles, // an array of the tile locations in which contains this settlement
         
-        name = data.name || '',
+        cityname = data.cityname || '',
         
         // attributes
         population = data.population || Math.floor(Math.random() * 100),
@@ -278,20 +278,52 @@ var createSettlement = function (data) {
         owner = data.owner;
         
         return {
-            ownedBy : function () {
-                return owner;
-            },
-            
-            getSize : function () {
-                return size;
-            },
-            
             containedInTiles : function () {
                 return containingTiles;
             },
-            
             getImageSource : function () {
                 return imgsrc;
+            },
+            getImageKey : function () {
+                return imgkey;
+            },
+            getName : function () {
+                return cityname;
+            },
+            ownedBy : function () {
+                return owner;
+            },
+            getSize : function () {
+                return size;
+            },
+            getPopulation : function () {
+                return population;
+            },
+            getHappiness : function () {
+                return happiness;
+            },
+            getOrder : function () {
+                return order;
+            },
+            getFood : function () {
+                return food;
+            },
+            getGold : function () {
+                return gold;
+            },
+            getIncome : function () {
+                return income;
+            },
+            getHarvest : function () {
+                return harvest;
+            },
+            
+            setOwner : function (player) {
+                owner = player;
+                console.log('set owner = player :: ' + owner + ' ; ' + player);
+            },
+            setGold : function (n) {
+                gold = n;
             },
             
             containingTiles : containingTiles,
@@ -473,7 +505,7 @@ var createClient = function () {
                         imagekey : data.settlements[i].imagekey,
                         containingTiles : data.settlements[i].containingTiles,
                         
-                        name : data.settlements[i].Name,
+                        cityname : data.settlements[i].Name,
                         owner : data.settlements[i].owner,
                         size : data.settlements[i].size,
                         
@@ -494,22 +526,23 @@ var createClient = function () {
                 }
                 
                 for (i = 0; i < data.owned_settlements.length; i += 1) {
+                     console.log(data.owned_settlements[i]);
                      settlement = createSettlement({
-                        imgsrc : data.settlements[i].imagesource,
-                        imagekey : data.settlements[i].imagekey,
-                        containingTiles : data.settlements[i].containingTiles,
+                        imgsrc : data.owned_settlements[i].imagesource,
+                        imagekey : data.owned_settlements[i].imagekey,
+                        containingTiles : data.owned_settlements[i].containingTiles,
                         
-                        name : data.settlements[i].Name,
-                        owner : data.settlements[i].owner,
-                        size : data.settlements[i].size,
+                        cityname : data.owned_settlements[i].Name,
+                        owner : data.owned_settlements[i].owner,
+                        size : data.owned_settlements[i].size,
                         
-                        population : data.settlements[i].Population,
-                        happiness : data.settlements[i].Happiness,
-                        income : data.settlements[i].Income,
-                        harvest : data.settlements[i].Harvest,
-                        gold : data.settlements[i].Gold,
-                        food : data.settlements[i].Food,
-                        order : data.settlements[i].Order
+                        population : data.owned_settlements[i].Population,
+                        happiness : data.owned_settlements[i].Happiness,
+                        income : data.owned_settlements[i].Income,
+                        harvest : data.owned_settlements[i].Harvest,
+                        gold : data.owned_settlements[i].Gold,
+                        food : data.owned_settlements[i].Food,
+                        order : data.owned_settlements[i].Order
                         
                     });
                     
@@ -546,19 +579,19 @@ var createClient = function () {
         },
         
         handleObjectSelected : function (obj) {
-            jQuery('#stl_owner').html(obj.owner);
-            jQuery('#stl_size').html(obj.size);
-            jQuery('#stl_population').html(obj.Population);
-            jQuery('#stl_order').html(obj.Order);
-            jQuery('#stl_happiness').html(obj.Happiness);
-            jQuery('#stl_food').html(obj.Food);
-            jQuery('#stl_gold').html(obj.Gold);
-            jQuery('#stl_harvest').html(obj.Harvest);
-            jQuery('#stl_income').html(obj.Income);
+            jQuery('#stl_owner').html(obj.ownedBy());
+            jQuery('#stl_size').html(obj.getSize());
+            jQuery('#stl_population').html(obj.getPopulation());
+            jQuery('#stl_order').html(obj.getOrder());
+            jQuery('#stl_happiness').html(obj.getHappiness());
+            jQuery('#stl_food').html(obj.getFood());
+            jQuery('#stl_gold').html(obj.getGold());
+            jQuery('#stl_harvest').html(obj.getHarvest());
+            jQuery('#stl_income').html(obj.getIncome());
             
             jQuery('#settlement_details')
                 .dialog({
-                    title : obj.Name
+                    title : obj.getName()
                 });
         },
         
