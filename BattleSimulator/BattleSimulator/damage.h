@@ -46,7 +46,7 @@ struct Damage
 	DamageNode* tail;
 	int size;
 	
-	int start; // Final calculated damage
+	int start; // initial damage
 	int final; // Final calculated damage
 
 	Damage(Action* aref, Unit* target, int amount, DamageRating rating, DamageType type = DAMAGE_TYPELESS) 

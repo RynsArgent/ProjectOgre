@@ -58,8 +58,9 @@ struct CharacterInfoBox : public InfoBox
 	int x;
 	int y;
 	bool form;
+	bool leader;
 
-	CharacterInfoBox() : InfoBox(), info(NULL), x(-1), y(-1), form(false) {}
+	CharacterInfoBox() : InfoBox(), info(NULL), x(-1), y(-1), form(false), leader(false) {}
 	virtual void render(Renderer* renderer) const; 
 };
 
@@ -68,7 +69,9 @@ struct FormationInfoBox : public InfoBox
 	Formation* info;
 	vector<vector<CharacterInfoBox> > characterInfos;
 
-	FormationInfoBox() : InfoBox(), info(NULL), characterInfos() {}
+	TextInfoBox targetInfo;
+
+	FormationInfoBox() : InfoBox(), info(NULL), characterInfos(), targetInfo() {}
 	virtual void render(Renderer* renderer) const; 
 };
 
@@ -173,7 +176,8 @@ struct Renderer
 	void initSetupRenderer(Setup* setup);
 	void renderSetup();
 
-	void processMouseClickSetup(const Point2D & loc);
+	void processMouseLeftClickSetup(const Point2D & loc);
+	void processMouseRightClickSetup(const Point2D & loc);
 	void processMouseMoveSetup(const Point2D & loc);
 
 	// Battle Function

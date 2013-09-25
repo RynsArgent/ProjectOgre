@@ -515,9 +515,12 @@ protected:
 	static const int MAX_GROUP_STACKS = 5;
 	
 	static const int TIMER = 3;
+	static const int AMOUNT = 15;
+
+	int amount;
 public:
 	StatusRegeneration(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Regeneration", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks)
+        : Status(effect, "Regeneration", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{}
 	
 	// Helper Functions

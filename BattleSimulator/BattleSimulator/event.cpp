@@ -7,12 +7,11 @@
 #include "unit.h"
 #include <cstdlib>
 
-Event::Event(Action* ref, int chance)
-	: ref(ref), chance(chance), success(true), desc("")
+Event::Event(Action* ref, const string & name, int chance)
+	: ref(ref), name(name), chance(chance), success(true), desc("")
 {
     if (ref) {
         ref->addEvent(this);
-        ref->getBattle()->addToEventStack(this);
     }
 }
 
@@ -26,7 +25,9 @@ void Event::determineSuccess()
 
 void Event::determineSuccess(Unit* target)
 {
-	Unit* source = ref->getSource();
+	Unit* source = NULL;
+	if (ref != NULL)
+	 source = ref->getSource();
 
 	// Trigger Pre on hit status effects
 	if (source != NULL)
@@ -43,22 +44,24 @@ void Event::determineSuccess(Unit* target)
 		source->activateOnPostPerformHit(this);
 }
 
-void Event::apply()
+void Event::apply(Battle* battle)
 {
+	battle->addToEventStack(this);
 }
 
 void Event::print(ostream& out) const
 {
-	if (ref->getAction() != EFFECT_TRIGGER)
-		out << ref->getSource()->getName() << " readies " << ref->getName() << endl;
+	if (ref != NULL && ref->getAction() != EFFECT_TRIGGER)
+		out << ref->getSource()->getName() << " readies " << name << endl;
 }
 
 Event::~Event()
 {
 }
 
-void EventCauseDamage::apply()
+void EventCauseDamage::apply(Battle* battle)
 {
+	Event::apply(battle);
 	determineSuccess(damage->target);
 	if (success)
 		damage->apply();
@@ -66,7 +69,9 @@ void EventCauseDamage::apply()
 
 void EventCauseDamage::print(ostream& out) const
 {
-    out << ref->getSource()->getName() << "'s " << ref->getName();
+	if (ref != NULL)
+		out << ref->getSource()->getName() << "'s ";
+	out << name;
     if (damage) {
 		if (success) {
 			damage->print(out);
@@ -82,8 +87,9 @@ EventCauseDamage::~EventCauseDamage()
     delete damage;
 }
 
-void EventCauseStatus::apply()
+void EventCauseStatus::apply(Battle* battle)
 {
+	Event::apply(battle);
 	determineSuccess(status->getTarget());
 	if (success)
 		status->getEffect()->addStatus(status);
@@ -91,7 +97,9 @@ void EventCauseStatus::apply()
 
 void EventCauseStatus::print(ostream& out) const
 {
-    out << ref->getSource()->getName() << "'s " << ref->getName();
+	if (ref != NULL)
+		out << ref->getSource()->getName() << "'s ";
+	out << name;
     if (status) {
 		if (success) {
 			out << " applies " << status->getEffect()->getName() << " to " << status->getTarget()->getName();
@@ -108,8 +116,9 @@ EventCauseStatus::~EventCauseStatus()
         delete status; // Only delete status if not linked to an Effect
 }
 
-void EventRemoveStatus::apply()
+void EventRemoveStatus::apply(Battle* battle)
 {
+	Event::apply(battle);
 	determineSuccess();
 	if (!success && !target->isAvailable())
 		return;
@@ -129,7 +138,9 @@ void EventRemoveStatus::apply()
 void EventRemoveStatus::print(ostream& out) const
 {
     if (removedResult) {
-		out << ref->getSource()->getName() << "'s " << ref->getName();
+		if (ref != NULL)
+			out << ref->getSource()->getName() << "'s "; 
+		out << name;
 		if (removedResult) {
 			out << " removes " << removedResult->getSubname() << " from " << target->getName();
 		}

@@ -77,7 +77,9 @@ void Damage::apply()
 	head->modify(target);
 
 	// Pre Damage Effects
-    Unit* applier = action->getSource();
+    Unit* applier = NULL;
+	if (action != NULL)
+		applier = action->getSource();
 	if (applier != NULL)
 		applier->activateOnPreApplyDamage(this);
 	target->activateOnPreReceiveDamage(this);

@@ -74,9 +74,6 @@ void initialize() {
 	formB->setCharacterAt(2, 1, new Character("Mage4B", JOB_MAGE, ELEMENT_WATER), 0, 0, 0);
 	formB->setLeaderPosition(1, 2);
 	formB->setTargetOrder(TARGET_LEADER);
-	
-	groupA = new Group(formA);
-	groupB = new Group(formB);
 
 	setup = new Setup(formA, formB);
 	renderer->initSetupRenderer(setup);
@@ -144,18 +141,27 @@ void GLprocessMouseClick(int button, int state, int x, int y)
 	{
 		if (mode == MODE_SETUP)
 		{
-			renderer->processMouseClickSetup(loc);
-			if (renderer->setupInfo.done) {
-				//int seed = 1377511528;
-				int seed = time(0);
-				srand(seed);
-				mode = MODE_BATTLE;
-				battle = new Battle(seed, groupA, groupB);
-				renderer->initBattleRenderer(battle);
-				battle->preprint();
-				battle->postprint();
+			if (button == GLUT_LEFT_BUTTON)
+			{
+				renderer->processMouseLeftClickSetup(loc);
+				if (renderer->setupInfo.done) {
+					//int seed = 1377511528;
+					int seed = time(0);
+					srand(seed);
+					mode = MODE_BATTLE;
+					groupA = new Group(formA);
+					groupB = new Group(formB);
+					battle = new Battle(seed, groupA, groupB);
+					renderer->initBattleRenderer(battle);
+					battle->preprint();
+					battle->postprint();
+				}
+				glutPostRedisplay();
 			}
-			glutPostRedisplay();
+			else if (button == GLUT_RIGHT_BUTTON)
+			{
+				renderer->processMouseRightClickSetup(loc);
+			}
 		}
 		else if (mode == MODE_BATTLE)
 		{

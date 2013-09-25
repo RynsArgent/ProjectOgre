@@ -411,10 +411,10 @@ int StatusPoison::onMerge(Status* status)
 
 void StatusPoison::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_EARTH);
+	Damage* damage = new Damage(NULL, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_EARTH);
 	
-	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
-	log->apply();
+	Event* log = new EventCauseDamage(NULL, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage);
+	log->apply(effect->getBattle());
 
 	/*
     // Has a nice idea for divided damage, however poison is one type
@@ -448,10 +448,10 @@ int StatusBleed::onMerge(Status* status)
 
 void StatusBleed::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
+	Damage* damage = new Damage(NULL, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
 	
-	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
-	log->apply();
+	Event* log = new EventCauseDamage(NULL, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage);
+	log->apply(effect->getBattle());
 }
 
 void StatusBleed::onRound()
@@ -472,10 +472,10 @@ int StatusBurn::onMerge(Status* status)
 
 void StatusBurn::applyTimedDamage()
 {
-	Damage* damage = new Damage(effect, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_FIRE);
+	Damage* damage = new Damage(NULL, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_FIRE);
 	
-	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
-	log->apply();
+	Event* log = new EventCauseDamage(NULL, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage);
+	log->apply(effect->getBattle());
 }
 
 void StatusBurn::onRound()
@@ -496,11 +496,12 @@ int StatusRegeneration::onMerge(Status* status)
 
 void StatusRegeneration::applyTimedHeal()
 {
-	int healAmount = useStacks() * effect->getSource()->getCurrentMagicAttack();
-	Damage* damage = new Damage(effect, target, useStacks() * healAmount, DAMAGE_LOW, DAMAGE_HEALING);
+	//int healAmount = useStacks() * effect->getSource()->getCurrentMagicAttack();
+	int healAmount = useStacks() * amount;
+	Damage* damage = new Damage(NULL, target, useStacks() * healAmount, DAMAGE_MEDIUM, DAMAGE_HEALING);
 	
-	Event* log = new EventCauseDamage(effect, Event::AUTO_HIT_CHANCE, damage);
-	log->apply();
+	Event* log = new EventCauseDamage(NULL, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage);
+	log->apply(effect->getBattle());
 }
 
 void StatusRegeneration::onRound()
@@ -822,12 +823,11 @@ void StatusTangleTrap::onPostBecomeTarget(Targeter* system)
 	if (system->ref && system->ref->getSource() &&
 		system->ref->getAbilityType() == ABILITY_ATTACK_MELEE)
 	{
-		string name = "Stun";
-		Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), name, system->ref->getSource());
+		Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), system->ref->getSource());
 		Status* status = new StatusStun(neffect, system->ref->getSource(), 1);
 		
-		Event* log = new EventCauseStatus(effect, Event::DEBUFF_HIT_CHANCE, status);
-		log->apply();
+		Event* log = new EventCauseStatus(effect, effect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+		log->apply(effect->getBattle());
 
 		neffect->applyEffect();
 

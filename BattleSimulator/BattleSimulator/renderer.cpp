@@ -85,8 +85,9 @@ void CharacterInfoBox::render(Renderer* renderer) const
 		Color colText = BLUE;
 
 		string descName = info->getName();
-		renderer->GLoutputString(Point2D(box.p.x + box.width / 2, box.p.y + 3 * (box.height / 10)), descName, colText, true);
-
+		renderer->GLoutputString(Point2D(box.p.x + box.width / 2, box.p.y + 3 * (box.height / 10)), descName, colText, true);\
+		if (leader)
+			renderer->GLoutputString(Point2D(box.p.x + box.width / 2, box.p.y + 3 * (2 * box.height / 10)), "***", colText, true);
 	}
 	
 	if (renderer->selected == this || (renderer->mouseover == this && renderer->selected == NULL)) {
@@ -143,7 +144,7 @@ void FormationInfoBox::render(Renderer* renderer) const
 		{
 			characterInfos[i][j].render(renderer);
 		}
-
+	targetInfo.render(renderer);
 }
 
 void GroupInfoBox::render(Renderer* renderer) const
@@ -503,7 +504,30 @@ void Renderer::setFormationBox(FormationInfoBox* container, Formation* form, Dir
 			container->characterInfos[i][j].x = i;
 			container->characterInfos[i][j].y = j;
 			container->characterInfos[i][j].form = dir == DIRECTION_SOUTH;
+			container->characterInfos[i][j].leader = form->getLeader() == character;
 		}
+		
+	container->targetInfo.box = Rect2D(container->box.p + Point2D(container->box.width + dx / 8, 0.0),
+		dx / 5.0, dy / 4.0, WHITE, true);
+	switch (form->getTargetOrder()) 
+	{
+	case TARGET_RANDOM:
+		container->targetInfo.text = "R";
+		break;
+	case TARGET_WEAKEST:
+		container->targetInfo.text = "W";
+		break;
+	case TARGET_STRONGEST:
+		container->targetInfo.text = "S";
+		break;
+	case TARGET_LEADER:
+		container->targetInfo.text = "L";
+		break;
+	default:
+		container->targetInfo.text = "?";
+		break;
+	}
+	container->targetInfo.textColor = BLACK;
 }
 
 void Renderer::initSetupRenderer(Setup* setup)
@@ -532,7 +556,7 @@ void Renderer::renderSetup()
 	setupInfo.render(this);
 }
 
-void Renderer::processMouseClickSetup(const Point2D & loc)
+void Renderer::processMouseLeftClickSetup(const Point2D & loc)
 {
 	if (setupInfo.sideboardInfo.info != NULL)
 	{
@@ -652,11 +676,108 @@ void Renderer::processMouseClickSetup(const Point2D & loc)
 			}
 		}
 
-
 	if (setupInfo.playBox.box.contains(loc))
 	{
 		setupInfo.done = true;
 	}
+
+	if (setupInfo.formAInfo.targetInfo.box.contains(loc))
+	{
+		cout << "rawr";
+		TargetType order = setupInfo.formAInfo.info->getTargetOrder();
+		switch (order) 
+		{
+		case TARGET_RANDOM:
+			order = TARGET_WEAKEST;
+			setupInfo.formAInfo.targetInfo.text = "W";
+			break;
+		case TARGET_WEAKEST:
+			order = TARGET_STRONGEST;
+			setupInfo.formAInfo.targetInfo.text = "S";
+			break;
+		case TARGET_STRONGEST:
+			order = TARGET_LEADER;
+			setupInfo.formAInfo.targetInfo.text = "L";
+			break;
+		case TARGET_LEADER:
+			order = TARGET_RANDOM;
+			setupInfo.formAInfo.targetInfo.text = "R";
+			break;
+		default:
+			setupInfo.formAInfo.targetInfo.text = "?";
+			break;
+		}
+		setupInfo.formAInfo.info->setTargetOrder(order);
+	}
+
+	if (setupInfo.formBInfo.targetInfo.box.contains(loc))
+	{
+		TargetType order = setupInfo.formBInfo.info->getTargetOrder();
+		switch (order) 
+		{
+		case TARGET_RANDOM:
+			order = TARGET_WEAKEST;
+			setupInfo.formBInfo.targetInfo.text = "W";
+			break;
+		case TARGET_WEAKEST:
+			order = TARGET_STRONGEST;
+			setupInfo.formBInfo.targetInfo.text = "S";
+			break;
+		case TARGET_STRONGEST:
+			order = TARGET_LEADER;
+			setupInfo.formBInfo.targetInfo.text = "L";
+			break;
+		case TARGET_LEADER:
+			order = TARGET_RANDOM;
+			setupInfo.formBInfo.targetInfo.text = "R";
+			break;
+		default:
+			setupInfo.formBInfo.targetInfo.text = "?";
+			break;
+		}
+		setupInfo.formBInfo.info->setTargetOrder(order);
+	}
+
+	change = true;
+	if (change) {
+		if (selected)
+			setSideboardBox(&setupInfo.sideboardInfo, static_cast<CharacterInfoBox*>(selected)->info);
+		else if (mouseover)
+			setSideboardBox(&setupInfo.sideboardInfo, static_cast<CharacterInfoBox*>(mouseover)->info);
+		else
+			setSideboardBox(&setupInfo.sideboardInfo, NULL);
+	}
+}
+
+void Renderer::processMouseRightClickSetup(const Point2D & loc)
+{
+	for (int i = 0; i < setupInfo.formAInfo.characterInfos.size(); ++i)
+		for (int j = 0; j < setupInfo.formAInfo.characterInfos[i].size(); ++j)
+		{
+			CharacterInfoBox* characterinfo = &setupInfo.formAInfo.characterInfos[i][j];
+			if (characterinfo->box.contains(loc))
+			{
+				GridPoint old = setupInfo.formAInfo.info->getLeaderPosition();
+				GridPoint next = GridPoint(i, j);
+				setupInfo.formAInfo.characterInfos[old.x][old.y].leader = false;
+				setupInfo.formAInfo.info->setLeaderPosition(next);
+				setupInfo.formAInfo.characterInfos[next.x][next.y].leader = true;
+			}
+		}
+
+	for (int i = 0; i < setupInfo.formBInfo.characterInfos.size(); ++i)
+		for (int j = 0; j < setupInfo.formBInfo.characterInfos[i].size(); ++j)
+		{
+			CharacterInfoBox* characterinfo = &setupInfo.formBInfo.characterInfos[i][j];
+			if (characterinfo->box.contains(loc))
+			{
+				GridPoint old = setupInfo.formBInfo.info->getLeaderPosition();
+				GridPoint next = GridPoint(i, j);
+				setupInfo.formBInfo.characterInfos[old.x][old.y].leader = false;
+				setupInfo.formBInfo.info->setLeaderPosition(next);
+				setupInfo.formBInfo.characterInfos[next.x][next.y].leader = true;
+			}
+		}
 
 	change = true;
 	if (change) {
@@ -836,6 +957,25 @@ void Renderer::processMouseMoveSetup(const Point2D & loc)
 	{
 		setupInfo.playBox.setHighlighted(false);
 	}
+	
+	if (setupInfo.formAInfo.targetInfo.box.contains(loc))
+	{
+		setupInfo.formAInfo.targetInfo.setHighlighted(true);
+	}
+	else
+	{
+		setupInfo.formAInfo.targetInfo.setHighlighted(false);
+	}
+
+	if (setupInfo.formBInfo.targetInfo.box.contains(loc))
+	{
+		setupInfo.formBInfo.targetInfo.setHighlighted(true);
+	}
+	else
+	{
+		setupInfo.formBInfo.targetInfo.setHighlighted(false);
+	}
+
 	change = true;
 }
 

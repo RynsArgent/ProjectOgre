@@ -18,7 +18,6 @@
 class Ability : public Action
 {
 protected:
-    string name;
 	bool basic; // Tells whether this ability is programmed to be set as a response ability (counterattack)
 	bool respondable; // Determines whether this ability can be followed with a counterattack
 	bool interruptible; // Determines whether an ability can be cancelled
