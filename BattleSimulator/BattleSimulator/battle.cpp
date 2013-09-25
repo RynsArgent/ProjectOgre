@@ -152,8 +152,6 @@ void Battle::executeTurn()
 	
 	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
 	sort(unitOrder.begin() + turnIndex, unitOrder.end(), compareSpeed);
-	
-    print();
 
 	// Increment to the next turn
 	mainUnit->setDone(true);
@@ -198,7 +196,7 @@ void Battle::simulate()
 	}
 }
 
-void Battle::print() const
+void Battle::preprint() const
 {
 	cout << "Round Number: " << roundNumber << endl;
     
@@ -208,20 +206,27 @@ void Battle::print() const
 	group2->printGroup(true);
 	cout << endl;
 	group1->printGroup(false);
+}
+
+void Battle::postprint() const
+{
+	cout << "--------------------------------------------------" << endl;
 	
+	for (int i = 0; i < unitOrder.size(); ++i)
+	{
+		int prevTurn = turnIndex - 1;
+		if (prevTurn < 0)
+			prevTurn = unitOrder.size() - 1;
+		if (i == prevTurn)
+			cout << "*** ";
+		unitOrder[i]->print();
+	}
+
 	cout << "--------------------------------------------------" << endl;
 	
     for (int i = 0; i < eventStack.size(); ++i)
         eventStack[i]->print(cout);
 	
-	cout << "--------------------------------------------------" << endl;
-
-	for (int i = 0; i < unitOrder.size(); ++i)
-	{
-		if (i == turnIndex)
-			cout << "*** ";
-		unitOrder[i]->print();
-	}
 	if (isBattleOver())
 	{
 		if (group1->groupIsAvailable())

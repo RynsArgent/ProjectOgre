@@ -72,6 +72,9 @@
     <ClCompile Include="setup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="job.cpp">
+      <Filter>Source Files\Battle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="unit.h">
@@ -122,9 +125,15 @@
     <ClInclude Include="setup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="job.h">
+      <Filter>Header Files\Battle</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="makefile">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="glut32.dll">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

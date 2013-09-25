@@ -309,7 +309,7 @@ public:
 	
 	// For fleeing units ect. - not implemented yet
 	bool isAvailable() const {
-		return isAlive();
+		return isAlive() && gridX >= 0 && gridY >= 0;
 	}
 
 	void setRValue() {

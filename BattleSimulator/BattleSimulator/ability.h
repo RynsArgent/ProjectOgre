@@ -7,6 +7,13 @@
 #include <fstream>
 #include <vector>
 
+// To add an ability: 
+// -go to pch.h and add the ability to the Skill enum
+// -go to ability.h and create the new derived class for the Skill
+// -go to ability.cpp and update the toStringSkill
+// -go to ability.cpp and update the getAbility to instantiate the new object for skill
+// -go to ability.cpp and write the logic in the execute function
+
 // Base class for abilities
 class Ability : public Action
 {
@@ -22,6 +29,7 @@ protected:
 	vector<Targeter*> targeters;
 	vector<Event*> events;
 public:
+	static string toStringSkill(Skill skill);
 	static Ability* getAbility(Skill skill);
 	static Skill selectSkill(Unit* unit);
 	static bool isAbleToRespond(Ability* previous, Ability* current);

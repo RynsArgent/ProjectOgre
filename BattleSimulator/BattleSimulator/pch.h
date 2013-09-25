@@ -19,6 +19,7 @@ enum AttributeType {
 	VALUE_LIGHTNING_DEFENSE,
 	VALUE_SIZE
 };
+enum JobType { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE };
 enum ElementType { ELEMENT_NONE, ELEMENT_PHYSICAL, ELEMENT_FIRE, ELEMENT_WATER, ELEMENT_EARTH, ELEMENT_ICE, ELEMENT_LIGHTNING };
 enum ActionType { ACTION_NONE, ABILITY_STANDARD, EFFECT_TRIGGER };
 enum AbilityType { ABILITY_NONE, ABILITY_ATTACK_MELEE, ABILITY_ATTACK_RANGE, ABILITY_SPECIAL };
@@ -43,6 +44,7 @@ int bound(int value, AttributeType type);
 string toStringAT(AbilityType val);
 string toStringDT(DamageType val);
 string toStringET(ElementType val);
+string toStringJob(JobType val);
 string toStringInt(int val);
 string toStringDouble(double val);
 
@@ -61,6 +63,7 @@ Facing fullTurn(Facing face);
 
 // Forward declarations of all classes
 class Character;
+class Job;
 class Unit;
 class Action;
 struct Event;

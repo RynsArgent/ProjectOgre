@@ -13,6 +13,8 @@ class Character
 protected:
 	string name;
 
+	Job* job;
+
 	int baseHealth;
 	int basePhysicalAttack;
 	int baseMagicAttack;
@@ -39,13 +41,22 @@ protected:
 	int basicSkillIndex;
 
 	int baseUpkeep;
+	
+	void carryOverJobStatistics();
 public:
-	Character(const string & name = "", int health = 0, int physicalAttack = 0, int magicAttack = 0, int speed = 0, 
-		int basePhysicalDefense = 0, int fireDefense = 0, int waterDefense = 0, 
+	Character(const string & name = "", JobType jobType = JOB_NONE, ElementType favoredElement = ELEMENT_NONE, 
+		int health = 0, int physicalAttack = 0, int magicAttack = 0, int speed = 0, 
+		int PhysicalDefense = 0, int fireDefense = 0, int waterDefense = 0, 
 		int earthDefense = 0, int iceDefense = 0, int lightningDefense = 0,
-		int size = 0, ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
+		int size = 1, int upkeep = 0);
 
-	virtual void init() = 0;
+	void updateJobInfo();
+	
+	Job* getJob() const {
+		return job;
+	}
+
+	void setJob(JobType jobType);
 
 	int getBasePhysicalAttack() const {
 		return basePhysicalAttack;
@@ -150,6 +161,22 @@ public:
 	void setFavoredElement(ElementType favoredElement) {
 		this->favoredElement = favoredElement;
 	}
+	
+	vector<Skill> getBackSkills() const {
+		return backSkills;
+	}
+	
+	vector<Skill> getMidSkills() const {
+		return midSkills;
+	}
+	
+	vector<Skill> getFrontSkills() const {
+		return frontSkills;
+	}
+	
+	vector<Skill> getBasicSkills() const {
+		return basicSkills;
+	}
 
 	Skill getBackSkill() const {
 		return backSkills[backSkillIndex];
@@ -208,98 +235,6 @@ public:
 	}
 
 	~Character() {}
-};
-
-class Fighter : public Character
-{
-protected:
-	const static int BASE_HEALTH = 100;
-	const static int BASE_PHYSICAL_ATTACK = 30;
-	const static int BASE_MAGIC_ATTACK = 10;
-	const static int BASE_SPEED = 3;
-	
-	const static int BASE_PHYSICAL_DEFENSE = 0;
-	const static int BASE_FIRE_DEFENSE = 0;
-	const static int BASE_WATER_DEFENSE = 0;
-	const static int BASE_EARTH_DEFENSE = 0;
-	const static int BASE_ICE_DEFENSE = 0;
-	const static int BASE_LIGHTNING_DEFENSE = 0;
-
-	const static int BASE_SIZE = 1;
-public:
-	Fighter(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
-	virtual void init();
-
-	~Fighter() {}
-};
-
-class Scout : public Character
-{
-protected:
-	const static int BASE_HEALTH = 80;
-	const static int BASE_PHYSICAL_ATTACK = 20;
-	const static int BASE_MAGIC_ATTACK = 20;
-	const static int BASE_SPEED = 5;
-	
-	const static int BASE_PHYSICAL_DEFENSE = 0;
-	const static int BASE_FIRE_DEFENSE = 0;
-	const static int BASE_WATER_DEFENSE = 0;
-	const static int BASE_EARTH_DEFENSE = 0;
-	const static int BASE_ICE_DEFENSE = 0;
-	const static int BASE_LIGHTNING_DEFENSE = 0;
-	
-	const static int BASE_SIZE = 1;
-public:
-	Scout(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
-	virtual void init();
-
-	~Scout() {}
-};
-
-class Acolyte : public Character
-{
-protected:
-	const static int BASE_HEALTH = 60;
-	const static int BASE_PHYSICAL_ATTACK = 10;
-	const static int BASE_MAGIC_ATTACK = 30;
-	const static int BASE_SPEED = 1;
-	
-	const static int BASE_PHYSICAL_DEFENSE = 0;
-	const static int BASE_FIRE_DEFENSE = 0;
-	const static int BASE_WATER_DEFENSE = 0;
-	const static int BASE_EARTH_DEFENSE = 0;
-	const static int BASE_ICE_DEFENSE = 0;
-	const static int BASE_LIGHTNING_DEFENSE = 0;
-	
-	const static int BASE_SIZE = 1;
-public:
-	Acolyte(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
-	virtual void init();
-
-	~Acolyte() {}
-};
-
-class Mage : public Character
-{
-protected:
-	const static int BASE_HEALTH = 40;
-	const static int BASE_PHYSICAL_ATTACK = 10;
-	const static int BASE_MAGIC_ATTACK = 30;
-	const static int BASE_SPEED = 1;
-	
-	const static int BASE_PHYSICAL_DEFENSE = 0;
-	const static int BASE_FIRE_DEFENSE = 0;
-	const static int BASE_WATER_DEFENSE = 0;
-	const static int BASE_EARTH_DEFENSE = 0;
-	const static int BASE_ICE_DEFENSE = 0;
-	const static int BASE_LIGHTNING_DEFENSE = 0;
-	
-	const static int BASE_SIZE = 1;
-public:
-	Mage(const string & name = "", ElementType favoredElement = ELEMENT_NONE, int upkeep = 0);
-	virtual void init();
-
-	~Mage() {}
 };
 
 #endif

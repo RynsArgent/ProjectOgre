@@ -10,6 +10,14 @@
 #include "group.h"
 #include "battle.h"
 
+string Ability::toStringSkill(Skill skill)
+{
+	Ability* tmp = getAbility(skill);
+	string ret = tmp->getName();
+	delete tmp;
+	return ret;
+}
+
 Ability* Ability::getAbility(Skill skill)
 {
 	switch (skill)

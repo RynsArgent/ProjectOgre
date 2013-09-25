@@ -124,6 +124,23 @@ string toStringET(ElementType val)
 	return "";
 }
 
+string toStringJob(JobType val)
+{
+	switch (val) {
+        case JOB_NONE:
+            return "None";
+        case JOB_FIGHTER:
+            return "Fighter";
+        case JOB_SCOUT:
+            return "Scout";
+        case JOB_ACOLYTE:
+            return "Acolyte";
+        case JOB_MAGE:
+            return "Mage";
+    }
+	return "";
+}
+
 string toStringInt(int val)
 {
 	stringstream ss;

@@ -44,23 +44,20 @@ Group* groupB = NULL;
 
 Battle* battle = NULL;
 
-Renderer* renderer = new Renderer(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
+Renderer* renderer = new Renderer(WINDOW_WIDTH, WINDOW_HEIGHT, VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
 
 void initialize() {
-	//int seed = 1377511528;
-	int seed = time(0);
-	srand(seed);
 	/*
 		*********GROUP A*********
 		FRONT	[0,0] [1,0] [2,0]
 		MIDDLE	[0,1] [1,1] [2,1]
 		BACK	[0,2] [1,2] [2,2]
 	*/
-	formA->setCharacterAt(0, 0, new Acolyte("acolyte1B"), 0, 0, 0);
-	formA->setCharacterAt(2, 0, new Acolyte("acolyte1C"), 0, 0, 0);
-	formA->setCharacterAt(1, 0, new Scout("scout1A"), 0, 0, 0);
-	formA->setCharacterAt(1, 1, new Scout("scout2A"), 0, 0, 0);
-	formA->setCharacterAt(1, 2, new Acolyte("acolyte1A"), 0, 0, 0);
+	formA->setCharacterAt(0, 0, new Character("Acolyte1A", JOB_ACOLYTE), 0, 0, 0);
+	formA->setCharacterAt(2, 0, new Character("Acolyte2A", JOB_ACOLYTE), 0, 0, 0);
+	formA->setCharacterAt(1, 0, new Character("Scout1A", JOB_SCOUT), 0, 0, 0);
+	formA->setCharacterAt(1, 1, new Character("Scout2A", JOB_SCOUT), 0, 0, 0);
+	formA->setCharacterAt(1, 2, new Character("Acolyte3A", JOB_ACOLYTE), 0, 0, 0);
 	formA->setLeaderPosition(1, 2);
 	formA->setTargetOrder(TARGET_LEADER);
 
@@ -70,11 +67,11 @@ void initialize() {
 		MIDDLE	[2,1] [1,1] [0,1]
 		FRONT	[2,0] [1,0] [0,0]
 	*/
-	formB->setCharacterAt(1, 2, new Fighter("fighter1B"), 1, 0, 0);
-	formB->setCharacterAt(0, 0, new Mage("mage1B", ELEMENT_WATER), 0, 0, 0);
-	formB->setCharacterAt(2, 0, new Mage("mage2B", ELEMENT_WATER), 0, 0, 0);
-	formB->setCharacterAt(0, 1, new Mage("mage3B", ELEMENT_WATER), 0, 0, 0);
-	formB->setCharacterAt(2, 1, new Mage("mage4B", ELEMENT_WATER), 0, 0, 0);
+	formB->setCharacterAt(1, 2, new Character("Fighter1B", JOB_FIGHTER), 1, 0, 0);
+	formB->setCharacterAt(0, 0, new Character("Mage1B", JOB_MAGE, ELEMENT_WATER), 0, 0, 0);
+	formB->setCharacterAt(2, 0, new Character("Mage2B", JOB_MAGE, ELEMENT_WATER), 0, 0, 0);
+	formB->setCharacterAt(0, 1, new Character("Mage3B", JOB_MAGE, ELEMENT_WATER), 0, 0, 0);
+	formB->setCharacterAt(2, 1, new Character("Mage4B", JOB_MAGE, ELEMENT_WATER), 0, 0, 0);
 	formB->setLeaderPosition(1, 2);
 	formB->setTargetOrder(TARGET_LEADER);
 	
@@ -83,7 +80,6 @@ void initialize() {
 
 	setup = new Setup(formA, formB);
 	renderer->initSetupRenderer(setup);
-	battle = new Battle(seed, groupA, groupB);
 }
 
 //Converts the provided point, p, from screen coordinates to OpenGL coordinate system 
@@ -120,7 +116,6 @@ int main(int argc, char** argv)
 	gluOrtho2D(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_BOTTOM, VIEWPORT_TOP);
 
 	initialize();
-	battle->print();
 	
 	glutMainLoop();
 
@@ -129,9 +124,6 @@ int main(int argc, char** argv)
 
 void GLrender()
 {
-	if (mode == MODE_BATTLE)
-		renderer->initBattleRenderer(battle);
-
 	glClear(GL_COLOR_BUFFER_BIT); 
 
 	//This is where we draw
@@ -153,12 +145,27 @@ void GLprocessMouseClick(int button, int state, int x, int y)
 		if (mode == MODE_SETUP)
 		{
 			renderer->processMouseClickSetup(loc);
+			if (renderer->setupInfo.done) {
+				//int seed = 1377511528;
+				int seed = time(0);
+				srand(seed);
+				mode = MODE_BATTLE;
+				battle = new Battle(seed, groupA, groupB);
+				renderer->initBattleRenderer(battle);
+				battle->preprint();
+				battle->postprint();
+			}
 			glutPostRedisplay();
 		}
 		else if (mode == MODE_BATTLE)
 		{
-			battle->cleanupTurn();
-			battle->executeTurn();
+			battle->preprint();
+			do
+			{
+				battle->cleanupTurn();
+				battle->executeTurn();
+			} while (battle->getEventStack().size() <= 0 && !battle->isBattleOver());
+			battle->postprint();
 			glutPostRedisplay();
 		}
 	}

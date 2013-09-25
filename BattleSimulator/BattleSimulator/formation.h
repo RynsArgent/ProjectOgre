@@ -40,6 +40,8 @@ public:
     
 	void setCharacterAt(int x, int y, Character* character, int backSkillIndex, int midSkillIndex, int frontSkillIndex, int basicSkillIndex = 0) {
 		grid[x][y] = character;
+		if (character == NULL)
+			return;
 		character->setBackSkillIndex(backSkillIndex);
 		character->setMidSkillIndex(midSkillIndex);
 		character->setFrontSkillIndex(frontSkillIndex);
@@ -48,6 +50,8 @@ public:
     
 	void setCharacterAt(const GridPoint & p, Character* character, int backSkillIndex, int midSkillIndex, int frontSkillIndex, int basicSkillIndex = 0) {
 		grid[p.x][p.y] = character;
+		if (character == NULL)
+			return;
 		character->setBackSkillIndex(backSkillIndex);
 		character->setMidSkillIndex(midSkillIndex);
 		character->setFrontSkillIndex(frontSkillIndex);

@@ -32,6 +32,12 @@ public:
 	int roundLength() const {
 		return unitOrder.size();
 	}
+	
+	int getSeed() const { return seed; }
+	Unit* getGlobalTrigger() const { return globaltrigger; }
+	Unit* getMainUnit() const { return mainUnit; }
+	Unit* getRespondUnit() const { return respondUnit; }
+	vector<Event*> getEventStack() const { return eventStack; }
 
 	Group* getAllyGroup(int gid) const;
 	Group* getEnemyGroup(int gid) const;
@@ -46,7 +52,8 @@ public:
     
 	void simulate();
 	
-	void print() const;
+	void preprint() const;
+	void postprint() const;
 
 	~Battle() {}
 
