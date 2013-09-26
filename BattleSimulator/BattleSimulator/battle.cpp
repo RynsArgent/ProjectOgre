@@ -217,7 +217,7 @@ void Battle::postprint() const
 		int prevTurn = turnIndex - 1;
 		if (prevTurn < 0)
 			prevTurn = unitOrder.size() - 1;
-		if (i == prevTurn)
+		if (i == prevTurn && turnIndex >= 0)
 			cout << "*** ";
 		unitOrder[i]->print();
 	}

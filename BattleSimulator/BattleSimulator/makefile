@@ -10,6 +10,7 @@ INCLUDE =
 MAIN_OUT = BattleSimulator.exe
 PCH_OUT = pch.o
 ACTION_OUT = action.o
+JOB_OUT = job.o
 ABILITY_OUT = ability.o
 EVENT_OUT = event.o
 BATTLE_OUT = battle.o
@@ -30,9 +31,10 @@ RENDERER_LINUX_OUT = rendererlinux.o
 RENDERER_MAC_OUT = renderermac.o
 
 ## Requirements for each command
-MAIN_REQS = main.cpp $(PCH_OUT) $(ACTION_OUT) $(ABILITY_OUT) $(EVENT_OUT) $(GRIDPOINT_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT) $(DAMAGE_OUT) $(SETUP_OUT) $(TARGET_OUT) 
+MAIN_REQS = main.cpp $(PCH_OUT) $(ACTION_OUT) $(JOB_OUT) $(ABILITY_OUT) $(EVENT_OUT) $(GRIDPOINT_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT) $(DAMAGE_OUT) $(SETUP_OUT) $(TARGET_OUT) 
 PCH_REQS = pch.h pch.cpp
 ACTION_REQS = action.h action.cpp
+JOB_REQS = job.h job.cpp
 ABILITY_REQS = ability.h ability.cpp
 EVENT_REQS = event.h event.cpp
 BATTLE_REQS = battle.h battle.cpp
@@ -49,9 +51,10 @@ SETUP_REQS = setup.h setup.cpp
 RENDERER_REQS = renderer.h renderer.cpp
 
 ## Targets to compile for each command
-MAIN_TARGETS = main.cpp $(PCH_OUT) $(ACTION_OUT) $(ABILITY_OUT) $(EVENT_OUT) $(GRIDPOINT_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT) $(DAMAGE_OUT) $(SETUP_OUT) $(TARGET_OUT)
+MAIN_TARGETS = main.cpp $(PCH_OUT) $(ACTION_OUT) $(JOB_OUT) $(ABILITY_OUT) $(EVENT_OUT) $(GRIDPOINT_OUT) $(BATTLE_OUT) $(GROUP_OUT) $(UNIT_OUT) $(FORMATION_OUT) $(CHARACTER_OUT) $(STATUS_OUT) $(DAMAGE_OUT) $(SETUP_OUT) $(TARGET_OUT)
 PCH_TARGETS = pch.cpp
 ACTION_TARGETS = action.cpp
+JOB_TARGETS = job.cpp
 ABILITY_TARGETS = ability.cpp
 EVENT_TARGETS = event.cpp
 BATTLE_TARGETS = battle.cpp
@@ -87,6 +90,8 @@ $(BATTLE_OUT): $(BATTLE_REQS) $(INCLUDE)
 	$(CC) -c $(BATTLE_TARGETS)
 $(ACTION_OUT): $(ACTION_REQS) $(INCLUDE)
 	$(CC) -c $(ACTION_TARGETS)
+$(JOB_OUT): $(JOB_REQS) $(INCLUDE)
+	$(CC) -c $(JOB_TARGETS)
 $(ABILITY_OUT): $(ABILITY_REQS) $(INCLUDE)
 	$(CC) -c $(ABILITY_TARGETS)
 $(EVENT_OUT): $(EVENT_REQS) $(INCLUDE)

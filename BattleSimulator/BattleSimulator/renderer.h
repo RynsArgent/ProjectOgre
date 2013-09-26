@@ -112,7 +112,7 @@ struct SideboardInfoBox : public InfoBox
 	TextInfoBox leftbox;
 	TextInfoBox rightbox;
 
-	SideboardInfoBox() : InfoBox(), skillboxes(), elementboxes(), jobboxes(), jobindex(0), leftbox(), rightbox() {}
+	SideboardInfoBox() : InfoBox(), info(NULL), skillboxes(), elementboxes(), jobboxes(), jobindex(0), leftbox(), rightbox() {}
 	virtual void render(Renderer* renderer) const;
 };
 
@@ -159,9 +159,13 @@ struct Renderer
 	InfoBox* selected;
 
 	//Outputs a string in graphics to point p with str and color (r,g,b) and font
-	void GLoutputString(double x, double y, const string & str,
+	void GLoutputString12(double x, double y, const string & str,
 							double cr = 1.0, double cg = 1.0, double cb = 1.0, bool centered = false);
-	void GLoutputString(const Point2D & p, const string & str, 
+	void GLoutputString12(const Point2D & p, const string & str, 
+							const Color & col = Color(), bool centered = false);
+	void GLoutputString18(double x, double y, const string & str,
+							double cr = 1.0, double cg = 1.0, double cb = 1.0, bool centered = false);
+	void GLoutputString18(const Point2D & p, const string & str, 
 							const Color & col = Color(), bool centered = false);
 
 	Renderer(int pixelWidth, int pixelHeight, double edgeLeft, double edgeRight, double edgeTop, double edgeBottom);
