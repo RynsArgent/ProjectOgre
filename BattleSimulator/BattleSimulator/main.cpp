@@ -29,6 +29,7 @@ const double VIEWPORT_RIGHT = 1.0;
 const double VIEWPORT_TOP = 0.0;
 const double VIEWPORT_BOTTOM = 1.0;
 
+int seed = 0;
 bool change = false;
 
 Formation* formA = new Formation();
@@ -47,6 +48,9 @@ Battle* battle = NULL;
 Renderer* renderer = new Renderer(WINDOW_WIDTH, WINDOW_HEIGHT, VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
 
 void initialize() {
+	seed = time(NULL);
+	srand(seed);
+
 	/*
 		*********GROUP A*********
 		FRONT	[0,0] [1,0] [2,0]
@@ -97,6 +101,7 @@ void GLscreenToWindowCoordinates(double x, double y, double & rx, double & ry)
 }
 
 void GLrender();
+void GLprocessKeyboardPress(unsigned char key, int x, int y);
 void GLprocessMouseClick(int button, int state, int x, int y);
 void GLprocessMouseMove(int x, int y);
 
@@ -108,6 +113,7 @@ int main(int argc, char** argv)
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutCreateWindow("My Application");
 	glutDisplayFunc(GLrender);
+	glutKeyboardFunc(GLprocessKeyboardPress);
 	glutMouseFunc(GLprocessMouseClick);
 	glutPassiveMotionFunc(GLprocessMouseMove);
 	gluOrtho2D(VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_BOTTOM, VIEWPORT_TOP);
@@ -133,6 +139,23 @@ void GLrender()
 	glutSwapBuffers();
 }
 
+void GLprocessKeyboardPress(unsigned char key, int x, int y)
+{
+	if (key == 27) //esc
+	{
+		if (mode == MODE_SETUP) {
+			exit(0);
+		} else {
+			delete groupA;
+			delete groupB;
+			delete battle;
+			mode = MODE_SETUP;
+			renderer->setupInfo.done = false;
+			glutPostRedisplay();
+		}
+	}
+}
+
 void GLprocessMouseClick(int button, int state, int x, int y)
 {
 	Point2D loc; 
@@ -145,9 +168,6 @@ void GLprocessMouseClick(int button, int state, int x, int y)
 			{
 				renderer->processMouseLeftClickSetup(loc);
 				if (renderer->setupInfo.done) {
-					//int seed = 1377511528;
-					int seed = time(0);
-					srand(seed);
 					mode = MODE_BATTLE;
 					groupA = new Group(formA);
 					groupB = new Group(formB);

@@ -124,6 +124,8 @@ struct SetupInfoBox : public InfoBox
 	FormationInfoBox formBInfo;
 	
 	TextInfoBox playBox;
+	TextInfoBox loadBox;
+	TextInfoBox saveBox;
 
 	bool done;
 
@@ -179,6 +181,9 @@ struct Renderer
 	void setFormationBox(FormationInfoBox* container, Formation* form, Direction dir, double centerx, double centery, double width, double height);
 	void initSetupRenderer(Setup* setup);
 	void renderSetup();
+
+	void load(const string & filename);
+	void save(const string & filename);
 
 	void processMouseLeftClickSetup(const Point2D & loc);
 	void processMouseRightClickSetup(const Point2D & loc);

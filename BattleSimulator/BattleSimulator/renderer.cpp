@@ -8,6 +8,7 @@
 #include "battle.h"
 #include "event.h"
 #include "action.h"
+#include <fstream>
 #include <sstream>
 #include <cmath>
 #include <vector>
@@ -183,6 +184,8 @@ void SetupInfoBox::render(Renderer* renderer) const
 	formAInfo.render(renderer);
 	formBInfo.render(renderer);
 	playBox.render(renderer);
+	loadBox.render(renderer);
+	saveBox.render(renderer);
 }
 
 void BattleInfoBox::render(Renderer* renderer) const
@@ -195,7 +198,6 @@ void BattleInfoBox::render(Renderer* renderer) const
 	for (int i = 0; i < eventStack.size(); ++i) {
 		stringstream ss;
 		eventStack[i]->print(ss);
-		eventStack[i]->print(cout);
 		renderer->GLoutputString12(0, 0.05 + 0.05 * i, ss.str(), 1.0, 1.0, 1.0);
 	}
 	renderer->GLoutputString12(0.01, 0.99, "seed: " + toStringInt(info->getSeed()), 1.0, 1.0, 1.0);
@@ -213,7 +215,6 @@ void Renderer::GLoutputString12(double x, double y, const string & str,
 {
 	glColor3d(cr, cg, cb);
 	if (centered) {
-		
 		double totalWidth = 0;
 		double totalHeight = 12;
 		for (unsigned i = 0; i < str.length(); i++) 
@@ -235,7 +236,6 @@ void Renderer::GLoutputString12(const Point2D & p, const string & str,
 {
 	glColor3d(col.r, col.g, col.b);
 	if (centered) {
-		
 		double totalWidth = 0;
 		double totalHeight = 12;
 		for (unsigned i = 0; i < str.length(); i++) {
@@ -259,7 +259,6 @@ void Renderer::GLoutputString18(double x, double y, const string & str,
 {
 	glColor3d(cr, cg, cb);
 	if (centered) {
-		
 		double totalWidth = 0;
 		double totalHeight = 18;
 		for (unsigned i = 0; i < str.length(); i++) 
@@ -281,7 +280,6 @@ void Renderer::GLoutputString18(const Point2D & p, const string & str,
 {
 	glColor3d(col.r, col.g, col.b);
 	if (centered) {
-		
 		double totalWidth = 0;
 		double totalHeight = 18;
 		for (unsigned i = 0; i < str.length(); i++) {
@@ -595,11 +593,61 @@ void Renderer::initSetupRenderer(Setup* setup)
 	setupInfo.playBox.box.filled = true;
 	setupInfo.playBox.text = "Play";
 	setupInfo.playBox.textColor = BLACK;
+	
+	setupInfo.loadBox.box.width = setupInfo.playBox.box.width;
+	setupInfo.loadBox.box.height = setupInfo.playBox.box.height;
+	setupInfo.loadBox.box.p = setupInfo.box.center() - Point2D(setupInfo.playBox.box.width * 2, 0) - Point2D(setupInfo.playBox.box.width, setupInfo.playBox.box.height) / 2;
+	setupInfo.loadBox.box.color = WHITE;
+	setupInfo.loadBox.box.filled = true;
+	setupInfo.loadBox.text = "Load";
+	setupInfo.loadBox.textColor = BLACK;
+
+	setupInfo.saveBox.box.width = setupInfo.playBox.box.width;
+	setupInfo.saveBox.box.height = setupInfo.playBox.box.height;
+	setupInfo.saveBox.box.p = setupInfo.box.center() + Point2D(setupInfo.playBox.box.width * 2, 0) - Point2D(setupInfo.playBox.box.width, setupInfo.playBox.box.height) / 2;
+	setupInfo.saveBox.box.color = WHITE;
+	setupInfo.saveBox.box.filled = true;
+	setupInfo.saveBox.text = "Save";
+	setupInfo.saveBox.textColor = BLACK;
+	
 }
 
 void Renderer::renderSetup()
 {
 	setupInfo.render(this);
+}
+
+void Renderer::load(const string & filename)
+{
+}
+
+void Renderer::save(const string & filename)
+{
+	ofstream outfile(filename.c_str());
+
+	Formation* formA = setupInfo.formAInfo.info;
+	Formation* formB = setupInfo.formBInfo.info;
+	
+	outfile << formA->getTargetOrder() << endl;
+	outfile << formA->getLeaderPosition().x << " " << formA->getLeaderPosition.y << endl;	
+	for (int i = 0; i < formA->getWidth(); ++i)
+		for (int j = 0; j < formA->getHeight(); ++j)
+		{
+			Character* character = formA->getCharacterAt(i, j);
+			if (!character)
+				outfile << -1 << " " << -1 << endl;
+			else
+				outfile << i << " " << j << " " 
+						<< character->getName() << " " << character->getJob() << " " << character->getFavoredElement() << " "
+						<< character->getBackSkillIndex() << " " << character->getMidSkillIndex() << " " << character->getFrontSkillIndex() << " " << character->getBasicSkillIndex() << endl;
+		}
+
+	for (int i = 0; i < formB->getWidth(); ++i)
+		for (int j = 0; j < formB->getHeight(); ++j)
+		{
+		}
+
+	outfile.close();
 }
 
 void Renderer::processMouseLeftClickSetup(const Point2D & loc)
@@ -1003,6 +1051,24 @@ void Renderer::processMouseMoveSetup(const Point2D & loc)
 		setupInfo.playBox.setHighlighted(false);
 	}
 	
+	if (setupInfo.loadBox.box.contains(loc))
+	{
+		setupInfo.loadBox.setHighlighted(true);
+	}
+	else
+	{
+		setupInfo.loadBox.setHighlighted(false);
+	}
+	
+	if (setupInfo.saveBox.box.contains(loc))
+	{
+		setupInfo.saveBox.setHighlighted(true);
+	}
+	else
+	{
+		setupInfo.saveBox.setHighlighted(false);
+	}
+
 	if (setupInfo.formAInfo.targetInfo.box.contains(loc))
 	{
 		setupInfo.formAInfo.targetInfo.setHighlighted(true);

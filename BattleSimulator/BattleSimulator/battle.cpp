@@ -83,22 +83,19 @@ void Battle::executeTurn()
 
 	// Retrieve the next unit in the turn list
 	mainUnit = unitOrder[turnIndex];
+	mainUnit->setCurrentSkill(NO_STANDARD_SKILL);
+	mainUnit->setCurrentTier(2);
+	// Activate any status effects that occur on preparing for abilities
+	mainUnit->activateOnSelectAbility(mainUnit);
+	mainUnit->setCurrentSkill(Ability::selectSkill(mainUnit));
 	
 	// Process unit ongoing effects
 	mainUnit->processEffects();
 
     mainAbility = NULL;
 	// Perform the unit ability based on its position
-	if (mainUnit && mainUnit->isAvailable())
+	if (mainUnit->isAvailable())
 	{
-		mainUnit->setCurrentSkill(NO_STANDARD_SKILL);
-		mainUnit->setCurrentTier(2);
-
-		// Activate any status effects that occur on preparing for abilities
-		mainUnit->activateOnSelectAbility(mainUnit);
-
-		mainUnit->setCurrentSkill(Ability::selectSkill(mainUnit));
-
 		// Execute the ability
 		mainAbility = Ability::getAbility(mainUnit->getCurrentSkill());
 		mainAbility->action(NULL, mainUnit, this);
@@ -122,10 +119,8 @@ void Battle::executeTurn()
 				{
 					respondUnit->setCurrentSkill(NO_STANDARD_SKILL);
 					respondUnit->setCurrentTier(1);
-
 					// Activate any status effects that occur on preparing for abilities
 					respondUnit->activateOnSelectAbility(respondUnit);
-				
 					respondUnit->setCurrentSkill(Ability::selectSkill(respondUnit));
 
 					respondAbility = Ability::getAbility(respondUnit->getCurrentSkill());
