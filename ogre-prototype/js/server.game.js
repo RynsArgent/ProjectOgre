@@ -327,8 +327,15 @@ var game = function () {
         },
         
         seedSettlements : function (seed) {
-            var i, node, usedTiles = [], t;
+            var i, node, t, cityname,
+                usedTiles = [], 
+                usedNames = [], 
+                rndNames = [];
                 t = {row:Math.floor(Math.random() * (map.numberOfRows - 4)), col:Math.floor(Math.random() * (map.numberOfColumns - 4))};
+
+            for (i = 0; i < tmp_random_names.length; i += 1) {
+                rndNames.push(tmp_random_names[i]);
+            }
             
             console.log('seeding settlements');
             for (i = 0; i < seed; i += 1) {
@@ -336,11 +343,15 @@ var game = function () {
                     t = {row:Math.floor(Math.random() * (map.numberOfRows - 4)), col:Math.floor(Math.random() * (map.numberOfColumns - 4))};
                 } while (usedTiles.indexOf(t) >= 0);
                 
+                cityname = rndNames[ Math.floor(Math.random() * rndNames.length) ];
+                rndNames.splice(rndNames.indexOf(cityname), 1);
+                usedNames.push(cityname);
+                
                 node = createSettlement({
                     imgsrc : 'images/CastleRed.png',
                     imagekey : 'CastleRed',
                     size : 'medium',
-                    cityname : tmp_random_names[ Math.floor(Math.random() * tmp_random_names.length) ],
+                    cityname : cityname,
                     containingTiles : [t, {row:t.row+1, col:t.col}, {row:t.row, col:t.col+1}, {row:t.row+1, col:t.col+1}]
                 });
                 

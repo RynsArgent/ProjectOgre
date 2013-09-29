@@ -160,7 +160,7 @@ var createTile = function (params) {
     };
 };
 
-var createMap = function (data) {//(rows, columns, tileWidthInPixels, tileHeightInPixels) {
+var createMap = function (data) {
     var rows = data.rows || data.height,
         columns = data.columns || data.width,
         tileWidthInPixels = data.tilePixelWidth,
@@ -489,7 +489,7 @@ var createClient = function () {
         onloggedin : function (data, callback) {
             console.log('gameClient : onloggedin');
             console.log(data);
-            var i, j, settlement;
+            var i, j, settlement, mycastle;
             
             if (data.status === 'success') {
                 player.username = data.username;
@@ -555,6 +555,17 @@ var createClient = function () {
                         map.getTileAt(settlement.containingTiles[j].row, settlement.containingTiles[j].col).setSettlement(settlement);
                     }
                     owned_settlements.push(settlement);
+                    
+                    // is this mine?
+                    if (settlement.ownedBy() === player.username) {
+                        mycastle = settlement;
+                        
+                        // TODO: we want to set up the scroll values so that the user sees their castle immediately
+                        // -- this involves the scroll.x and scroll.y -- look at the keyboard handler to see how panning works
+                        // what we want to do is to center the home castle on the screen
+                        // but we also gotta check for the edge cases, we don't want their viewport way outside the
+                        // map boundaries
+                    }
                 }
                 
                 //tick();
@@ -589,9 +600,13 @@ var createClient = function () {
             jQuery('#stl_harvest').html(obj.getHarvest());
             jQuery('#stl_income').html(obj.getIncome());
             
-            jQuery('#settlement_details')
+            jQuery('#menu_top').menu();
+            
+            jQuery('#menu')
                 .dialog({
-                    title : obj.getName()
+                    title : obj.getName(),
+                    width : 600,
+                    resizable : false
                 });
         },
         
@@ -703,6 +718,8 @@ jQuery(document).ready(function () {
     });
     socket.on('onloggedin', function (data) {
         gameClient.onloggedin(data, function () {
+            jQuery("#info_player").html(data.username);
+        
             jQuery("div#frontPage").hide("slide", { direction: "left" }, "slow", function() {
                 jQuery("div#gamePage").show("slide", { direction: "right" }, "slow");
             });
@@ -721,11 +738,40 @@ jQuery(document).ready(function () {
     });
     
     jQuery(window).resize(function () {
+        var clientWidth = document.body.clientWidth,
+            clientHeight = document.body.clientHeight;
+            
         gameClient.screenResize({
             width: document.body.clientWidth,
             height: document.body.clientHeight
         });
+        
+        jQuery('#tools_container').css({
+            height : clientHeight * 0.2
+        });
+        
+        jQuery('#log_container').css({
+            height : clientHeight - parseInt(jQuery('#info_panel').css('height')) - parseInt(jQuery('#tools_container').css('height'))
+        });
     });
+    
+    (function() {
+        var clientWidth = document.body.clientWidth,
+            clientHeight = document.body.clientHeight;
+            
+        gameClient.screenResize({
+            width: document.body.clientWidth,
+            height: document.body.clientHeight
+        });
+        
+        jQuery('#tools_container').css({
+            height : clientHeight * 0.2
+        });
+        
+        jQuery('#log_container').css({
+            height : clientHeight - parseInt(jQuery('#info_panel').css('height')) - parseInt(jQuery('#tools_container').css('height'))
+        });
+    }());
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////

@@ -14,7 +14,9 @@ div#gamePage {
     padding: 0;
     
     width: 100%;
-    height: 100%
+    height: 100%;
+    
+    cursor: url(/images/cursor_arrow.png), pointer;
 }
 
 div#interface {
@@ -76,12 +78,31 @@ canvas#fg {
     z-index: 30;
 }
 
+div#info_panel {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 30px;
+    
+    border: 2px solid black;
+    
+    background-color: black;
+    opacity: 0.9;
+    
+    color: white;
+    
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+}
+
 div#log_container {
 	margin: 0;
 	padding: 0;
 	
 	width: 250px;
-	height: 100%;
+	height: 700px;
 	
 	border: 2px solid black;
 	
@@ -92,7 +113,7 @@ div#log_container {
 	
 	position: absolute;
 	right: 0;
-	top: 0;
+	top: 30px;
 	overflow: auto
 }
 
@@ -104,14 +125,40 @@ div#tools_container {
 	opacity: 0.9;
 	color: white;
 	
-	
 	width: 100%;
-	height: 20%;
+	height: 200px;
 	
 	position: absolute;
 	bottom: 0;
 	
 	overflow: auto
+}
+
+div#info_panel ul {
+    list-style: none;
+    margin: 5px 0;
+    padding: 0 5px;
+}
+
+div#info_panel ul li {
+    display: block;
+    float: left;
+    margin: 0 10px;
+    
+    width: 200px;
+}
+
+div#menu_list {
+    float: left;
+    
+    width: 30%;
+}
+
+div#menu_selected_content {
+    border: 2px solid #ccc;
+    float: right;
+    
+    width: 65%;
 }
 
 ul#log { float: left }

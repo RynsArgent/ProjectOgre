@@ -26,6 +26,15 @@
 	        <canvas id="fg"></canvas>
 	    </div>
 	    <div id="interface">
+	        <div id="info_panel">
+	            <ul>
+	                <li><span id="info_player"></span></li>
+	                <li><span id="info_gold">123423423 Gold</span></li>
+	                <li><span id="info_food">1231241231231 Food</span></li>
+	                <li><span id="info_kingdom">Holdings: 3</span></li>
+	                <li><span id="info_army">Army Size: 1 / 30</span></li>
+	            </ul>
+	        </div>
 	        <div id="log_container">
 		        <h3>LOGS</h3>
 		        <p>Scroll X: <span id="scrollx">0</span></p>
@@ -34,24 +43,38 @@
 	        </div>
 	        <div id="tools_container">
 		        <h3>Tools</h3>
-		        <p>Use the WASD keys to scroll</p>
+		        <p>Use the WASD or Arrow keys to pan</p>
+		        <p>Click on Castles to see their statistics</p>
 	        </div>
 	    </div><!-- end interface -->
 	</div><!-- end gamePage -->
 	
 	<!-- templates -->
-	<div id="settlement_details" style="display:none">
-	    <ul>
-	        <li><span class="head">Owned By: </span><span id="stl_owner"></span></li>
-	        <li><span class="head">Size: </span><span id="stl_size"></span></li>
-	        <li><span class="head">Population: </span><span id="stl_population"></span></li>
-	        <li><span class="head">Order: </span><span id="stl_order"></span></li>
-	        <li><span class="head">Happiness: </span><span id="stl_happiness"></span></li>
-	        <li><span class="head">Food: </span><span id="stl_food"></span></li>
-	        <li><span class="head">Gold: </span><span id="stl_gold"></span></li>
-	        <li><span class="head">Harvest: </span><span id="stl_harvest"></span></li>
-	        <li><span class="head">Income: </span><span id="stl_income"></span></li>
-	    </ul>
+	<div id="menu" style="display:none">
+	    <div id="menu_list">
+	        <ul id="menu_top">
+	            <li><a href="#">Details</a></li>
+	            <li><a href="#">Army</a></li>
+	            <li><a href="#">Recruit</a></li>
+	            <li><a href="#">City</a></li>
+	            <li><a href="#">Diplomacy</a></li>
+	        </ul>
+	    </div>
+	    <div id="menu_selected_content">
+	        <div id="settlement_details">
+	            <ul>
+	                <li><span class="head">Owned By: </span><span id="stl_owner"></span></li>
+	                <li><span class="head">Size: </span><span id="stl_size"></span></li>
+	                <li><span class="head">Population: </span><span id="stl_population"></span></li>
+	                <li><span class="head">Order: </span><span id="stl_order"></span></li>
+	                <li><span class="head">Happiness: </span><span id="stl_happiness"></span></li>
+	                <li><span class="head">Food: </span><span id="stl_food"></span></li>
+	                <li><span class="head">Gold: </span><span id="stl_gold"></span></li>
+	                <li><span class="head">Harvest: </span><span id="stl_harvest"></span></li>
+	                <li><span class="head">Income: </span><span id="stl_income"></span></li>
+	            </ul>
+	        </div>
+	    </div>
 	</div>
 	<!-- /templates -->
 	
