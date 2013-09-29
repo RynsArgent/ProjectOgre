@@ -20,6 +20,8 @@
 
 struct Renderer;
 
+Color getColor(StatusGroup* status);
+
 struct InfoBox
 {
 	Rect2D box;
@@ -30,6 +32,16 @@ struct InfoBox
 	InfoBox() : box(), highlighted() {}
 	void renderOutline(const Color & col) const;
 	virtual void render(Renderer* renderer) const; 
+	~InfoBox() {}
+};
+
+struct StatusInfoBox : public InfoBox
+{
+	StatusGroup* info;
+
+	StatusInfoBox() : InfoBox(), info(NULL) {}
+	virtual void render(Renderer* renderer) const; 
+	~StatusInfoBox() {}
 };
 
 struct TextInfoBox : public InfoBox
@@ -40,6 +52,7 @@ struct TextInfoBox : public InfoBox
 	TextInfoBox() : InfoBox(), text(""), textColor() {}
 
 	virtual void render(Renderer* renderer) const; 
+	~TextInfoBox() {}
 };
 
 struct JobInfoBox : public InfoBox
@@ -50,6 +63,7 @@ struct JobInfoBox : public InfoBox
 	JobInfoBox() : InfoBox(), info(JOB_NONE), textColor() {}
 
 	virtual void render(Renderer* renderer) const; 
+	~JobInfoBox() {}
 };
 
 struct CharacterInfoBox : public InfoBox
@@ -62,6 +76,7 @@ struct CharacterInfoBox : public InfoBox
 
 	CharacterInfoBox() : InfoBox(), info(NULL), x(-1), y(-1), form(false), leader(false) {}
 	virtual void render(Renderer* renderer) const; 
+	~CharacterInfoBox() {}
 };
 
 struct FormationInfoBox : public InfoBox
@@ -73,14 +88,18 @@ struct FormationInfoBox : public InfoBox
 
 	FormationInfoBox() : InfoBox(), info(NULL), characterInfos(), targetInfo() {}
 	virtual void render(Renderer* renderer) const; 
+	~FormationInfoBox() {}
 };
 
 struct UnitInfoBox : public InfoBox
 {
 	Unit* info;
 	
-	UnitInfoBox() : InfoBox(), info(NULL) {}
+	vector<StatusInfoBox> statusInfos;
+
+	UnitInfoBox() : InfoBox(), info(NULL), statusInfos() {}
 	virtual void render(Renderer* renderer) const; 
+	~UnitInfoBox() {}
 };
 
 struct GroupInfoBox : public InfoBox
@@ -90,6 +109,7 @@ struct GroupInfoBox : public InfoBox
 	
 	GroupInfoBox() : InfoBox(), info(NULL), unitInfos() {}
 	virtual void render(Renderer* renderer) const; 
+	~GroupInfoBox() {}
 };
 
 struct SideboardInfoBox : public InfoBox
@@ -114,6 +134,7 @@ struct SideboardInfoBox : public InfoBox
 
 	SideboardInfoBox() : InfoBox(), info(NULL), skillboxes(), elementboxes(), jobboxes(), jobindex(0), leftbox(), rightbox() {}
 	virtual void render(Renderer* renderer) const;
+	~SideboardInfoBox() {}
 };
 
 struct SetupInfoBox : public InfoBox
@@ -130,7 +151,8 @@ struct SetupInfoBox : public InfoBox
 	bool done;
 
 	SetupInfoBox() : InfoBox(), info(NULL), sideboardInfo(), formAInfo(), formBInfo(), playBox(), done(false) {}
-	virtual void render(Renderer* renderer) const; 
+	virtual void render(Renderer* renderer) const;
+	~SetupInfoBox() {} 
 };
 
 struct BattleInfoBox : public InfoBox
@@ -142,6 +164,7 @@ struct BattleInfoBox : public InfoBox
 
 	BattleInfoBox() : InfoBox(), info(NULL),  sideboardInfo(), groupAInfo(), groupBInfo() {}
 	virtual void render(Renderer* renderer) const; 
+	~BattleInfoBox() {} 
 };
 
 struct Renderer
@@ -194,6 +217,8 @@ struct Renderer
 	void setGroupBox(GroupInfoBox* container, Group* group, Direction dir, double centerx, double centery, double width, double height);
 	void initBattleRenderer(Battle* battle);
 	void renderBattle();
+	
+	void processMouseMoveBattle(const Point2D & loc);
 
 	~Renderer();
 };

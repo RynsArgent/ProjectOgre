@@ -57,11 +57,11 @@ void initialize() {
 		MIDDLE	[0,1] [1,1] [2,1]
 		BACK	[0,2] [1,2] [2,2]
 	*/
-	formA->setCharacterAt(0, 0, new Character("Acolyte1A", JOB_ACOLYTE), 0, 0, 0);
-	formA->setCharacterAt(2, 0, new Character("Acolyte2A", JOB_ACOLYTE), 0, 0, 0);
-	formA->setCharacterAt(1, 0, new Character("Scout1A", JOB_SCOUT), 0, 0, 0);
-	formA->setCharacterAt(1, 1, new Character("Scout2A", JOB_SCOUT), 0, 0, 0);
-	formA->setCharacterAt(1, 2, new Character("Acolyte3A", JOB_ACOLYTE), 0, 0, 0);
+	formA->setCharacterAt(1, 0, new Character("Fighter1A", JOB_FIGHTER, ELEMENT_PHYSICAL), 0, 0, 0);
+	formA->setCharacterAt(1, 1, new Character("Acolyte2A", JOB_ACOLYTE, ELEMENT_PHYSICAL), 0, 0, 0);
+	formA->setCharacterAt(0, 2, new Character("Scout1A", JOB_SCOUT, ELEMENT_PHYSICAL), 0, 0, 0);
+	formA->setCharacterAt(2, 2, new Character("Scout2A", JOB_SCOUT, ELEMENT_PHYSICAL), 0, 0, 0);
+	formA->setCharacterAt(1, 2, new Character("Mage1A", JOB_MAGE, ELEMENT_EARTH), 0, 0, 0);
 	formA->setLeaderPosition(1, 2);
 	formA->setTargetOrder(TARGET_LEADER);
 
@@ -71,16 +71,17 @@ void initialize() {
 		MIDDLE	[2,1] [1,1] [0,1]
 		FRONT	[2,0] [1,0] [0,0]
 	*/
-	formB->setCharacterAt(1, 2, new Character("Fighter1B", JOB_FIGHTER), 1, 0, 0);
-	formB->setCharacterAt(0, 0, new Character("Mage1B", JOB_MAGE, ELEMENT_WATER), 0, 0, 0);
-	formB->setCharacterAt(2, 0, new Character("Mage2B", JOB_MAGE, ELEMENT_WATER), 0, 0, 0);
-	formB->setCharacterAt(0, 1, new Character("Mage3B", JOB_MAGE, ELEMENT_WATER), 0, 0, 0);
-	formB->setCharacterAt(2, 1, new Character("Mage4B", JOB_MAGE, ELEMENT_WATER), 0, 0, 0);
+	formB->setCharacterAt(0, 0, new Character("Fighter1B", JOB_FIGHTER, ELEMENT_PHYSICAL), 0, 0, 0);
+	formB->setCharacterAt(2, 0, new Character("Fighter2B", JOB_FIGHTER, ELEMENT_PHYSICAL), 0, 0, 0);
+	formB->setCharacterAt(0, 1, new Character("Acolyte1B", JOB_ACOLYTE, ELEMENT_PHYSICAL), 0, 1, 0);
+	formB->setCharacterAt(2, 1, new Character("Acolyte2B", JOB_ACOLYTE, ELEMENT_PHYSICAL), 0, 0, 0);
+	formB->setCharacterAt(1, 2, new Character("Fighter3B",JOB_FIGHTER, ELEMENT_PHYSICAL), 0, 0, 0);
 	formB->setLeaderPosition(1, 2);
 	formB->setTargetOrder(TARGET_LEADER);
 
 	setup = new Setup(formA, formB);
 	renderer->initSetupRenderer(setup);
+	renderer->load("data.txt");
 }
 
 //Converts the provided point, p, from screen coordinates to OpenGL coordinate system 
@@ -192,6 +193,7 @@ void GLprocessMouseClick(int button, int state, int x, int y)
 				battle->executeTurn();
 			} while (battle->getEventStack().size() <= 0 && !battle->isBattleOver());
 			battle->postprint();
+			renderer->initBattleRenderer(battle);
 			glutPostRedisplay();
 		}
 	}
@@ -203,6 +205,8 @@ void GLprocessMouseMove(int x, int y)
 	GLscreenToWindowCoordinates(x, y, loc.x, loc.y);
 	if (mode == MODE_SETUP) {
 		renderer->processMouseMoveSetup(loc);
+	} else {
+		renderer->processMouseMoveBattle(loc);
 	}
 	if (change)
 		glutPostRedisplay();

@@ -34,6 +34,7 @@ public:
 	}
 	
 	int getSeed() const { return seed; }
+	int getRoundNumber() const { return roundNumber; }
 	Unit* getGlobalTrigger() const { return globaltrigger; }
 	Unit* getMainUnit() const { return mainUnit; }
 	Unit* getRespondUnit() const { return respondUnit; }
@@ -49,6 +50,7 @@ public:
 	void cleanupTurn();
     void addToEventStack(Event* value);
     void addToCleanup(StatusGroup* value);
+	int getWinner() const;
     
 	void simulate();
 	

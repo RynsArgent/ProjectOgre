@@ -75,11 +75,11 @@ void Scout::init()
 {
 	Job::init();
 	backSkills.push_back(SHOOT);
-	backSkills.push_back(HASTE);
+	backSkills.push_back(SCOPE);
 	midSkills.push_back(SHOOT);
-	midSkills.push_back(SCOPE);
-	frontSkills.push_back(TANGLE_TRAP);
-	frontSkills.push_back(SCOPE);
+	midSkills.push_back(TANGLE_TRAP);
+	frontSkills.push_back(SHOOT);
+	frontSkills.push_back(HASTE);
 	basicSkills.push_back(SHOOT);
 }
 

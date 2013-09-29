@@ -1,8 +1,10 @@
 #include "renderer.h"
 
+#include "job.h"
 #include "character.h"
 #include "formation.h"
 #include "ability.h"
+#include "status.h"
 #include "unit.h"
 #include "group.h"
 #include "battle.h"
@@ -14,9 +16,56 @@
 #include <vector>
 
 extern bool change;
+extern int seed;
 
 JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE };
 static const int NUM_JOBS = sizeof(jobs) / sizeof(JobType);
+
+Color getColor(StatusGroup* status)
+{
+	string name = status->getSubname();
+	if (name == "Stun")
+		return Color(1.0, 1.0, 0.0);
+	else if (name == "Sleep")
+		return Color(0.0, 0.5, 1.0);
+	else if (name == "Flee")
+		return Color(0.0, 0.0, 1.0);
+	else if (name == "Confusion")
+		return Color(0.0, 1.0, 1.0);
+	else if (name == "Charm")
+		return Color(1.0, 0.0, 1.0);
+	else if (name == "Poison")
+		return Color(0.0, 1.0, 0.0);
+	else if (name == "Bleed")
+		return Color(1.0, 0.5, 0.0);
+	else if (name == "Burn")
+		return Color(1.0, 0.0, 0.0);
+	else if (name == "Regeneration")
+		return Color(0.5, 1.0, 0.5);
+	else if (name == "Blind")
+		return Color(0.0, 0.0, 0.0);
+	else if (name == "Polymorph")
+		return Color(0.7, 0.7, 0.7);
+	else if (name == "Mortality")
+		return Color(0.5, 0.0, 0.0);
+	else if (name == "Block")
+		return Color(0.3, 0.3, 0.3);
+	else if (name == "Taunt")
+		return Color(0.7, 0.3, 0.0);
+	else if (name == "BattleShout")
+		return Color(1.0, 0.7, 0.0);
+	else if (name == "Barrier")
+		return Color(0.5, 0.5, 1.0);
+	else if (name == "Haste")
+		return Color(0.7, 1.0, 0.7);
+	else if (name == "Chill")
+		return Color(0.7, 0.7, 1.0);
+	else if (name == "Scope")
+		return Color(0.3, 0.5, 0.3);
+	else if (name == "TangleTrap")
+		return Color(0.3, 0.0, 0.3);
+	return Color(0.0, 0.0, 0.0);
+}
 
 bool hasName(Formation* formation, const string & value)
 {
@@ -62,6 +111,20 @@ void InfoBox::render(Renderer* renderer) const
 		renderOutline(YELLOW);
 	if (renderer->selected == this)
 		renderOutline(RED);
+}
+
+void StatusInfoBox::render(Renderer* renderer) const
+{
+	InfoBox::render(renderer);
+	if (highlighted) 
+		renderOutline(YELLOW);
+	if (renderer->selected == this)
+		renderOutline(RED);
+	
+	renderer->GLoutputString12(box.center(), toStringInt(info->getTotalStacks()), BLACK, true);
+	Status* status = info->getInstances()[info->getInstances().size() - 1];
+	if (status->isTimed())
+		renderer->GLoutputString12(box.center() + Point2D(0.0, box.height), toStringInt(status->getTimer()), BLACK, true);
 }
 
 void TextInfoBox::render(Renderer* renderer) const
@@ -124,16 +187,20 @@ void UnitInfoBox::render(Renderer* renderer) const
 		else
 		{
 			if (info->isDone())
-				colText = Color(0.2, 0.2, 0.2);
+				colText = Color(1.0, 0.0, 0.0);
 			else
-				colText = Color(0.0, 0.0, 1.0);
+				colText = Color(0.3, 0.3, 0.3);
 		}
 		string descLeader = info->isLeader() ? "***" : "";
 		string descHP = toStringInt(info->getCurrentHealth()) + "/" + toStringInt(info->getMaxHealth());
 		string descName = info->getName();
 		renderer->GLoutputString18(Point2D(box.p.x + max(barWidth * 0.30, scaledWidth) / 2, box.p.y + barHeight / 2), descLeader, colText, true);
-		renderer->GLoutputString18(Point2D(box.p.x + box.width / 2, box.p.y + 1.5 * barHeight), descHP, colText, true);
-		renderer->GLoutputString18(Point2D(box.p.x + box.width / 2, box.p.y + 3.0 * barHeight), descName, colText, true);
+		renderer->GLoutputString18(Point2D(box.p.x + box.width / 2, box.p.y + 1.2 * barHeight), descHP, colText, true);
+		renderer->GLoutputString18(Point2D(box.p.x + box.width / 2, box.p.y + 2.0 * barHeight), descName, colText, true);
+		
+		for (int i = 0; i < statusInfos.size(); ++i) {
+			statusInfos[i].render(renderer);
+		}
 	}
 }
 
@@ -194,13 +261,18 @@ void BattleInfoBox::render(Renderer* renderer) const
 	groupAInfo.render(renderer);
 	groupBInfo.render(renderer);
 
+	Rect2D sidebox = renderer->battleInfo.sideboardInfo.box;
+	double wpadding = 0.005;
+	double hpadding = 0.05;
+	double dheight = 0.05;
+
 	vector<Event*> eventStack = info->getEventStack();
 	for (int i = 0; i < eventStack.size(); ++i) {
 		stringstream ss;
 		eventStack[i]->print(ss);
-		renderer->GLoutputString12(0, 0.05 + 0.05 * i, ss.str(), 1.0, 1.0, 1.0);
+		renderer->GLoutputString12(sidebox.p.x + wpadding, sidebox.p.y + hpadding + dheight * i, ss.str(), 1.0, 1.0, 1.0);
 	}
-	renderer->GLoutputString12(0.01, 0.99, "seed: " + toStringInt(info->getSeed()), 1.0, 1.0, 1.0);
+	renderer->GLoutputString12(sidebox.p.x + wpadding, sidebox.p.y + sidebox.height - hpadding, "seed: " + toStringInt(info->getSeed()), 1.0, 1.0, 1.0);
 }
 
 Renderer::Renderer(int pixelWidth, int pixelHeight, double edgeLeft, double edgeRight, double edgeTop, double edgeBottom)
@@ -304,14 +376,6 @@ void Renderer::GLoutputString18(const Point2D & p, const string & str,
 void Renderer::setSideboardBox(SideboardInfoBox* container, Character* character)
 {
 	container->info = character;
-	/*
-	if (character == NULL) {
-		container->skillboxes = vector<vector<TextInfoBox> >();
-		container->elementboxes = vector<InfoBox>();
-		container->jobboxes = vector<vector<JobInfoBox> >();
-		return;
-	}
-	*/
 	
 	Rect2D sbox = container->box;
 	Rect2D skillbox = Rect2D(
@@ -577,6 +641,8 @@ void Renderer::setFormationBox(FormationInfoBox* container, Formation* form, Dir
 void Renderer::initSetupRenderer(Setup* setup)
 {
 	setupInfo.info = setup;
+	mouseover = NULL;
+	selected = NULL;
 
 	double w = (edgeRight - edgeLeft) / 2;
 	double h = (edgeBottom - edgeTop);
@@ -619,6 +685,86 @@ void Renderer::renderSetup()
 
 void Renderer::load(const string & filename)
 {
+	ifstream infile(filename.c_str());
+	if (!infile) return;
+	
+	Formation* formA = setupInfo.formAInfo.info;
+	Formation* formB = setupInfo.formBInfo.info;
+
+	for (int i = 0; i < formA->getWidth(); ++i)
+		for (int j = 0; j < formA->getHeight(); ++j)
+		{
+			Character* character = formA->getCharacterAt(i, j);
+			if (character) {
+				delete character->getJob();
+				delete character;
+			}
+			formA->setCharacterAt(GridPoint(i, j), NULL);
+		}
+	for (int i = 0; i < formB->getWidth(); ++i)
+		for (int j = 0; j < formB->getHeight(); ++j)
+		{
+			Character* character = formB->getCharacterAt(i, j);
+			if (character) {
+				delete character->getJob();
+				delete character;
+			}
+			formB->setCharacterAt(GridPoint(i, j), NULL);
+		}
+
+	int inputInt1;
+	int inputInt2;
+
+	infile >> inputInt1;
+	formA->setTargetOrder((TargetType)inputInt1);
+	infile >> inputInt1 >> inputInt2;
+	formA->setLeaderPosition(GridPoint(inputInt1, inputInt2));
+	for (int i = 0; i < formA->getWidth(); ++i)
+		for (int j = 0; j < formA->getHeight(); ++j)
+		{
+			infile >> inputInt1 >> inputInt2;
+			if (inputInt1 == -1 || inputInt2 == -1)
+				continue;
+			GridPoint formPos = GridPoint(inputInt1, inputInt2);
+			string name;
+			JobType job;
+			ElementType ele;
+			infile >> name;
+			infile >> inputInt1;
+			job = (JobType)inputInt1;
+			infile >> inputInt1;
+			ele = (ElementType)inputInt1;
+			int ind1, ind2, ind3, ind4;
+			infile >> ind1 >> ind2 >> ind3 >> ind4;
+			formA->setCharacterAt(formPos, new Character(name, job, ele), ind1, ind2, ind3, ind4);
+		}
+
+	infile >> inputInt1;
+	formB->setTargetOrder((TargetType)inputInt1);
+	infile >> inputInt1 >> inputInt2;
+	formB->setLeaderPosition(GridPoint(inputInt1, inputInt2));
+	for (int i = 0; i < formB->getWidth(); ++i)
+		for (int j = 0; j < formB->getHeight(); ++j)
+		{
+			infile >> inputInt1 >> inputInt2;
+			if (inputInt1 == -1 || inputInt2 == -1)
+				continue;
+			GridPoint formPos = GridPoint(inputInt1, inputInt2);
+			string name;
+			JobType job;
+			ElementType ele;
+			infile >> name;
+			infile >> inputInt1;
+			job = (JobType)inputInt1;
+			infile >> inputInt1;
+			ele = (ElementType)inputInt1;
+			int ind1, ind2, ind3, ind4;
+			infile >> ind1 >> ind2 >> ind3 >> ind4;
+			formB->setCharacterAt(formPos, new Character(name, job, ele), ind1, ind2, ind3, ind4);
+		}
+		
+	initSetupRenderer(setupInfo.info);
+	infile.close();
 }
 
 void Renderer::save(const string & filename)
@@ -629,7 +775,7 @@ void Renderer::save(const string & filename)
 	Formation* formB = setupInfo.formBInfo.info;
 	
 	outfile << formA->getTargetOrder() << endl;
-	outfile << formA->getLeaderPosition().x << " " << formA->getLeaderPosition.y << endl;	
+	outfile << formA->getLeaderPosition().x << " " << formA->getLeaderPosition().y << endl;	
 	for (int i = 0; i < formA->getWidth(); ++i)
 		for (int j = 0; j < formA->getHeight(); ++j)
 		{
@@ -638,13 +784,22 @@ void Renderer::save(const string & filename)
 				outfile << -1 << " " << -1 << endl;
 			else
 				outfile << i << " " << j << " " 
-						<< character->getName() << " " << character->getJob() << " " << character->getFavoredElement() << " "
+						<< character->getName() << " " << character->getJob()->getType() << " " << character->getFavoredElement() << " "
 						<< character->getBackSkillIndex() << " " << character->getMidSkillIndex() << " " << character->getFrontSkillIndex() << " " << character->getBasicSkillIndex() << endl;
 		}
-
+		
+	outfile << formB->getTargetOrder() << endl;
+	outfile << formB->getLeaderPosition().x << " " << formB->getLeaderPosition().y << endl;	
 	for (int i = 0; i < formB->getWidth(); ++i)
 		for (int j = 0; j < formB->getHeight(); ++j)
 		{
+			Character* character = formB->getCharacterAt(i, j);
+			if (!character)
+				outfile << -1 << " " << -1 << endl;
+			else
+				outfile << i << " " << j << " " 
+						<< character->getName() << " " << character->getJob()->getType() << " " << character->getFavoredElement() << " "
+						<< character->getBackSkillIndex() << " " << character->getMidSkillIndex() << " " << character->getFrontSkillIndex() << " " << character->getBasicSkillIndex() << endl;
 		}
 
 	outfile.close();
@@ -673,7 +828,10 @@ void Renderer::processMouseLeftClickSetup(const Point2D & loc)
 					setSideboardBox(&setupInfo.sideboardInfo, setupInfo.sideboardInfo.info);
 				}
 			}
+	}
 
+	if (selected)
+	{
 			for (int i = 0; i < setupInfo.sideboardInfo.elementboxes.size(); ++i)
 			{
 				if (setupInfo.sideboardInfo.elementboxes[i].box.contains(loc))
@@ -703,6 +861,7 @@ void Renderer::processMouseLeftClickSetup(const Point2D & loc)
 				}
 			}
 
+
 			for (int i = 0; i < setupInfo.sideboardInfo.jobboxes.size(); ++i)
 				for (int j = 0; j < setupInfo.sideboardInfo.jobboxes[i].size(); ++j)
 				{
@@ -721,7 +880,7 @@ void Renderer::processMouseLeftClickSetup(const Point2D & loc)
 						characterinfo->info = NULL;
 
 						if (newjob != JOB_NONE) {
-							Character* newchar = new Character(getAvailableName(characterinfo->form, form->info, newjob), newjob);
+							Character* newchar = new Character(getAvailableName(characterinfo->form, form->info, newjob), newjob, ELEMENT_PHYSICAL);
 							form->info->setCharacterAt(x, y, newchar, 0, 0, 0);
 							characterinfo->info = newchar;
 						}
@@ -773,6 +932,18 @@ void Renderer::processMouseLeftClickSetup(const Point2D & loc)
 	if (setupInfo.playBox.box.contains(loc))
 	{
 		setupInfo.done = true;
+	}
+	
+	if (setupInfo.loadBox.box.contains(loc))
+	{
+		load("data.txt");
+		cout << "Loading Data (if available)\n";
+	}
+	
+	if (setupInfo.saveBox.box.contains(loc))
+	{
+		save("data.txt");
+		cout << "Saving Data\n";
 	}
 
 	if (setupInfo.formAInfo.targetInfo.box.contains(loc))
@@ -871,6 +1042,45 @@ void Renderer::processMouseRightClickSetup(const Point2D & loc)
 				setupInfo.formBInfo.characterInfos[next.x][next.y].leader = true;
 			}
 		}
+		
+	if (setupInfo.playBox.box.contains(loc))
+	{
+		int totalTies = 0;
+		int totalWins1 = 0;
+		int totalWins2 = 0;
+		int totalTerminates = 0;
+
+		for (int i = 0; i < 100; ++i) 
+		{
+			battleInfo.groupAInfo.info = new Group(setupInfo.formAInfo.info);
+			battleInfo.groupBInfo.info = new Group(setupInfo.formBInfo.info);
+			battleInfo.info = new Battle(seed, battleInfo.groupAInfo.info, battleInfo.groupBInfo.info);
+			
+			battleInfo.info->simulate();
+			switch (battleInfo.info->getWinner())
+			{
+			case 0:
+				++totalTies;
+				break;
+			case 1:
+				++totalWins1;
+				break;
+			case 2:
+				++totalWins2;
+				break;
+			}
+
+			if (battleInfo.info->getRoundNumber() > 100)
+				++totalTerminates;
+
+			
+			if (battleInfo.groupAInfo.info) delete battleInfo.groupAInfo.info;
+			if (battleInfo.groupBInfo.info) delete battleInfo.groupBInfo.info;
+			if (battleInfo.info) delete battleInfo.info;
+		}
+		cout << "Group1/Tie/Group2 Win Ratio - " << totalWins1 << ":" << totalTies << ":" << totalWins2 << endl;
+		cout << "Indefinite Battles - " << totalTerminates << endl;
+	}
 
 	change = true;
 	if (change) {
@@ -929,7 +1139,10 @@ void Renderer::processMouseMoveSetup(const Point2D & loc)
 				}
 			}
 		}
-
+	}
+	
+	if (selected != NULL)
+	{
 	for (int i = 0; i < setupInfo.sideboardInfo.jobboxes.size(); ++i)
 		for (int j = 0; j < setupInfo.sideboardInfo.jobboxes[i].size(); ++j)
 		{
@@ -1100,6 +1313,22 @@ void Renderer::setUnitBox(UnitInfoBox* container, Unit* unit, double centerx, do
 	double xpos = centerx - width / 2;
 	double ypos = centery - height / 2;
 	container->box = Rect2D(Point2D(xpos, ypos), width, height, WHITE, true);
+	
+	container->statusInfos = vector<StatusInfoBox>();
+	if (unit) {
+		double statoffset = 0.005;
+		double statwidth = width / 8;
+		double statheight = statwidth;
+		double dstatWidth = statwidth + statoffset;
+		vector<StatusGroup*> status = unit->getCurrentStatus();
+		for (unsigned i = 0; i < status.size(); ++i) {
+			StatusInfoBox val;
+			Point2D sp = container->box.p + Point2D(statoffset, statoffset + 5 * statheight) + Point2D(dstatWidth, 0.0) * i;
+			val.info = status[i];
+			val.box = Rect2D(sp, statwidth, statheight, getColor(status[i]), true);
+			container->statusInfos.push_back(val);
+		}
+	}
 }
 
 void Renderer::setGroupBox(GroupInfoBox* container, Group* group, Direction dir, double centerx, double centery, double width, double height)
@@ -1161,19 +1390,80 @@ void Renderer::setGroupBox(GroupInfoBox* container, Group* group, Direction dir,
 void Renderer::initBattleRenderer(Battle* battle)
 {
 	battleInfo.info = battle;
+	mouseover = NULL;
+	selected = NULL;
 	
 	double w = (edgeRight - edgeLeft) / 2;
 	double h = (edgeBottom - edgeTop);
-	battleInfo.sideboardInfo.box = Rect2D(Point2D(0.0, 0.0), w, h, BLACK, true);
-	battleInfo.box = Rect2D(Point2D((edgeLeft + edgeRight) / 2, edgeTop), w, h, GRAY, true); 
+	battleInfo.box = Rect2D(Point2D((edgeLeft + edgeRight) / 2, edgeTop), w, h, BLACK, true);
+	battleInfo.sideboardInfo.box = Rect2D(Point2D(0.0, 0.0), w, h, GRAY, true); 
 	
-	setGroupBox(&battleInfo.groupAInfo, battle->group1, DIRECTION_NORTH, 0.75, 0.75, 0.40, 0.40);
-	setGroupBox(&battleInfo.groupBInfo, battle->group2, DIRECTION_SOUTH, 0.75, 0.25, 0.40, 0.40);
+	setGroupBox(&battleInfo.groupAInfo, battle->group1, DIRECTION_NORTH, 0.750, 0.750, 0.475, 0.475);
+	setGroupBox(&battleInfo.groupBInfo, battle->group2, DIRECTION_SOUTH, 0.750, 0.250, 0.475, 0.475);
 }
 
 void Renderer::renderBattle()
 {
 	battleInfo.render(this);
+	if (mouseover) {
+		StatusInfoBox* statusinfo = (StatusInfoBox*)mouseover;
+		GLoutputString18(statusinfo->box.p + Point2D(0.0, 3 * statusinfo->box.height), statusinfo->info->getSubname(), WHITE, true);
+	}
+}
+
+void Renderer::processMouseMoveBattle(const Point2D & loc)
+{
+	for (int i = 0; i < battleInfo.groupAInfo.unitInfos.size(); ++i)
+		for (int j = 0; j < battleInfo.groupAInfo.unitInfos[i].size(); ++j)
+		{
+			UnitInfoBox* unitinfo = &battleInfo.groupAInfo.unitInfos[i][j];
+			if (unitinfo->box.contains(loc))
+			{
+				for (int k = 0; k < unitinfo->statusInfos.size(); ++k) {
+					StatusInfoBox* statusinfo = &unitinfo->statusInfos[k];
+					if (statusinfo->box.contains(loc))
+					{
+						if (mouseover == NULL) {
+							mouseover = statusinfo;
+							change = true;
+						}
+					}
+					else
+					{
+						if (mouseover == statusinfo) {
+							mouseover = NULL;
+							change = true;
+						}
+					}
+				}
+			}
+		}
+				
+	for (int i = 0; i < battleInfo.groupBInfo.unitInfos.size(); ++i)
+		for (int j = 0; j < battleInfo.groupBInfo.unitInfos[i].size(); ++j)
+		{
+			UnitInfoBox* unitinfo = &battleInfo.groupBInfo.unitInfos[i][j];
+			if (unitinfo->box.contains(loc))
+			{
+				for (int k = 0; k < unitinfo->statusInfos.size(); ++k) {
+					StatusInfoBox* statusinfo = &unitinfo->statusInfos[k];
+					if (statusinfo->box.contains(loc))
+					{
+						if (mouseover == NULL) {
+							mouseover = statusinfo;
+							change = true;
+						}
+					}
+					else
+					{
+						if (mouseover == statusinfo) {
+							mouseover = NULL;
+							change = true;
+						}
+					}
+				}
+			}
+		}
 }
 
 Renderer::~Renderer()

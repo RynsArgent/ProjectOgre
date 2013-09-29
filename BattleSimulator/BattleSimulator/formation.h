@@ -38,7 +38,7 @@ public:
 		return grid[p.x][p.y];
 	}
     
-	void setCharacterAt(int x, int y, Character* character, int backSkillIndex, int midSkillIndex, int frontSkillIndex, int basicSkillIndex = 0) {
+	void setCharacterAt(int x, int y, Character* character, int backSkillIndex = 0, int midSkillIndex = 0, int frontSkillIndex = 0, int basicSkillIndex = 0) {
 		grid[x][y] = character;
 		if (character == NULL)
 			return;
@@ -48,7 +48,7 @@ public:
 		character->setBasicSkillIndex(basicSkillIndex);
 	}
     
-	void setCharacterAt(const GridPoint & p, Character* character, int backSkillIndex, int midSkillIndex, int frontSkillIndex, int basicSkillIndex = 0) {
+	void setCharacterAt(const GridPoint & p, Character* character, int backSkillIndex = 0, int midSkillIndex = 0, int frontSkillIndex = 0, int basicSkillIndex = 0) {
 		grid[p.x][p.y] = character;
 		if (character == NULL)
 			return;

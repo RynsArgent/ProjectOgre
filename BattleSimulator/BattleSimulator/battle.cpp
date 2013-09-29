@@ -185,8 +185,9 @@ void Battle::addToCleanup(StatusGroup* value) {
 
 void Battle::simulate()
 {
-	while (!isBattleOver())
+	while (!isBattleOver() && roundNumber <= 100)
 	{
+		cleanupTurn();
 		executeTurn();
 	}
 }
@@ -224,12 +225,28 @@ void Battle::postprint() const
 	
 	if (isBattleOver())
 	{
-		if (group1->groupIsAvailable())
-			cout << "Group 1 Won!" << endl;
-		else if (group2->groupIsAvailable())
-			cout << "Group 2 Won!" << endl;
-		else
+		switch (getWinner())
+		{
+		case 0:
 			cout << "Tie!" << endl;
+			break;
+		case 1:
+			cout << "Group 1 Won!" << endl;
+			break;
+		case 2:
+			cout << "Group 2 Won!" << endl;
+			break;
+		}
 	}
 	cout << endl << endl << endl;
+}
+
+int Battle::getWinner() const
+{
+	if (group1->groupIsAvailable())
+		return 1;
+	else if (group2->groupIsAvailable())
+		return 2;
+	else
+		return 0;
 }
