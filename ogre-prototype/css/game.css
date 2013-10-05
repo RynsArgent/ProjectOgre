@@ -114,7 +114,9 @@ div#log_container {
 	position: absolute;
 	right: 0;
 	top: 30px;
-	overflow: auto
+	overflow: auto;
+	
+	display: block;
 }
 
 div#tools_container {
@@ -131,7 +133,9 @@ div#tools_container {
 	position: absolute;
 	bottom: 0;
 	
-	overflow: auto
+	overflow: auto;
+	
+	display: none;
 }
 
 div#info_panel ul {
@@ -159,6 +163,13 @@ div#menu_selected_content {
     float: right;
     
     width: 65%;
+    height: 100%;
+}
+
+div#settlement_details, div#army_details, div#city_details,
+div#recruit_details, div#diplomacy_details {
+    width: 100%;
+    height: 100%
 }
 
 ul#log { float: left }

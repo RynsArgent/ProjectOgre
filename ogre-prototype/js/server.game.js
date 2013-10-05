@@ -323,7 +323,7 @@ var game = function () {
         // data file or the location to the map.
         initialize : function (params) {
             map = createMap(params.mapdata);
-            this.seedSettlements(Math.floor(Math.random() * 100));
+            this.seedSettlements(Math.floor(Math.random() * tmp_random_names.length));
         },
         
         seedSettlements : function (seed) {

@@ -12,7 +12,8 @@ if (typeof Object.create !== 'function') {
 ///////////////////////////////////////////////////////////////////////////////
 var resources = (function () {
     var dict = {
-        'CastleRed' : {label: 'CasteRed', image: 'images/CastleRed.png', width: 32, height: 32}
+        'CastleRed' : {label: 'CasteRed', image: 'images/CastleRed.png', width: 32, height: 32},
+        'ico_fighter' : {label: 'FighterIcon', image: 'images/fighter_32.png', width: 32, height: 32}
     }
     
     return {
@@ -343,9 +344,96 @@ var createSettlement = function (data) {
         };
 };
 
+var createArmy = function (data) {
+    var kingdom = data.kingdom,
+        units = [],
+        tilePosition,
+        pixelPosition,
+        icon;
+        
+    return {
+        belongsTo : function () {
+            return kingdom;
+        },
+        
+        getTilePosition : function () {
+            return tilePosition;
+        },
+        
+        getIcon : function () {
+            return icon;
+        }
+    }
+};
+
+var createKingdom = function (data) {
+    var player = data.player,
+        color = data.color || '',
+        holdfasts = [],
+        armies = [],
+        
+        stats = {
+            gold : 0,
+            food : 0,
+            nholdfasts : holdfasts.length,
+            armies : armies.length
+        };
+        
+        return {
+            getPlayer : function () {
+                return player;
+            },
+            
+            changeGoldBy : function (amount) {
+                stats.gold = Math.min(0, stats.gold + amount);
+            },
+            
+            changeFoodBy : function (amount) {
+                stats.food = Math.min(0, stats.food + amount);
+            },
+            
+            addArmy : function (army) {
+                armies.push(army);
+            },
+
+            removeArmy : function (idx) {
+                var army = armies[idx];
+                armies.splice(armies.indexOf(army), 1);
+                return army;
+            },
+
+            armySize : function () {
+                return armies.length;
+            },
+            
+            getArmy : function (idx) {
+                return armies[idx];
+            },
+            
+            hasHowManyHoldfasts : function () {
+                return holdfasts.length;
+            },
+            
+            getHoldfast : function (idx) {
+                return holdfasts[idx];
+            },
+            
+            addHoldfast : function (holdfast) {
+                holdfasts.push(holdfast);
+            },
+            
+            removeHoldfast : function (idx) {
+                var holdfast = holdfasts[idx];
+                holdfasts.splice(holdfasts.indexOf(holdfast), 1);
+                return holdfast;
+            }
+            
+        }
+};
+
 var createClient = function () {
     // Declare private variables and methods
-    var that, player,
+    var that, player, kingdoms = [],
         
         tick, update, animate, draw,
         
@@ -366,6 +454,7 @@ var createClient = function () {
         gamescreen = {},
         
         scroll = {x: 0, y: 0},
+        mouse = {x: 0, y: 0, down: false},
         
         map, settlements = [], owned_settlements = [],
         
@@ -399,6 +488,43 @@ var createClient = function () {
         
         fgCanvas.width = gamescreen.width;
         fgCanvas.height = gamescreen.height;
+        
+        
+        var n_tiles_wide, n_tiles_high, column_sections, row_sections, sections = [], i, j, section;
+        
+        if (map !== null && map !== undefined) {
+            n_tiles_wide = Math.floor(gamescreen.width / map.getTileWidthInPixels());
+            n_tiles_high = Math.floor(gamescreen.height / map.getTileHeightInPixels());
+            
+            // map.numberOfRows map.numberOfColumns
+            
+            column_sections = Math.ceil(map.numberOfColumns / n_tiles_wide);
+            row_sections = Math.ceil(map.numberOfRows / n_tiles_high);
+            
+            for (i = 0; i < row_sections; i += 1) {
+                for (j = 0; j < column_sections; j += 1) {
+                    section = {
+                        mincol : j * n_tiles_wide,
+                        maxcol : ((j * n_tiles_wide) + n_tiles_wide),
+                        minrow : i * n_tiles_high,
+                        maxrow : (i * n_tiles_high) + n_tiles_high
+                    }
+                
+                    if (section.maxcol > map.numberOfColumns) {
+                        section.maxcol = map.numberOfColumns;
+                        section.mincol = map.numberOfColumns - n_tiles_wide;
+                    }
+                    
+                    if (section.maxrow > map.numberOfRows) {
+                        section.maxrow = map.numberOfRows;
+                        section.minrow = map.numberOfRows - n_tiles_high;
+                    }
+                    sections.push(section);
+                }
+            }
+            
+            gamescreen.mapsections = sections;
+        }
     };
         
 
@@ -423,11 +549,11 @@ var createClient = function () {
         
         stContext.clearRect(0, 0, stCanvas.width, stCanvas.height);
         
-        var startRow = Math.floor(scroll.x / map.getTileWidthInPixels()), 
-            startCol = Math.floor(scroll.y / map.getTileHeightInPixels()), 
+        var startRow = Math.floor(scroll.y / map.getTileHeightInPixels()), 
+            startCol = Math.floor(scroll.x / map.getTileWidthInPixels()), 
             
-            rowCount = startRow + Math.floor(bgCanvas.width / map.getTileWidthInPixels()) + 1, 
-            colCount = startCol + Math.floor(bgCanvas.height / map.getTileHeightInPixels()) + 1,
+            rowCount = startRow + Math.floor(bgCanvas.height / map.getTileHeightInPixels()) + 1, 
+            colCount = startCol + Math.floor(bgCanvas.width / map.getTileWidthInPixels()) + 1,
 
             row, col,
             tilePositionX, tilePositionY,
@@ -443,8 +569,8 @@ var createClient = function () {
 
         for (row = startRow; row < rowCount && row < map.numberOfRows; row += 1) {
             for (col = startCol; col < colCount && col < map.numberOfColumns; col += 1) {
-                tilePositionX = map.getTileWidthInPixels() * row;
-                tilePositionY = map.getTileHeightInPixels() * col;
+                tilePositionY = map.getTileHeightInPixels() * row;
+                tilePositionX = map.getTileWidthInPixels() * col;
                 
                 tilePositionX -= scroll.x;
                 tilePositionY -= scroll.y;
@@ -498,6 +624,12 @@ var createClient = function () {
                 // but for now we are going to cheat and use a pre-defined
                 // map data file
                 map = createMap(tmp_data);
+                if (gamescreen.sections === undefined || gamescreen === null) {
+                    resizeScreen({
+                        width : document.body.clientWidth,
+                        height : document.body.clientHeight
+                    });
+                }
                 
                 for (i = 0; i < data.settlements.length; i += 1) {
                     settlement = createSettlement({
@@ -559,12 +691,28 @@ var createClient = function () {
                     // is this mine?
                     if (settlement.ownedBy() === player.username) {
                         mycastle = settlement;
-                        
-                        // TODO: we want to set up the scroll values so that the user sees their castle immediately
+                        // we want to set up the scroll values so that the user sees their castle immediately
                         // -- this involves the scroll.x and scroll.y -- look at the keyboard handler to see how panning works
                         // what we want to do is to center the home castle on the screen
                         // but we also gotta check for the edge cases, we don't want their viewport way outside the
                         // map boundaries
+                        (function () {
+                            var my_x = mycastle.containedInTiles()[0].col,
+                                my_y = mycastle.containedInTiles()[0].row,
+                                i, section;
+                            
+                            jQuery('#log').prepend('<li>Your castle [' + mycastle.getName() + '] is at (' + my_y + ',' + my_x + ')</li>');
+                            
+                            for (i = 0; i < gamescreen.mapsections.length; i += 1) {
+                                section = gamescreen.mapsections[i];
+                                if (my_x >= section.mincol && my_x < section.maxcol &&
+                                    my_y >= section.minrow && my_y < section.maxrow) {
+                                    scroll.x = section.mincol * map.getTileWidthInPixels();
+                                    scroll.y = section.minrow * map.getTileHeightInPixels();
+                                    return;
+                                }
+                            }
+                        }());
                     }
                 }
                 
@@ -590,6 +738,7 @@ var createClient = function () {
         },
         
         handleObjectSelected : function (obj) {
+            var div;
             jQuery('#stl_owner').html(obj.ownedBy());
             jQuery('#stl_size').html(obj.getSize());
             jQuery('#stl_population').html(obj.getPopulation());
@@ -599,15 +748,89 @@ var createClient = function () {
             jQuery('#stl_gold').html(obj.getGold());
             jQuery('#stl_harvest').html(obj.getHarvest());
             jQuery('#stl_income').html(obj.getIncome());
-            
-            jQuery('#menu_top').menu();
-            
-            jQuery('#menu')
-                .dialog({
-                    title : obj.getName(),
-                    width : 600,
-                    resizable : false
+            console.log(obj.ownedBy() + ' ~ ' + player.username);
+            if (obj.ownedBy() === player.username) {
+                jQuery('#menu_top').menu({
+                    select : function (event, ui) {
+                        var context = ui.item.find('a:first').html().toLowerCase();
+                        
+                        if (context === 'army' || context === 'diplomacy' || context === 'city') {
+                            jQuery('#menu_top').hide({
+                                effect : 'slide',
+                                complete : function () {
+                                    jQuery('#menu_'+context).show({
+                                        effect : 'slide'
+                                    });
+                                }
+                            });
+                            
+                            jQuery('#settlement_details').hide();
+                            jQuery('#' + context + '_details').show();
+                        }
+                        else if (context === 'details') {
+                            jQuery('#menu_selected_content').children().hide();
+                            jQuery('#settlement_details').show();
+                        }
+                    }
                 });
+                jQuery('#menu_army').menu({
+                    select : function (event, ui) {
+                        var context = ui.item.find('a:first').html();
+                        
+                        if (context === 'Back') {
+                            jQuery('#menu_army').hide({
+                                effect : 'slide',
+                                complete : function () {
+                                    jQuery('#menu_top').show('slide');
+                                }
+                            });
+                        }
+                    }
+                });
+                jQuery('#menu_diplomacy').menu({
+                    select : function (event, ui) {
+                        var context = ui.item.find('a:first').html();
+                        
+                        if (context === 'Back') {
+                            jQuery('#menu_diplomacy').hide({
+                                effect : 'slide',
+                                complete : function () {
+                                    jQuery('#menu_top').show('slide');
+                                }
+                            });
+                        }
+                    }
+                });
+                jQuery('#menu_city').menu({
+                    select : function (event, ui) {
+                        var context = ui.item.find('a:first').html();
+                        
+                        if (context === 'Back') {
+                            jQuery('#menu_city').hide({
+                                effect : 'slide',
+                                complete : function () {
+                                    jQuery('#menu_top').show('slide');
+                                }
+                            });
+                        }
+                    }
+                });
+                
+                jQuery('#menu')
+                    .dialog({
+                        title : obj.getName(),
+                        width : 600,
+                        resizable : false
+                    });
+            }
+            else {
+                jQuery('#infoscreen').children().remove();
+                jQuery('#settlement_details').clone().show().appendTo('#infoscreen');
+                
+                jQuery('#infoscreen').dialog({
+                    title : obj.getName()
+                });
+            }
         },
         
         handleKeyboard : function (event) {
@@ -665,11 +888,11 @@ var createClient = function () {
 	        // we need to offset for scrolling
 	        // relrow = (Scroll.x / game.map.TilePixelWidth) + absrow;
 	        // relcol = (Scroll.y / game.map.TilePixelHeight) + abscol;
-	        var absrow = Math.floor(scroll.x / map.getTileWidthInPixels()),
-	            relrow = absrow + Math.floor(event.clientX / map.getTileWidthInPixels()),
+	        var absrow = Math.floor(scroll.y / map.getTileHeightInPixels()),
+	            relrow = absrow + Math.floor(event.clientY / map.getTileHeightInPixels()),
 	        
-	            abscol = Math.floor(scroll.y / map.getTileHeightInPixels()),
-	            relcol = abscol + Math.floor(event.clientY / map.getTileHeightInPixels()),
+	            abscol = Math.floor(scroll.x / map.getTileWidthInPixels()),
+	            relcol = abscol + Math.floor(event.clientX / map.getTileWidthInPixels()),
 	            
 	            cellAt = map.getTileAt(relrow, relcol);
 	        
@@ -694,6 +917,62 @@ var createClient = function () {
 	        jQuery("#log").prepend(
 	            '<li>' + sb + '</li>'
 	        );
+        },
+        
+        handleMouseMove : function (event) {
+            var absrow = Math.floor(scroll.y / map.getTileHeightInPixels()),
+	            relrow = absrow + Math.floor(event.clientY / map.getTileHeightInPixels()),
+	        
+	            abscol = Math.floor(scroll.x / map.getTileWidthInPixels()),
+	            relcol = abscol + Math.floor(event.clientX / map.getTileWidthInPixels());
+	            
+	            jQuery('#mousex').html(relcol);
+	            jQuery('#mousey').html(relrow);
+	            
+	            if (mouse.down) {
+	            
+	                if (Math.abs(mouse.y-relrow) > Math.abs(mouse.x-relcol)) {
+	                    if (mouse.y < relrow) {
+	                        if (scroll.y - map.getTileHeightInPixels() >= 0) {
+                                scroll.y -= map.getTileHeightInPixels();
+                            }
+	                    }
+	                    
+	                    if (mouse.y > relrow) {
+	                        if (scroll.y + map.getTileHeightInPixels() <= 
+                                map.getHeightInPixels() - gamescreen.height) {
+                                
+                                scroll.y += map.getTileHeightInPixels();
+                            }
+	                    }
+                    } 
+                    else if (Math.abs(mouse.y-relrow) < Math.abs(mouse.x-relcol)) {
+	                    if (mouse.x < relcol) {
+	                        if (scroll.x - map.getTileWidthInPixels() >= 0) {
+                                scroll.x -= map.getTileWidthInPixels();
+                            }
+	                    }
+	                    
+	                    if (mouse.x > relcol) {
+	                        if (scroll.x + map.getTileWidthInPixels() <=
+                                map.getWidthInPixels() - gamescreen.width) {
+                                
+                                scroll.x += map.getTileWidthInPixels();   
+                            }
+	                    }
+                    }
+	                
+	                mouse.x = relcol;
+	                mouse.y = relrow;
+	            }
+        },
+        
+        handleMouseDown : function (event) {
+            mouse.down = true;
+        },
+        
+        handleMouseUp : function (event) {
+            mouse.down = false;
         }
     };
     
@@ -753,6 +1032,18 @@ jQuery(document).ready(function () {
         jQuery('#log_container').css({
             height : clientHeight - parseInt(jQuery('#info_panel').css('height')) - parseInt(jQuery('#tools_container').css('height'))
         });
+    });
+    
+    jQuery('#gamePage').mousemove(function (event) {
+        gameClient.handleMouseMove(event);
+    });
+    
+    jQuery('#gamePage').mousedown(function (event) {
+        gameClient.handleMouseDown(event);
+    });
+    
+    jQuery('#gamePage').mouseup(function (event) {
+        gameClient.handleMouseUp(event);
     });
     
     (function() {

@@ -37,8 +37,10 @@
 	        </div>
 	        <div id="log_container">
 		        <h3>LOGS</h3>
-		        <p>Scroll X: <span id="scrollx">0</span></p>
-		        <p>Scroll Y: <span id="scrolly">0</span></p>
+		        <p>Scroll Col: <span id="scrollx">0</span></p>
+		        <p>Scroll Row: <span id="scrolly">0</span></p>
+		        <p>Mouse Col: <span id="mousex">0</span></p>
+		        <p>Mouse Row: <span id="mousey">0</span></p>
 		        <ul id="log"></ul>
 	        </div>
 	        <div id="tools_container">
@@ -59,6 +61,28 @@
 	            <li><a href="#">City</a></li>
 	            <li><a href="#">Diplomacy</a></li>
 	        </ul>
+	        <ul id="menu_army" style="display:none">
+                <li><a href="#">Deploy</a></li>
+                <li><a href="#">Spy</a></li>
+                <li><a href="#">Plot</a></li>
+                <li><a href="#">Back</a></li>
+            </ul>
+	        <ul id="menu_diplomacy" style="display:none">
+                <li><a href="#">Negotiate</a></li>
+                <li><a href="#">Alliance</a></li>
+                <li><a href="#">Gift</a></li>
+                <li><a href="#">Declare War</a></li>
+                <li><a href="#">Back</a></li>
+            </ul>
+	        <ul id="menu_city" style="display:none">
+                <li><a href="#">Build</a></li>
+                <li><a href="#">Farm</a></li>
+                <li><a href="#">Mine</a></li>
+                <li><a href="#">Merchant</a></li>
+                <li><a href="#">Patrol</a></li>
+                <li><a href="#">Tavern</a></li>
+                <li><a href="#">Back</a></li>
+            </ul>
 	    </div>
 	    <div id="menu_selected_content">
 	        <div id="settlement_details">
@@ -74,8 +98,13 @@
 	                <li><span class="head">Income: </span><span id="stl_income"></span></li>
 	            </ul>
 	        </div>
+	        <div id="army_details" style="display: none"></div>
+	        <div id="recruit_details" style="display: none"></div>
+	        <div id="city_details" style="display: none"></div>
+	        <div id="diplomacy_details" style="display: none"></div>
 	    </div>
 	</div>
+	<div id="infoscreen"></div>
 	<!-- /templates -->
 	
 	
