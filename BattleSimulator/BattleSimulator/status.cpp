@@ -318,7 +318,6 @@ void StatusFlee::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(0);
 }
 
-
 int StatusConfusion::onMerge(Status* status)
 {
 	int appliedStacks = Status::onMerge(status);
@@ -350,6 +349,23 @@ void StatusConfusion::onPreFindTarget(Targeter* system)
 }
 
 void StatusConfusion::onSelectAbility(Unit* caster)
+{
+    if (hasExpired())
+        return;
+	Status::onSelectAbility(caster);
+	
+	if (caster->getCurrentTier() > 1)
+		caster->setCurrentTier(1);
+}
+
+int StatusDemoralize::onMerge(Status* status)
+{
+	int appliedStacks = Status::onMerge(status);
+	timer += status->getTimer();
+	return appliedStacks;
+}
+
+void StatusDemoralize::onSelectAbility(Unit* caster)
 {
     if (hasExpired())
         return;
@@ -413,7 +429,7 @@ void StatusPoison::applyTimedDamage()
 {
 	Damage* damage = new Damage(NULL, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_EARTH);
 	
-	Event* log = new EventCauseDamage(NULL, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage);
+	Event* log = new EventCauseDamage(this->effect, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage, true);
 	log->apply(effect->getBattle());
 
 	/*
@@ -450,7 +466,7 @@ void StatusBleed::applyTimedDamage()
 {
 	Damage* damage = new Damage(NULL, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
 	
-	Event* log = new EventCauseDamage(NULL, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage);
+	Event* log = new EventCauseDamage(this->effect, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage, true);
 	log->apply(effect->getBattle());
 }
 
@@ -474,7 +490,7 @@ void StatusBurn::applyTimedDamage()
 {
 	Damage* damage = new Damage(NULL, target, useStacks() * amount, DAMAGE_MEDIUM, DAMAGE_FIRE);
 	
-	Event* log = new EventCauseDamage(NULL, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage);
+	Event* log = new EventCauseDamage(this->effect, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage, true);
 	log->apply(effect->getBattle());
 }
 
@@ -500,7 +516,7 @@ void StatusRegeneration::applyTimedHeal()
 	int healAmount = useStacks() * amount;
 	Damage* damage = new Damage(NULL, target, useStacks() * healAmount, DAMAGE_MEDIUM, DAMAGE_HEALING);
 	
-	Event* log = new EventCauseDamage(NULL, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage);
+	Event* log = new EventCauseDamage(this->effect, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage, true);
 	log->apply(effect->getBattle());
 }
 
@@ -600,18 +616,18 @@ void StatusMortality::onKill()
 	Status::onKill();
 }
 
-int StatusBlock::onMerge(Status* status)
+int StatusShield::onMerge(Status* status)
 {
 	int appliedStacks = Status::onMerge(status);
 	return appliedStacks;
 }
 
-bool StatusBlock::hasExpired() const
+bool StatusShield::hasExpired() const
 {
 	return Status::hasExpired() || (limited && amount <= 0);
 }
 
-void StatusBlock::applyDamagePrevention(Damage* applier)
+void StatusShield::applyDamagePrevention(Damage* applier)
 { 
 	int currentPrevention = useStacks() * amount;
 	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
@@ -628,7 +644,7 @@ void StatusBlock::applyDamagePrevention(Damage* applier)
 		amount = currentPrevention;
 }
 	
-void StatusBlock::onPreReceiveDamage(Damage* applier)
+void StatusShield::onPreReceiveDamage(Damage* applier)
 {
 	if (hasExpired())
 		return;
@@ -638,6 +654,40 @@ void StatusBlock::onPreReceiveDamage(Damage* applier)
 
 	if (hasExpired())
 		onKill();
+}
+
+int StatusBlock::onMerge(Status* status)
+{
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
+}
+
+void StatusBlock::applyDamageReduction(Damage* applier)
+{ 
+	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
+		if (n->type == DAMAGE_PHYSICAL) {
+			int startingDamage = n->amount;
+			int resultantDamage = startingDamage / 2;
+			bound(resultantDamage, VALUE_DAMAGE);
+			n->amount = resultantDamage;
+		}
+	}
+}
+	
+void StatusBlock::onPreReceiveDamage(Damage* applier)
+{
+	if (hasExpired())
+		return;
+	Status::onPreReceiveDamage(applier);
+
+	// Special rules for global trigger
+	Unit* source = effect->getSource();
+	Unit* target = applier->target;
+	if (source->getGrid() == target->getGrid() && // from same group?
+		source->getGridY() < target->getGridY()) // target is behind blocker
+	{
+		applyDamageReduction(applier);
+	}
 }
 
 int StatusTaunt::onMerge(Status* status)

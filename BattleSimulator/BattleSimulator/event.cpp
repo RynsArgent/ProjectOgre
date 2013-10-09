@@ -5,10 +5,11 @@
 #include "damage.h"
 #include "status.h"
 #include "unit.h"
+#include "group.h"
 #include <cstdlib>
 
-Event::Event(Action* ref, const string & name, int chance)
-	: ref(ref), name(name), chance(chance), success(true), desc("")
+Event::Event(Action* ref, const string & name, int chance, bool hiddenSource)
+	: ref(ref), name(name), chance(chance), success(true), desc(""), hiddenSource(hiddenSource)
 {
     if (ref) {
         ref->addEvent(this);
@@ -26,22 +27,30 @@ void Event::determineSuccess()
 void Event::determineSuccess(Unit* target)
 {
 	Unit* source = NULL;
-	if (ref != NULL)
+	if (!hiddenSource && ref != NULL)
 	 source = ref->getSource();
 
 	// Trigger Pre on hit status effects
 	if (source != NULL)
+	{
 		source->activateOnPrePerformHit(this);
+		ref->getBattle()->getGlobalTrigger()->activateOnPrePerformHit(this);
+	}
 	target->activateOnPreReactHit(this);
+	ref->getBattle()->getGlobalTrigger()->activateOnPreReactHit(this);
 
 	// Determine if roll was a success out of a 100%
 	int roll = rand() % 100 + 1;
 	success = roll <= chance;
 	
 	// Trigger Post on hit status effects
+	ref->getBattle()->getGlobalTrigger()->activateOnPostReactHit(this);
 	target->activateOnPostReactHit(this);
 	if (source != NULL)
+	{
+		ref->getBattle()->getGlobalTrigger()->activateOnPostPerformHit(this);
 		source->activateOnPostPerformHit(this);
+	}
 }
 
 void Event::apply(Battle* battle)
@@ -51,7 +60,7 @@ void Event::apply(Battle* battle)
 
 void Event::print(ostream& out) const
 {
-	if (ref != NULL && ref->getAction() != EFFECT_TRIGGER)
+	if (!hiddenSource && ref != NULL && ref->getAction() != EFFECT_TRIGGER)
 		out << ref->getSource()->getName() << " readies " << name << endl;
 }
 
@@ -64,12 +73,12 @@ void EventCauseDamage::apply(Battle* battle)
 	Event::apply(battle);
 	determineSuccess(damage->target);
 	if (success)
-		damage->apply();
+		damage->apply(battle);
 }
 
 void EventCauseDamage::print(ostream& out) const
 {
-	if (ref != NULL)
+	if (!hiddenSource && ref != NULL)
 		out << ref->getSource()->getName() << "'s ";
 	out << name;
     if (damage) {
@@ -97,15 +106,20 @@ void EventCauseStatus::apply(Battle* battle)
 
 void EventCauseStatus::print(ostream& out) const
 {
-	if (ref != NULL)
+	if (!hiddenSource && ref != NULL)
 		out << ref->getSource()->getName() << "'s ";
 	out << name;
     if (status) {
-		if (success) {
-			out << " applies " << status->getEffect()->getName() << " to " << status->getTarget()->getName();
-		} else {
-			out << " fizzles on " << status->getTarget()->getName();
-		}
+		if (status->getTarget()->getName() == "")
+			if (success)
+				out << " is applied";
+			else
+				out << " fizzled";
+		else 
+			if (success)
+				out << " applies " << status->getSubname() << " to " << status->getTarget()->getName();
+			else
+				out << " fizzles on " << status->getTarget()->getName();
     }
     out << endl;
 }
@@ -138,7 +152,7 @@ void EventRemoveStatus::apply(Battle* battle)
 void EventRemoveStatus::print(ostream& out) const
 {
     if (removedResult) {
-		if (ref != NULL)
+		if (!hiddenSource && ref != NULL)
 			out << ref->getSource()->getName() << "'s "; 
 		out << name;
 		if (removedResult) {
@@ -149,5 +163,35 @@ void EventRemoveStatus::print(ostream& out) const
 }
 
 EventRemoveStatus::~EventRemoveStatus()
+{
+}
+
+void EventReposition::apply(Battle* battle)
+{
+	Event::apply(battle);
+	determineSuccess();
+	if (success) {
+		Group* group = battle->getAllyGroup(target->getGrid());
+		if (group->getUnitAt(destination) == NULL)
+		{
+			group->setUnitAt(destination, target);
+			group->setUnitAt(target->getGridX(), target->getGridY(), NULL);
+			target->setOnGrid(destination.x, destination.y);
+		}
+	}
+}
+
+void EventReposition::print(ostream& out) const
+{
+    if (success) {
+		if (!hiddenSource && ref != NULL)
+			out << ref->getSource()->getName() << "'s "; 
+		out << name;
+		out << " repositions " << target->getName();
+	}
+	out << endl;
+}
+	
+EventReposition::~EventReposition()
 {
 }

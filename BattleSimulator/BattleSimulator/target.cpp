@@ -3,6 +3,7 @@
 #include "unit.h"
 #include "group.h"
 #include "status.h"
+#include "battle.h"
 
 // Comparator functions to determine strongest/weakest unit
 bool compareCurrentLifePreferLess(Unit* lhs, Unit* rhs) {
@@ -61,14 +62,18 @@ vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Battle* battle, Gro
 	return targets;
 }
 
-void Targeter::set(int n) 
+void Targeter::set(Battle* battle, int n) 
 {
 	chosen.clear();
     
 	// OnPreTarget Methods
     for (int i = 0; i < candidates.size(); ++i)
+	{
 		candidates[i]->activateOnPreBecomeTarget(this);
+		battle->getGlobalTrigger()->activateOnPreBecomeTarget(this);
+	}
 	ref->getSource()->activateOnPreFindTarget(this);
+	battle->getGlobalTrigger()->activateOnPreFindTarget(this);
 
 	vector<Unit*> cand = candidates;
 	vector<int> prio = priorities;
@@ -189,9 +194,13 @@ void Targeter::set(int n)
 	}
             
     // OnPostTarget Methods
+	battle->getGlobalTrigger()->activateOnPostFindTarget(this);
 	ref->getSource()->activateOnPostFindTarget(this);
     for (int i = 0; i < chosen.size(); ++i)
+	{
+		battle->getGlobalTrigger()->activateOnPostBecomeTarget(this);
 		chosen[i]->activateOnPostBecomeTarget(this);
+	}
 }
 
 void Targeter::print() const

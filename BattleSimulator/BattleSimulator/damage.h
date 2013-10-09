@@ -61,7 +61,7 @@ struct Damage
 		++size;
 	}
 
-	void apply();
+	void apply(Battle* battle);
 
 	void clean() {
 		head->clean();

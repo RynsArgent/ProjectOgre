@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+#include "gridpoint.h"
+
 #include <fstream>
 #include <string>
 
@@ -18,6 +20,7 @@ struct Event
 	static const int DEBUFF_HIT_CHANCE = 100;
 	static const int UNBUFF_HIT_CHANCE = 100;
 	static const int CLEANSE_HIT_CHANCE = 100;
+	static const int KNOCKBACK_HIT_CHANCE = 100;
 
     Action* ref;
     string name;
@@ -25,9 +28,11 @@ struct Event
 	int chance;
 	bool success;
 
+	bool hiddenSource;
+
 	string desc;
 
-	Event(Action* ref, const string & name, int chance = 100);
+	Event(Action* ref, const string & name, int chance = 100, bool hiddenSource = false);
 
     // Apply Event abilities if the odds were a success on a target Unit
 	void determineSuccess();
@@ -43,8 +48,8 @@ struct EventCauseDamage : public Event
 {
 	Damage* damage;
 
-	EventCauseDamage(Action* ref, const string & name, int chance = 100, Damage* damage = NULL)
-		: Event(ref, name, chance), damage(damage)
+	EventCauseDamage(Action* ref, const string & name, int chance = 100, Damage* damage = NULL, bool hiddenSource = false)
+		: Event(ref, name, chance, hiddenSource), damage(damage)
 	{}
 	
 	virtual void apply(Battle* battle);
@@ -57,8 +62,8 @@ struct EventCauseStatus : public Event
 {
 	Status* status;
 
-	EventCauseStatus(Action* ref, const string & name, int chance = 100, Status* status = NULL)
-		: Event(ref, name, chance), status(status)
+	EventCauseStatus(Action* ref, const string & name, int chance = 100, Status* status = NULL, bool hiddenSource = false)
+		: Event(ref, name, chance, hiddenSource), status(status)
 	{}
 	
 	virtual void apply(Battle* battle);
@@ -74,14 +79,29 @@ struct EventRemoveStatus : public Event
 
 	StatusGroup* removedResult;
 	
-	EventRemoveStatus(Action* ref, const string & name, int chance = 100, Unit* target = NULL, StatusBenefit removingType = DEBUFF)
-		: Event(ref, name, chance), target(target), removingType(removingType), removedResult(NULL)
+	EventRemoveStatus(Action* ref, const string & name, int chance = 100, Unit* target = NULL, StatusBenefit removingType = DEBUFF, bool hiddenSource = false)
+		: Event(ref, name, chance, hiddenSource), target(target), removingType(removingType), removedResult(NULL)
 	{}
 
 	virtual void apply(Battle* battle);
     virtual void print(ostream& out) const;
 	
 	~EventRemoveStatus();
+};
+
+struct EventReposition : public Event
+{
+	Unit* target;
+	GridPoint destination;
+
+	EventReposition(Action* ref, const string & name, int chance = 100, Unit* target = NULL, const GridPoint & destination = GridPoint(), bool hiddenSource = false)
+		: Event(ref, name, chance, hiddenSource), target(target), destination(destination)
+	{}
+	
+	virtual void apply(Battle* battle);
+    virtual void print(ostream& out) const;
+	
+	~EventReposition();
 };
 
 #endif

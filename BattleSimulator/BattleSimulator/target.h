@@ -21,28 +21,30 @@ struct Targeter
     
     TargetGroup group;
 	TargetType method; // Method of selecting candidates
-	bool primary; // Determines whether a primary target exists for this system for counterattacks
-	
+//	bool primary; // Determines whether a primary target exists for this system for counterattacks
+	int numPrimaries;
+
 	// Dynamic variables
 	bool provoked; // If set to true, that means the Action has processed long enough (before completion or cancellation)
 					// for the primary unit to respond
 
-	Targeter(Action* ref, const vector<Unit*> & candidates, TargetGroup group, TargetType method, bool primary = true)
-		: ref(ref), base(candidates), candidates(candidates), priorities(), chosen(), group(group), method(method), primary(primary), provoked(false)
+	Targeter(Action* ref, const vector<Unit*> & candidates, TargetGroup group, TargetType method, int numPrimaries)
+		: ref(ref), base(candidates), candidates(candidates), priorities(), chosen(), group(group), method(method), numPrimaries(numPrimaries), provoked(false)
 	{
     }
             
-	Unit* getPrimary() const {
-		if (!primary) return NULL;
-		if (chosen.size() > 0)
-			return chosen[0];
-		return NULL;
+	vector<Unit*> getPrimaries() const {
+		vector<Unit*> ret;
+		for (int i = 0; i < chosen.size() && i < numPrimaries ; ++i)
+			ret.push_back(chosen[i]);
+		return ret;
 	}
 
 	// The static functions below are common in abilities and are provided for code reuse. (Search for front targets, back targets, ect)
 	static vector<Unit*> searchForFrontTargets(Unit* current, Battle* battle, Group* allyGroup, Group* enemyGroup, int startingAdjacencyRange, int rowRange);
 	
-	void set(int n = 1);
+	// n is the maximum number of targets to add to chosen list
+	void set(Battle* battle, int n = 1);
     
     void print() const;
 

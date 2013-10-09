@@ -18,7 +18,7 @@ bool compareSpeed(Unit* lhs, Unit* rhs) {
 
 Battle::Battle(int seed, Group* group1, Group* group2)
 	: seed(seed), group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), 
-	mainUnit(NULL), respondUnit(NULL), mainAbility(NULL), respondAbility(NULL),
+	globalTrigger(NULL), mainUnit(NULL), respondUnit(NULL), mainAbility(NULL), respondAbility(NULL),
 	eventStack(), cleanup(), isOver(false)
 {
 	group1->turnToFace(FACING_FORWARD);
@@ -50,6 +50,7 @@ Group* Battle::getEnemyGroup(int gid) const {
 
 void Battle::initializeUnits()
 {
+	globalTrigger = new Unit(NULL, -1, -1, -1);
 	vector<Unit*> units1 = group1->allyUnits();
 	vector<Unit*> units2 = group2->allyUnits();
 	for (int i = 0; i < units1.size(); ++i)
@@ -87,10 +88,12 @@ void Battle::executeTurn()
 	mainUnit->setCurrentTier(2);
 	// Activate any status effects that occur on preparing for abilities
 	mainUnit->activateOnSelectAbility(mainUnit);
+	globalTrigger->activateOnSelectAbility(mainUnit);
 	mainUnit->setCurrentSkill(Ability::selectSkill(mainUnit));
 	
 	// Process unit ongoing effects
 	mainUnit->processEffects();
+	globalTrigger->processEffects();
 
     mainAbility = NULL;
 	// Perform the unit ability based on its position
@@ -107,25 +110,28 @@ void Battle::executeTurn()
 	{
 		// Look for the first able primary responder who can counter.
 		//Targeter* mainTargeter = mainAbility->retrieveFirstPrimaryTargeter();
-		Targeter* mainTargeter = NULL;
+		bool responded = false;
 		vector<Targeter*> targeters = mainAbility->getTargeters();
-		for (int i = 0; i < targeters.size(); ++i)
+		for (int i = 0; i < targeters.size() && !responded; ++i)
 		{
-			mainTargeter = targeters[i];
-			if (mainTargeter != NULL)
+			Targeter* targeter = targeters[i];
+			vector<Unit*> primaries = targeter->getPrimaries();
+			for (int j = 0; j < primaries.size(); ++j)
 			{
-				respondUnit = mainTargeter->getPrimary();
-				if (respondUnit != NULL && mainTargeter->provoked)
+				respondUnit = primaries[j];
+				if (respondUnit->isAvailable() && targeter->provoked)
 				{
 					respondUnit->setCurrentSkill(NO_STANDARD_SKILL);
 					respondUnit->setCurrentTier(1);
 					// Activate any status effects that occur on preparing for abilities
 					respondUnit->activateOnSelectAbility(respondUnit);
+					globalTrigger->activateOnSelectAbility(respondUnit);
 					respondUnit->setCurrentSkill(Ability::selectSkill(respondUnit));
 
 					respondAbility = Ability::getAbility(respondUnit->getCurrentSkill());
 					if (Ability::isAbleToRespond(mainAbility, respondAbility) && respondAbility->getAbilityType() != ABILITY_NONE) {
 						respondAbility->action(mainAbility, respondUnit, this);
+						responded = true;
 						break; // found ability to counter used to counter, no need to look further
 					}
 					else {
@@ -249,4 +255,10 @@ int Battle::getWinner() const
 		return 2;
 	else
 		return 0;
+}
+
+Battle::~Battle()
+{
+	cleanupTurn();
+	delete globalTrigger;
 }

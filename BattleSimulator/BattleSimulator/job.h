@@ -8,6 +8,14 @@
 
 using namespace std;
 
+// To add a job: 
+// -go to pch.h and add the job to the JobType enum
+// -go to pch.cpp and update the toStringJob
+// -go to job.h and create the new derived class for the Job
+// -go to job.cpp and add to getJob at the top of the file the new enum
+// -go to job.cpp and implement the constructor and init functions
+// -go to renderer.cpp near the top of the file and add the new job to the jobs array
+
 class Job
 {
 protected:
@@ -211,7 +219,7 @@ class Fighter : public Job
 protected:
 	const static JobType JOB_TYPE = JOB_FIGHTER;
 
-	const static int BASE_HEALTH = 100;
+	const static int BASE_HEALTH = 120;
 	const static int BASE_PHYSICAL_ATTACK = 30;
 	const static int BASE_MAGIC_ATTACK = 10;
 	const static int BASE_SPEED = 3;
@@ -237,7 +245,7 @@ class Scout : public Job
 protected:
 	const static JobType JOB_TYPE = JOB_SCOUT;
 
-	const static int BASE_HEALTH = 80;
+	const static int BASE_HEALTH = 100;
 	const static int BASE_PHYSICAL_ATTACK = 20;
 	const static int BASE_MAGIC_ATTACK = 20;
 	const static int BASE_SPEED = 5;
@@ -263,7 +271,7 @@ class Acolyte : public Job
 protected:
 	const static JobType JOB_TYPE = JOB_ACOLYTE;
 
-	const static int BASE_HEALTH = 60;
+	const static int BASE_HEALTH = 80;
 	const static int BASE_PHYSICAL_ATTACK = 10;
 	const static int BASE_MAGIC_ATTACK = 30;
 	const static int BASE_SPEED = 1;
@@ -289,7 +297,7 @@ class Mage : public Job
 protected:
 	const static JobType JOB_TYPE = JOB_MAGE;
 
-	const static int BASE_HEALTH = 40;
+	const static int BASE_HEALTH = 80;
 	const static int BASE_PHYSICAL_ATTACK = 10;
 	const static int BASE_MAGIC_ATTACK = 30;
 	const static int BASE_SPEED = 1;
@@ -308,6 +316,32 @@ public:
 	virtual void init();
 
 	~Mage() {}
+};
+
+class Warrior : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_WARRIOR;
+
+	const static int BASE_HEALTH = 120;
+	const static int BASE_PHYSICAL_ATTACK = 30;
+	const static int BASE_MAGIC_ATTACK = 10;
+	const static int BASE_SPEED = 3;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	Warrior(Character* character);
+	virtual void init();
+
+	~Warrior() {}
 };
 
 #endif

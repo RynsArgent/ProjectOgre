@@ -374,6 +374,33 @@ public:
     ~StatusConfusion() {}
 };
 
+class StatusDemoralize : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const bool DISPELLABLE = false;    
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = true;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+public:
+    StatusDemoralize(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Demoralize", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+    {}
+    
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+
+	// Main Function
+	virtual int onMerge(Status* status);
+    virtual void onSelectAbility(Unit* caster);
+
+    ~StatusDemoralize() {}
+};
+
 class StatusCharm : public Status
 {
 private:
@@ -509,13 +536,13 @@ protected:
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
-	static const bool COLLECTIVE = false;
+	static const bool COLLECTIVE = true;
 	static const bool TIMED = true;
 	static const int MAX_SINGLE_STACKS = 5;
 	static const int MAX_GROUP_STACKS = 5;
 	
 	static const int TIMER = 3;
-	static const int AMOUNT = 15;
+	static const int AMOUNT = 20;
 
 	int amount;
 public:
@@ -625,7 +652,7 @@ public:
 	~StatusMortality() {}
 };
 
-class StatusBlock : public Status
+class StatusShield : public Status
 {
 private:
 	static const StatusBenefit BENEFIT = BUFF;
@@ -644,8 +671,8 @@ private:
 	bool limited; // If set, amount will drop on use and expire at 0. Otherwise, amount will not drop
 	int amount;
 public:
-	StatusBlock(Effect* effect, Unit* target)
-        : Status(effect, "Block", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), limited(LIMITED), amount(AMOUNT)
+	StatusShield(Effect* effect, Unit* target)
+        : Status(effect, "Shield", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), limited(LIMITED), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -653,6 +680,38 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 	virtual bool hasExpired() const;
 	void applyDamagePrevention(Damage* applier);
+	
+	// Main Function
+	virtual int onMerge(Status* status);
+	virtual void onPreReceiveDamage(Damage* applier);
+
+	~StatusShield() {}
+};
+
+class StatusBlock : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const bool DISPELLABLE = false;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+
+	static const int TIMER = 1;
+
+	int amount;
+public:
+	StatusBlock(Effect* effect, Unit* target)
+        : Status(effect, "Block", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	void applyDamageReduction(Damage* applier);
 	
 	// Main Function
 	virtual int onMerge(Status* status);

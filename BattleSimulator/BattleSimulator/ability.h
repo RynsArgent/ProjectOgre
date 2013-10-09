@@ -10,7 +10,7 @@
 // To add an ability: 
 // -go to pch.h and add the ability to the Skill enum
 // -go to ability.h and create the new derived class for the Skill
-// -go to ability.cpp and update the toStringSkill
+// -go to ability.cpp and update the toStringSkill (NO NEED TO ATM)
 // -go to ability.cpp and update the getAbility to instantiate the new object for skill
 // -go to ability.cpp and write the logic in the execute function
 
@@ -47,7 +47,6 @@ public:
     void setCancelled(bool value) { cancelled = value; }
 	vector<Targeter*> getTargeters() const { return targeters; }
 	void setTargeters(const vector<Targeter*> & value) { targeters = value; }
-	Targeter* retrieveFirstPrimaryTargeter() const;
 
 	// This is used to check whether the unit is stunned, sleep, fleeing, ect.
 	// Because if the unit is, the ability is probably cancelled
@@ -239,7 +238,7 @@ public:
 	~Cleanse() {}
 };
 
-class Rejuvenate : public Ability
+class Regeneration : public Ability
 {
 protected:
 	static const ActionType ACT = ABILITY_STANDARD;
@@ -249,9 +248,9 @@ protected:
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	Rejuvenate() : Ability("Rejuvenate", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	Regeneration() : Ability("Regeneration", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
-	~Rejuvenate() {}
+	~Regeneration() {}
 };
 
 class Blind : public Ability
@@ -372,6 +371,51 @@ public:
 	LightningBolt() : Ability("Lightning Bolt", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
 	~LightningBolt() {}
+};
+
+class Slash : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Slash() : Ability("Slash", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Slash() {}
+};
+
+class Provoke : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Provoke() : Ability("Provoke", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Provoke() {}
+};
+
+class DemoralizingShout : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	DemoralizingShout() : Ability("Demoralizing Shout", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~DemoralizingShout() {}
 };
 
 #endif

@@ -33,7 +33,8 @@ Unit::Unit(Character* character, int gid, int x, int y)
 	gid(gid), formX(x), formY(y), gridX(x), gridY(y), currentEffects(), currentStatus(),
 	leader(false), done(false), rValue(0)
 {
-	carryOverCharacterStatistics();
+	if (character != NULL)
+		carryOverCharacterStatistics();
 }
 
 void Unit::addStatusGroup(StatusGroup* statusGroup)

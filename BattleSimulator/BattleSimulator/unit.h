@@ -65,6 +65,8 @@ public:
 	}
 	
 	string getName() const {
+		if (!character)
+			return "";
 		return character->getName();
 	}
 	

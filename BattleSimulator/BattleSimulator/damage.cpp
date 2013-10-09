@@ -3,6 +3,7 @@
 #include "unit.h"
 #include "ability.h"
 #include "status.h"
+#include "battle.h"
 #include <algorithm>
 
 DamageNode::DamageNode(int amount, DamageRating rating, DamageType type, DamageNode* next)
@@ -70,7 +71,7 @@ void DamageNode::print(ostream& out) const
     if (next) next->print(out);
 }
 
-void Damage::apply()
+void Damage::apply(Battle* battle)
 {
 	final = 0; // Init calculated damage to 0
 	
@@ -80,9 +81,14 @@ void Damage::apply()
     Unit* applier = NULL;
 	if (action != NULL)
 		applier = action->getSource();
+
 	if (applier != NULL)
+	{
 		applier->activateOnPreApplyDamage(this);
+		battle->getGlobalTrigger()->activateOnPreApplyDamage(this);
+	}
 	target->activateOnPreReceiveDamage(this);
+	battle->getGlobalTrigger()->activateOnPreReceiveDamage(this);
 
 	// Apply the final damage
 	if (target->isAlive())
@@ -90,9 +96,13 @@ void Damage::apply()
 			final += head->apply(target);
 
 	// Post Damage Effects
+	battle->getGlobalTrigger()->activateOnPostReceiveDamage(this);
 	target->activateOnPostReceiveDamage(this);
 	if (applier != NULL)
+	{
+		battle->getGlobalTrigger()->activateOnPostApplyDamage(this);
 		applier->activateOnPostApplyDamage(this);
+	}
 }
 
 void Damage::print(ostream& out) const

@@ -16,7 +16,7 @@ private:
 	int turnIndex;
 	vector<Unit*> unitOrder;
 
-	Unit* globaltrigger;
+	Unit* globalTrigger;
 	Unit* mainUnit;
 	Unit* respondUnit;
 	Ability* mainAbility;
@@ -35,7 +35,7 @@ public:
 	
 	int getSeed() const { return seed; }
 	int getRoundNumber() const { return roundNumber; }
-	Unit* getGlobalTrigger() const { return globaltrigger; }
+	Unit* getGlobalTrigger() const { return globalTrigger; }
 	Unit* getMainUnit() const { return mainUnit; }
 	Unit* getRespondUnit() const { return respondUnit; }
 	vector<Event*> getEventStack() const { return eventStack; }
@@ -57,7 +57,7 @@ public:
 	void preprint() const;
 	void postprint() const;
 
-	~Battle() {}
+	~Battle();
 
 	friend class Ability;
 	friend class Renderer;

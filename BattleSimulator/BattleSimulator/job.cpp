@@ -16,6 +16,8 @@ Job* Job::getJob(JobType job, Character* target)
 		return new Acolyte(target);
 	case JOB_MAGE:
 		return new Mage(target);
+	case JOB_WARRIOR:
+		return new Warrior(target);
 	default:
 		return NULL;
 	}
@@ -58,7 +60,7 @@ void Fighter::init()
 	midSkills.push_back(STRIKE);
 	midSkills.push_back(BLOCK);
 	frontSkills.push_back(HUNDRED_BLADES);
-	frontSkills.push_back(BLOCK);
+	frontSkills.push_back(STRIKE);
 	basicSkills.push_back(STRIKE);
 }
 
@@ -79,7 +81,7 @@ void Scout::init()
 	midSkills.push_back(SHOOT);
 	midSkills.push_back(TANGLE_TRAP);
 	frontSkills.push_back(SHOOT);
-	frontSkills.push_back(HASTE);
+	frontSkills.push_back(TANGLE_TRAP);
 	basicSkills.push_back(SHOOT);
 }
 
@@ -96,9 +98,9 @@ void Acolyte::init()
 {
 	Job::init();
 	backSkills.push_back(HEAL);
-	backSkills.push_back(CLEANSE);
+	backSkills.push_back(REGENERATION);
 	midSkills.push_back(HEAL);
-	midSkills.push_back(REJUVENATE);
+	midSkills.push_back(REGENERATION);
 	frontSkills.push_back(HEAL);
 	frontSkills.push_back(BLIND);
 	basicSkills.push_back(NO_STANDARD_SKILL);
@@ -117,10 +119,31 @@ void Mage::init()
 {
 	Job::init();
 	backSkills.push_back(retrieveSkill(SPELL1, character->getFavoredElement()));
-	backSkills.push_back(BARRIER);
+	backSkills.push_back(HASTE);
 	midSkills.push_back(retrieveSkill(SPELL1, character->getFavoredElement()));
-	midSkills.push_back(POLYMORPH);
+	midSkills.push_back(HASTE);
 	frontSkills.push_back(retrieveSkill(SPELL1, character->getFavoredElement()));
 	frontSkills.push_back(BARRIER);
 	basicSkills.push_back(NO_STANDARD_SKILL);
+}
+
+Warrior::Warrior(Character* character)
+	: Job(character, JOB_TYPE, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
+		BASE_PHYSICAL_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+		BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
+		BASE_UPKEEP)
+{
+	init();
+}
+
+void Warrior::init() 
+{
+	Job::init();
+	backSkills.push_back(DEMORALIZING_SHOUT);
+	backSkills.push_back(BATTLE_SHOUT);
+	midSkills.push_back(STRIKE);
+	midSkills.push_back(PROVOKE);
+	frontSkills.push_back(SLASH);
+	frontSkills.push_back(PROVOKE);
+	basicSkills.push_back(STRIKE);
 }
