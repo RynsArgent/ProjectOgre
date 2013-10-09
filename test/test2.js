@@ -1,9 +1,25 @@
 
-var io = require('socket.io-client');
-var api = require('../api').api;
+/*
+var	modeler = require('modeler-redis')
+,	client = require('redis').createClient();
+*/
+//var io = require('socket.io-client');
+
+
+/*
+var	modeler = require('modeler-redis')
+,	client = require('redis').createClient();
+*/
+
+var modeler = require('modeler');
+var client = null;
+
+var api = new (require('../api').api)(modeler, client);
+
 require('chai').should();
 
 describe('api tests /', function(){
+
 	it('testCreateUser', function(done)
 	{
 		api.should.have.property('createUser');
@@ -37,7 +53,9 @@ describe('api tests /', function(){
 				
 				data.should.have.property('alias');
 				data.alias.should.equal('tesract');
-				
+
+console.log(data);				
+
 				done();
 			});			
 		});
