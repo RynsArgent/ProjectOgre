@@ -1,4 +1,6 @@
 # Ignore rules
 
-*.sdf 	#ignore visual studio intellisence files
-	#they can be regened locally, and save about 32mb per VS project
+#ignore visual studio intellisence files
+#they can be regened locally, and save about 32mb per VS project
+**/*.sdf
+
