@@ -27,6 +27,7 @@ void Group::carryOverFormationStatistics()
 					leader = unit;
 					unit->setLeader(true);
 				}
+                addUnitToGroup(unit);
 			}
 			else
 			{

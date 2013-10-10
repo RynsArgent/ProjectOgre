@@ -9,6 +9,7 @@ void Character::carryOverJobStatistics()
 	baseMagicAttack = job->getBaseMagicAttack();
 	baseSpeed = job->getBaseSpeed();
 	basePhysicalDefense = job->getBasePhysicalDefense();
+	baseArcaneDefense = job->getBaseArcaneDefense();
 	baseFireDefense = job->getBaseFireDefense();
 	baseWaterDefense = job->getBaseWaterDefense();
 	baseEarthDefense = job->getBaseEarthDefense();
@@ -28,11 +29,11 @@ void Character::carryOverJobStatistics()
 
 Character::Character(const string & name, JobType jobType, ElementType favoredElement, 
 	int health, int physicalAttack, int magicAttack, int speed, 
-	int physicalDefense, int fireDefense, int waterDefense, 
+	int physicalDefense, int arcaneDefense, int fireDefense, int waterDefense,
 	int earthDefense, int iceDefense, int lightningDefense,
 	int size, int upkeep)
 	: name(name), job(NULL), baseHealth(health), basePhysicalAttack(physicalAttack), baseMagicAttack(magicAttack), baseSpeed(speed),
-	basePhysicalDefense(physicalDefense), baseFireDefense(fireDefense), baseWaterDefense(waterDefense),
+	basePhysicalDefense(physicalDefense), baseArcaneDefense(arcaneDefense), baseFireDefense(fireDefense), baseWaterDefense(waterDefense),
 	baseEarthDefense(earthDefense), baseIceDefense(iceDefense), baseLightningDefense(lightningDefense),
 	baseSize(size), favoredElement(favoredElement), backSkills(), midSkills(), frontSkills(), basicSkills(),
 	backSkillIndex(0), midSkillIndex(0), frontSkillIndex(0), basicSkillIndex(0), baseUpkeep(upkeep)

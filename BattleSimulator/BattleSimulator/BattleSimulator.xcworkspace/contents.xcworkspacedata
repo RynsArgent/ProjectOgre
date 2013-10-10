@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:ability.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:ability.h">
+   </FileRef>
+   <FileRef
+      location = "group:action.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:action.h">
+   </FileRef>
+   <FileRef
+      location = "group:battle.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:battle.h">
+   </FileRef>
+   <FileRef
+      location = "group:character.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:character.h">
+   </FileRef>
+   <FileRef
+      location = "group:damage.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:damage.h">
+   </FileRef>
+   <FileRef
+      location = "group:event.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:event.h">
+   </FileRef>
+   <FileRef
+      location = "group:formation.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:formation.h">
+   </FileRef>
+   <FileRef
+      location = "group:gridpoint.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:gridpoint.h">
+   </FileRef>
+   <FileRef
+      location = "group:group.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:group.h">
+   </FileRef>
+   <FileRef
+      location = "group:job.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:job.h">
+   </FileRef>
+   <FileRef
+      location = "group:main.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:makefile">
+   </FileRef>
+   <FileRef
+      location = "group:object.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:object.h">
+   </FileRef>
+   <FileRef
+      location = "group:pch.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:pch.h">
+   </FileRef>
+   <FileRef
+      location = "group:renderer.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:renderer.h">
+   </FileRef>
+   <FileRef
+      location = "group:setup.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:setup.h">
+   </FileRef>
+   <FileRef
+      location = "group:status.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:status.h">
+   </FileRef>
+   <FileRef
+      location = "group:target.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:target.h">
+   </FileRef>
+   <FileRef
+      location = "group:unit.cpp">
+   </FileRef>
+   <FileRef
+      location = "group:unit.h">
+   </FileRef>
+</Workspace>

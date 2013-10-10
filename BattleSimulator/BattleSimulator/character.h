@@ -8,6 +8,9 @@
 
 using namespace std;
 
+// These are actual Character statistics.
+//
+// Missing Potential Characteristics: Race
 class Character
 {
 protected:
@@ -21,13 +24,14 @@ protected:
 	int baseSpeed;
 	
 	int basePhysicalDefense;
+	int baseArcaneDefense;
 	int baseFireDefense;
 	int baseWaterDefense;
 	int baseEarthDefense;
 	int baseIceDefense;
 	int baseLightningDefense;
 	
-	int baseSize;
+	int baseSize; // Not implemented yet, but big creatures later will take up more space
 	
 	ElementType favoredElement;
 	
@@ -46,7 +50,7 @@ protected:
 public:
 	Character(const string & name = "", JobType jobType = JOB_NONE, ElementType favoredElement = ELEMENT_NONE, 
 		int health = 0, int physicalAttack = 0, int magicAttack = 0, int speed = 0, 
-		int PhysicalDefense = 0, int fireDefense = 0, int waterDefense = 0, 
+		int physicalDefense = 0, int arcaneDefense = 0, int fireDefense = 0, int waterDefense = 0,
 		int earthDefense = 0, int iceDefense = 0, int lightningDefense = 0,
 		int size = 1, int upkeep = 0);
 
@@ -80,6 +84,14 @@ public:
 
 	void setBaseEarthDefense(int baseEarthDefense) {
 		this->baseEarthDefense = baseEarthDefense;
+	}
+    
+	int getBaseArcaneDefense() const {
+		return baseArcaneDefense;
+	}
+    
+	void setBaseArcaneDefense(int baseArcaneDefense) {
+		this->baseArcaneDefense = baseArcaneDefense;
 	}
 
 	int getBaseFireDefense() const {

@@ -9,6 +9,11 @@
 #include "event.h"
 #include "unit.h"
 
+// To add a status:
+// -go to status.h and create the new derived class for the Status, set all the new attributes and select which event handlers to override.
+// -go to status.cpp and define the overriden event handlers. onMerge must be handled.
+// -go to renderer.cpp near the top of the file and add the new status effect with a color so it is rendered to the screen UNLESS your status is attached to a global trigger (not rendered)
+
 // Status: This defines an instance of a certain status effect, all status effect types are
 //			derived off of this to share similar information. A status effect registers itself
 //			to base event handlers to perform specific needs. These are modifiable information
@@ -48,7 +53,12 @@
 // A limit for Status Group total stacks (instancing), the most recent instances will overwrite
 // the older instances.
 //
-
+//
+//
+// Room for improvement: all status effects are called on an event. This is inefficient.
+// All status effect use O(N) to remove attachments to Unit, Effect, and Status Group.
+// These can definitely be done better especially when we get to a greater scale battle system.
+// Most of these O(N) functionalies come from the onKill event handler.
 class Status
 {
 protected:
@@ -57,6 +67,7 @@ protected:
 	Unit* target;
 	StatusBenefit benefit;
 	StatusMatch match;
+    StatusCategory category;
 	bool instancing;
     bool dispellable;
 	bool collective;
@@ -71,8 +82,8 @@ protected:
 	StatusGroup* grouplist;
 	bool clean;
 public:
-	Status(Effect* effect, const string & subname, Unit* target = NULL, StatusBenefit benefit = NEUTRAL, StatusMatch match = STATUS_UNMATCHABLE, bool dispellable = true, bool instancing = false, bool collective = false, bool timed = false, int timer = 0, int stacks = 0)
-		: effect(effect), subname(subname), target(target), benefit(benefit), match(match), 
+	Status(Effect* effect, const string & subname, Unit* target = NULL, StatusBenefit benefit = NEUTRAL, StatusMatch match = STATUS_UNMATCHABLE, StatusCategory category = STATUS_UNCATEGORIZED, bool dispellable = true, bool instancing = false, bool collective = false, bool timed = false, int timer = 0, int stacks = 0)
+		: effect(effect), subname(subname), target(target), benefit(benefit), match(match), category(category),
 		dispellable(dispellable), instancing(instancing), collective(collective), stacks(stacks), timed(timed), timer(timer), merger(NULL), grouplist(NULL), clean(false)
 	{
 	}
@@ -87,6 +98,14 @@ public:
 
 	StatusBenefit getBenefit() const {
 		return benefit;
+	}
+    
+	StatusMatch getMatch() const {
+		return match;
+	}
+    
+	StatusCategory getCategory() const {
+		return category;
 	}
 	
 	Unit* getTarget() const {
@@ -251,8 +270,15 @@ public:
     virtual void onCheckpoint(Ability* ability);
 
 	// This deals with selecting which ability to use
-	// (i.e. Charmed and Confused casters will use their basic ability)
+	// (i.e. Charmed and Confused casters will use their basic ability, Stunned casters ect... will use no ability)
     virtual void onSelectAbility(Unit* caster);
+    
+    // This deals with an ability just being generated and just
+    // before execution.
+    // (i.e. Rally causes the next ability to be uninterruptible despite defaults)
+    // Note: CC effects like Stun and Sleep work here, however, they are better in onSelectAbility
+	virtual void onExecuteAbility(Ability* ability);
+    
     
 	~Status() {}
 	
@@ -264,6 +290,7 @@ class StatusStun : public Status
 private:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -272,7 +299,7 @@ private:
 	static const int MAX_GROUP_STACKS = 1;
 public:
     StatusStun(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Stun", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+        : Status(effect, "Stun", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
     {}
     
 	// Helper Functions
@@ -292,6 +319,7 @@ class StatusSleep : public Status
 private:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -300,7 +328,7 @@ private:
 	static const int MAX_GROUP_STACKS = 1;
 public:
     StatusSleep(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Sleep", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+        : Status(effect, "Sleep", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
     {}
     
 	// Helper Functions
@@ -321,6 +349,7 @@ class StatusFlee : public Status
 private:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -329,7 +358,7 @@ private:
 	static const int MAX_GROUP_STACKS = 1;
 public:
     StatusFlee(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Flee", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+        : Status(effect, "Flee", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
     {}
     
 	// Helper Functions
@@ -351,6 +380,7 @@ class StatusConfusion : public Status
 private:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
 	static const bool DISPELLABLE = true;    
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -359,7 +389,7 @@ private:
 	static const int MAX_GROUP_STACKS = 1;
 public:
     StatusConfusion(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Confusion", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+        : Status(effect, "Confusion", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
     {}
     
 	// Helper Functions
@@ -379,6 +409,7 @@ class StatusDemoralize : public Status
 private:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
 	static const bool DISPELLABLE = false;    
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -387,7 +418,7 @@ private:
 	static const int MAX_GROUP_STACKS = 1;
 public:
     StatusDemoralize(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Demoralize", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+        : Status(effect, "Demoralize", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
     {}
     
 	// Helper Functions
@@ -406,6 +437,7 @@ class StatusCharm : public Status
 private:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -414,7 +446,7 @@ private:
 	static const int MAX_GROUP_STACKS = 1;
 public:
     StatusCharm(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Charm", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+        : Status(effect, "Charm", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
     {}
     
 	// Helper Functions
@@ -435,6 +467,7 @@ class StatusPoison : public Status
 protected:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_DOT;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -448,7 +481,7 @@ protected:
 	int amount;
 public:
 	StatusPoison(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Poison", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "Poison", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -468,6 +501,7 @@ class StatusBleed : public Status
 protected:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_DOT;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -481,7 +515,7 @@ protected:
 	int amount;
 public:
 	StatusBleed(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Bleed", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "Bleed", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -501,6 +535,7 @@ class StatusBurn : public Status
 protected:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_DOT;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -514,7 +549,7 @@ protected:
 	int amount;
 public:
 	StatusBurn(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Burn", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "Burn", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -534,6 +569,7 @@ class StatusRegeneration : public Status
 protected:
 	static const StatusBenefit BENEFIT = BUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_DOT;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -547,7 +583,7 @@ protected:
 	int amount;
 public:
 	StatusRegeneration(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Regeneration", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "Regeneration", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -567,6 +603,7 @@ class StatusBlind : public Status
 protected:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -575,7 +612,7 @@ protected:
 	static const int MAX_GROUP_STACKS = 1;
 public:
 	StatusBlind(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Blind", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+        : Status(effect, "Blind", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
 	{}
 	
 	// Helper Functions
@@ -594,6 +631,7 @@ class StatusPolymorph : public Status
 private:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
@@ -602,7 +640,7 @@ private:
 	static const int MAX_GROUP_STACKS = 1;
 public:
     StatusPolymorph(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Polymorph", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+        : Status(effect, "Polymorph", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
     {}
     
 	// Helper Functions
@@ -623,6 +661,7 @@ class StatusMortality : public Status
 protected:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_STAT;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
@@ -636,7 +675,7 @@ protected:
 	int amount;
 public:
 	StatusMortality(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Mortality", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS), amount(AMOUNT)
+        : Status(effect, "Mortality", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -657,6 +696,7 @@ class StatusShield : public Status
 private:
 	static const StatusBenefit BENEFIT = BUFF;
 	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
@@ -672,7 +712,7 @@ private:
 	int amount;
 public:
 	StatusShield(Effect* effect, Unit* target)
-        : Status(effect, "Shield", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), limited(LIMITED), amount(AMOUNT)
+        : Status(effect, "Shield", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), limited(LIMITED), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -691,8 +731,9 @@ public:
 class StatusBlock : public Status
 {
 private:
-	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusBenefit BENEFIT = NEUTRAL;
 	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
 	static const bool DISPELLABLE = false;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
@@ -702,10 +743,9 @@ private:
 
 	static const int TIMER = 1;
 
-	int amount;
 public:
 	StatusBlock(Effect* effect, Unit* target)
-        : Status(effect, "Block", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
+        : Status(effect, "Block", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
 	{}
 	
 	// Helper Functions
@@ -725,6 +765,7 @@ class StatusTaunt : public Status
 protected:
 	static const StatusBenefit BENEFIT = NEUTRAL;
 	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
 	static const bool DISPELLABLE = false;
 	static const bool INSTANCING = false;
 	static const bool COLLECTIVE = false;
@@ -737,7 +778,7 @@ protected:
 	Unit* focus; 
 public:
 	StatusTaunt(Effect* effect, Unit* target, Unit* focus)
-        : Status(effect, "Taunt", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), focus(focus)
+        : Status(effect, "Taunt", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), focus(focus)
 	{
 	}
 	
@@ -758,6 +799,7 @@ class StatusBattleShout : public Status
 protected:
 	static const StatusBenefit BENEFIT = BUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_STAT;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
@@ -771,7 +813,7 @@ protected:
 	int amount;
 public:
 	StatusBattleShout(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "BattleShout", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "BattleShout", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{
 	}
 	
@@ -793,6 +835,7 @@ class StatusBarrier : public Status
 protected:
 	static const StatusBenefit BENEFIT = BUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_STAT;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
@@ -806,7 +849,7 @@ protected:
 	int amount;
 public:
 	StatusBarrier(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Barrier", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "Barrier", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{
 	}
 	
@@ -828,6 +871,7 @@ class StatusHaste : public Status
 protected:
 	static const StatusBenefit BENEFIT = BUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_STAT;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
@@ -841,7 +885,7 @@ protected:
 	int amount;
 public:
 	StatusHaste(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Haste", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "Haste", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{
 	}
 	
@@ -863,6 +907,7 @@ class StatusChill : public Status
 protected:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_STAT;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
@@ -876,7 +921,7 @@ protected:
 	int amount;
 public:
 	StatusChill(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Chill", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "Chill", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{
 	}
 	
@@ -898,6 +943,7 @@ class StatusScope : public Status
 protected:
 	static const StatusBenefit BENEFIT = BUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
@@ -911,7 +957,7 @@ protected:
 	int amount;
 public:
 	StatusScope(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Scope", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "Scope", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -930,6 +976,7 @@ class StatusTangleTrap : public Status
 protected:
 	static const StatusBenefit BENEFIT = BUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
 	static const bool DISPELLABLE = true;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
@@ -940,7 +987,7 @@ protected:
 	static const int TIMER = 1;
 public:
 	StatusTangleTrap(Effect* effect, Unit* target)
-        : Status(effect, "TangleTrap", target, BENEFIT, MATCH, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
+        : Status(effect, "TangleTrap", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
 	{}
 	
 	// Helper Functions
@@ -954,6 +1001,34 @@ public:
 	~StatusTangleTrap() {}
 };
 
+class StatusRally : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = NEUTRAL;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = false;
+	static const bool INSTANCING = false;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = false;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+public:
+	StatusRally(Effect* effect, Unit* target)
+    : Status(effect, "Rally", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, 0, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	
+	// Main Function
+	virtual int onMerge(Status* status);
+	virtual void onExecuteAbility(Ability* ability);
+    
+	~StatusRally() {}
+};
+
 class StatusGroup
 {
 private:
@@ -962,6 +1037,7 @@ private:
 	Unit* target;
 	StatusBenefit benefit;
 	StatusMatch match;
+	StatusCategory category;
     bool dispellable;
 	bool instancing;
 	bool collective;
@@ -972,10 +1048,10 @@ private:
 	int totalStacks;
 	bool executed;
 public:
-	StatusGroup(const string & subname, Unit* target = NULL, StatusBenefit benefit = NEUTRAL, StatusMatch match = STATUS_UNMATCHABLE, 
+	StatusGroup(const string & subname, Unit* target = NULL, StatusBenefit benefit = NEUTRAL, StatusMatch match = STATUS_UNMATCHABLE, StatusCategory category = STATUS_UNCATEGORIZED,
 		bool dispellable = true, bool instancing = false, bool collective = false, int maxSingleStacks = 0, int maxGroupStacks = 0)
 		: subname(subname), target(target), benefit(benefit), 
-		match(match), dispellable(dispellable), instancing(instancing), collective(collective), maxSingleStacks(maxSingleStacks), maxGroupStacks(maxGroupStacks),
+		match(match), category(category), dispellable(dispellable), instancing(instancing), collective(collective), maxSingleStacks(maxSingleStacks), maxGroupStacks(maxGroupStacks),
 		instances(), totalStacks(0), executed(false)
 	{}
 
@@ -985,6 +1061,14 @@ public:
 
 	StatusBenefit getBenefit() const {
 		return benefit;
+	}
+    
+	StatusMatch getMatch() const {
+		return match;
+	}
+    
+	StatusCategory getCategory() const {
+		return category;
 	}
 	
 	Unit* getTarget() const {

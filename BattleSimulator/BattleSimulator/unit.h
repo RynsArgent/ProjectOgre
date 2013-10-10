@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <vector>
 
+// This is an actual instance of a Character in the game
+
 class Unit
 {
 protected:
@@ -22,6 +24,7 @@ protected:
 	int currentMagicAttack;
 	
 	int currentPhysicalDefense;
+	int currentArcaneDefense;
 	int currentFireDefense;
 	int currentWaterDefense;
 	int currentEarthDefense;
@@ -115,7 +118,15 @@ public:
 	void setCurrentEarthDefense(int currentEarthDefense) {
 		this->currentEarthDefense = currentEarthDefense;
 	}
-
+    
+	int getCurrentArcaneDefense() const {
+		return currentArcaneDefense;
+	}
+    
+	void setCurrentArcaneDefense(int currentArcaneDefense) {
+		this->currentArcaneDefense = currentArcaneDefense;
+	}
+    
 	int getCurrentFireDefense() const {
 		return currentFireDefense;
 	}
@@ -349,6 +360,7 @@ public:
 	void activateOnPostBecomeTarget(Targeter* system);
 	void activateOnCheckpoint(Ability* ability);
     void activateOnSelectAbility(Unit* caster);
+    void activateOnExecuteAbility(Ability* ability);
 
 	// Process all Effects that have originated from this unit
 	void processEffects();

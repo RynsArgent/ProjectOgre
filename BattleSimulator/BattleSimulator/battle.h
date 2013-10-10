@@ -16,9 +16,13 @@ private:
 	int turnIndex;
 	vector<Unit*> unitOrder;
 
+    // This can be attached with Status and Effects without an attachment
+    // to a real existing unit. This allows for timers to run turn by turn
+    // and not by round by round.
 	Unit* globalTrigger;
-	Unit* mainUnit;
-	Unit* respondUnit;
+    
+	Unit* mainUnit; // Current unit's turn
+	Unit* respondUnit; // The unit responding to current unit
 	Ability* mainAbility;
 	Ability* respondAbility;
 

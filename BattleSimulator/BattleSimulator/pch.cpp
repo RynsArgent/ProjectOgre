@@ -7,9 +7,11 @@ Skill retrieveSkill(SkillSet set, ElementType element)
 	if (set == SPELL1) {
 		switch (element) {
 			case ELEMENT_NONE: 
-				return NO_STANDARD_SKILL;
+				return ARCANE_BOLT;
 			case ELEMENT_PHYSICAL: 
 				return NO_STANDARD_SKILL;
+			case ELEMENT_ARCANE:
+				return ARCANE_BOLT;
 			case ELEMENT_FIRE:
 				return FIREBALL;
 			case ELEMENT_WATER: 
@@ -47,6 +49,8 @@ int bound(int value, AttributeType type)
 		case VALUE_MAGIC_ATTACK:
 			return bound(value, 0, 999);
 		case VALUE_PHYSICAL_DEFENSE: 
+			return bound(value, 0, 999);
+		case VALUE_ARCANE_DEFENSE:
 			return bound(value, 0, 999);
 		case VALUE_FIRE_DEFENSE:
 			return bound(value, 0, 999);
@@ -87,6 +91,8 @@ string toStringDT(DamageType val)
             return "None";
         case DAMAGE_PHYSICAL:
             return "Physical";
+        case DAMAGE_ARCANE:
+            return "Arcane";
         case DAMAGE_FIRE:
             return "Fire";
         case DAMAGE_WATER:
@@ -110,6 +116,8 @@ string toStringET(ElementType val)
             return "None";
         case ELEMENT_PHYSICAL:
             return "Physical";
+        case ELEMENT_ARCANE:
+            return "Arcane";
         case ELEMENT_FIRE:
             return "Fire";
         case ELEMENT_WATER:
@@ -139,6 +147,8 @@ string toStringJob(JobType val)
             return "Mage";
         case JOB_WARRIOR:
             return "Warrior";
+        case JOB_KNIGHT:
+            return "Knight";
     }
 	return "";
 }

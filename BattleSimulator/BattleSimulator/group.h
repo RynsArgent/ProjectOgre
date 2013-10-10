@@ -8,6 +8,8 @@
 #include "formation.h"
 #include "gridpoint.h"
 
+// This is an actual instance of a Formation
+
 class Group
 {
 protected:
@@ -23,6 +25,7 @@ protected:
 	
 	Unit* leader;
 
+    vector<Unit*> units; // All units include dead and unavailable ones
 	vector<Unit*> dead; // Collects dead units in battle
 
 	void carryOverFormationStatistics();
@@ -45,6 +48,15 @@ public:
 		return height;
 	}
 
+    void addUnitToGroup(Unit* unit) {
+        units.push_back(unit);
+    }
+    
+    // Returns all Units dead or alive
+    vector<Unit*> getAllUnits() const {
+        return units;
+    }
+    
 	bool hasUnitAt(int x, int y) const {
 		return grid[x][y] != NULL && grid[x][y]->isAvailable();
 	}

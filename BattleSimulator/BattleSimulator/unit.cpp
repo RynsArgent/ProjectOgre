@@ -15,6 +15,7 @@ void Unit::carryOverCharacterStatistics()
 	currentMagicAttack = character->getBaseMagicAttack();
 	
 	currentPhysicalDefense = character->getBasePhysicalDefense();
+	currentArcaneDefense = character->getBaseArcaneDefense();
 	currentFireDefense = character->getBaseFireDefense();
 	currentWaterDefense = character->getBaseWaterDefense();
 	currentEarthDefense = character->getBaseEarthDefense();
@@ -303,6 +304,18 @@ void Unit::activateOnSelectAbility(Unit* caster)
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
 			instances[j]->onSelectAbility(caster);
+            currentStatus[i]->setExecuted(true);
+		}
+		currentStatus[i]->setExecuted(false);
+	}
+}
+
+void Unit::activateOnExecuteAbility(Ability* ability)
+{
+	for (int i = 0; i < currentStatus.size(); ++i) {
+		vector<Status*> instances = currentStatus[i]->getInstances();
+		for (int j = 0; j < instances.size(); ++j) {
+			instances[j]->onExecuteAbility(ability);
             currentStatus[i]->setExecuted(true);
 		}
 		currentStatus[i]->setExecuted(false);

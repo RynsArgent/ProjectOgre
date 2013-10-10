@@ -48,15 +48,15 @@ bool Status::canMergeWith(Status* rhs) const {
 	// Sanity check, if the match modes are not the same, there is a problem
 	if (match != rhs->match)
 		return false;
-
+    
 	// If the two Status effects are not even for the same target, do not merge.
 	if (!target || !rhs->target || target->getName() != rhs->target->getName())
 		return false;
 
 	if (this->hasExpired() || rhs->hasExpired())
 		return false;
-
-	switch (match) 
+    
+	switch (match)
 	{
 	case STATUS_UNMATCHABLE:
 		// Cannot not merge with any status
@@ -84,19 +84,29 @@ int Status::onMerge(Status* status)
 	int appliedStacks = 0;
 	grouplist = status->grouplist;
 	if (instancing) {
-		// Add a new instance
+		// Add a new instance,
+        // new stacks are determined by the StatusGroup class
+        // with MAX_GROUP_STACKS and with each own instance's
+        // MAX_SINGLE_STACKS
 		appliedStacks = grouplist->addInstance(this);
-		
-		// Refresh effect order of old status;
-		Effect* mergeEffect = status->getEffect();
-		mergeEffect->getTrigger()->eraseEffect(mergeEffect);
-		mergeEffect->getTrigger()->addEffect(mergeEffect);
 	} else {
-		// Merge the two instances
+		// Merge the two instances, there should always be
+        // one instance in the Status Group. the new stacks
+        // are determined by MAX_SINGLE_STACKS
 		appliedStacks = addStacks(status->getStacks());
+        
+        // Before killing the old status effect, we need
+        // to add the new Status instance so the Status
+        // Group object is not deallocated
+        grouplist->addInstance(this);
 		status->Status::onKill();
 	}
-
+    
+    // Refresh effect order of old status;
+    Effect* mergeEffect = status->getEffect();
+    mergeEffect->getTrigger()->eraseEffect(mergeEffect);
+    mergeEffect->getTrigger()->addEffect(mergeEffect);
+    
 	// Refresh the order
 	if (target != NULL && grouplist != NULL) {
 		target->eraseStatusGroup(grouplist);
@@ -108,7 +118,7 @@ int Status::onMerge(Status* status)
 
 void Status::onSpawn()
 {
-	grouplist = new StatusGroup(subname, target, benefit, match, dispellable, instancing, collective,
+	grouplist = new StatusGroup(subname, target, benefit, match, category, dispellable, instancing, collective,
 		this->getMaxSingleStacks(), this->getMaxGroupStacks());
 	grouplist->addInstance(this);
 	if (target != NULL && grouplist != NULL)
@@ -190,6 +200,10 @@ void Status::onCheckpoint(Ability* ability)
 }
 
 void Status::onSelectAbility(Unit* caster)
+{
+}
+
+void Status::onExecuteAbility(Ability* ability)
 {
 }
 
@@ -742,6 +756,9 @@ void StatusBattleShout::onKill()
 void StatusBarrier::modifyAttributes(int dvalue)
 {
 	int val;
+	val = target->getCurrentArcaneDefense();
+	val += dvalue;
+	target->setCurrentArcaneDefense(val);
 	val = target->getCurrentFireDefense();
 	val += dvalue;
 	target->setCurrentFireDefense(val);
@@ -883,6 +900,23 @@ void StatusTangleTrap::onPostBecomeTarget(Targeter* system)
 
 		onKill();
 	}
+}
+
+int StatusRally::onMerge(Status* status)
+{
+	int appliedStacks = Status::onMerge(status);
+	return appliedStacks;
+}
+
+void StatusRally::onExecuteAbility(Ability* ability)
+{
+	if (hasExpired())
+		return;
+	Status::onExecuteAbility(ability);
+    
+    ability->setRespondable(false);
+    ability->setInterruptible(false);
+    onKill();
 }
 
 void Effect::print(ostream& out) const

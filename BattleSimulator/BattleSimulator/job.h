@@ -29,6 +29,7 @@ protected:
 	int baseSpeed;
 	
 	int basePhysicalDefense;
+	int baseArcaneDefense;
 	int baseFireDefense;
 	int baseWaterDefense;
 	int baseEarthDefense;
@@ -49,7 +50,7 @@ public:
 	static Job* getJob(JobType jobType, Character* target);
 		
 	Job(Character* character, JobType type, int health = 0, int physicalAttack = 0, int magicAttack = 0, int speed = 0, 
-		int physicalDefense = 0, int fireDefense = 0, int waterDefense = 0, 
+		int physicalDefense = 0, int arcaneDefense = 0, int fireDefense = 0, int waterDefense = 0,
 		int earthDefense = 0, int iceDefense = 0, int lightningDefense = 0,
 		int upkeep = 0);
 
@@ -82,7 +83,15 @@ public:
 	void setBaseEarthDefense(int baseEarthDefense) {
 		this->baseEarthDefense = baseEarthDefense;
 	}
-
+    
+	int getBaseArcaneDefense() const {
+		return baseArcaneDefense;
+	}
+    
+	void setBaseArcaneDefense(int baseArcaneDefense) {
+		this->baseArcaneDefense = baseArcaneDefense;
+	}
+    
 	int getBaseFireDefense() const {
 		return baseFireDefense;
 	}
@@ -225,6 +234,7 @@ protected:
 	const static int BASE_SPEED = 3;
 	
 	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
 	const static int BASE_FIRE_DEFENSE = 0;
 	const static int BASE_WATER_DEFENSE = 0;
 	const static int BASE_EARTH_DEFENSE = 0;
@@ -236,7 +246,6 @@ protected:
 public:
 	Fighter(Character* character);
 	virtual void init();
-
 	~Fighter() {}
 };
 
@@ -251,6 +260,7 @@ protected:
 	const static int BASE_SPEED = 5;
 	
 	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
 	const static int BASE_FIRE_DEFENSE = 0;
 	const static int BASE_WATER_DEFENSE = 0;
 	const static int BASE_EARTH_DEFENSE = 0;
@@ -262,7 +272,6 @@ protected:
 public:
 	Scout(Character* character);
 	virtual void init();
-
 	~Scout() {}
 };
 
@@ -277,6 +286,7 @@ protected:
 	const static int BASE_SPEED = 1;
 	
 	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
 	const static int BASE_FIRE_DEFENSE = 0;
 	const static int BASE_WATER_DEFENSE = 0;
 	const static int BASE_EARTH_DEFENSE = 0;
@@ -288,7 +298,6 @@ protected:
 public:
 	Acolyte(Character* character);
 	virtual void init();
-
 	~Acolyte() {}
 };
 
@@ -303,6 +312,7 @@ protected:
 	const static int BASE_SPEED = 1;
 	
 	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
 	const static int BASE_FIRE_DEFENSE = 0;
 	const static int BASE_WATER_DEFENSE = 0;
 	const static int BASE_EARTH_DEFENSE = 0;
@@ -314,7 +324,6 @@ protected:
 public:
 	Mage(Character* character);
 	virtual void init();
-
 	~Mage() {}
 };
 
@@ -329,6 +338,7 @@ protected:
 	const static int BASE_SPEED = 3;
 	
 	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
 	const static int BASE_FIRE_DEFENSE = 0;
 	const static int BASE_WATER_DEFENSE = 0;
 	const static int BASE_EARTH_DEFENSE = 0;
@@ -340,8 +350,33 @@ protected:
 public:
 	Warrior(Character* character);
 	virtual void init();
-
 	~Warrior() {}
+};
+
+class Knight : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_KNIGHT;
+    
+	const static int BASE_HEALTH = 140;
+	const static int BASE_PHYSICAL_ATTACK = 30;
+	const static int BASE_MAGIC_ATTACK = 10;
+	const static int BASE_SPEED = 3;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	Knight(Character* character);
+	virtual void init();
+	~Knight() {}
 };
 
 #endif

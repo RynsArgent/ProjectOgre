@@ -7,6 +7,8 @@
 #include "gridpoint.h"
 #include <vector>
 
+// This is setup for organizing Characters without being instanced
+
 class Formation
 {
 private:

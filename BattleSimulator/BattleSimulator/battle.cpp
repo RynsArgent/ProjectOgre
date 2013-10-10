@@ -90,7 +90,7 @@ void Battle::executeTurn()
 	mainUnit->activateOnSelectAbility(mainUnit);
 	globalTrigger->activateOnSelectAbility(mainUnit);
 	mainUnit->setCurrentSkill(Ability::selectSkill(mainUnit));
-	
+    
 	// Process unit ongoing effects
 	mainUnit->processEffects();
 	globalTrigger->processEffects();
@@ -101,6 +101,8 @@ void Battle::executeTurn()
 	{
 		// Execute the ability
 		mainAbility = Ability::getAbility(mainUnit->getCurrentSkill());
+        mainUnit->activateOnExecuteAbility(mainAbility);
+        globalTrigger->activateOnExecuteAbility(mainAbility);
 		mainAbility->action(NULL, mainUnit, this);
 	}
 
@@ -129,7 +131,11 @@ void Battle::executeTurn()
 					respondUnit->setCurrentSkill(Ability::selectSkill(respondUnit));
 
 					respondAbility = Ability::getAbility(respondUnit->getCurrentSkill());
+                    
+                    // Check if the responding ability can respond to the previous.
 					if (Ability::isAbleToRespond(mainAbility, respondAbility) && respondAbility->getAbilityType() != ABILITY_NONE) {
+                        respondUnit->activateOnExecuteAbility(respondAbility);
+                        globalTrigger->activateOnExecuteAbility(respondAbility);
 						respondAbility->action(mainAbility, respondUnit, this);
 						responded = true;
 						break; // found ability to counter used to counter, no need to look further
@@ -179,6 +185,7 @@ void Battle::cleanupTurn()
 	// Clean up ended effects, this must be after deleted event stacks because the event stack
 	// references effect names
 	if (mainUnit) mainUnit->cleanEffects();
+	if (globalTrigger) globalTrigger->cleanEffects();
 }
 
 void Battle::addToEventStack(Event* value) {

@@ -9,6 +9,7 @@
 #include <string>
 
 // Tracks a result of an Action.
+// NOTE: We may need to add more Events such as Status Triggers
 struct Event
 {
 	static const int AUTO_HIT_CHANCE = 100;

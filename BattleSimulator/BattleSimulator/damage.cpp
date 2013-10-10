@@ -17,7 +17,10 @@ void DamageNode::modify(Unit* target)
 	{
 	case DAMAGE_PHYSICAL:
 		totalDamage -= bound(target->getCurrentPhysicalDefense(), VALUE_PHYSICAL_DEFENSE);
-		break;
+        break;
+    case DAMAGE_ARCANE:
+        totalDamage -= bound(target->getCurrentArcaneDefense(), VALUE_ARCANE_DEFENSE);
+        break;
 	case DAMAGE_FIRE:
 		totalDamage -= bound(target->getCurrentFireDefense(), VALUE_FIRE_DEFENSE);
 		break;

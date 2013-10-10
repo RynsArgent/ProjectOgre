@@ -26,7 +26,7 @@ struct Targeter
 
 	// Dynamic variables
 	bool provoked; // If set to true, that means the Action has processed long enough (before completion or cancellation)
-					// for the primary unit to respond
+					// for a primary unit in this targeting system to respond
 
 	Targeter(Action* ref, const vector<Unit*> & candidates, TargetGroup group, TargetType method, int numPrimaries)
 		: ref(ref), base(candidates), candidates(candidates), priorities(), chosen(), group(group), method(method), numPrimaries(numPrimaries), provoked(false)
@@ -40,7 +40,7 @@ struct Targeter
 		return ret;
 	}
 
-	// The static functions below are common in abilities and are provided for code reuse. (Search for front targets, back targets, ect)
+	// The static functions below are common in abilities and are provided for code reuse with a column range. (Search for front targets, back targets, ect)
 	static vector<Unit*> searchForFrontTargets(Unit* current, Battle* battle, Group* allyGroup, Group* enemyGroup, int startingAdjacencyRange, int rowRange);
 	
 	// n is the maximum number of targets to add to chosen list
