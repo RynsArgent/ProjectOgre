@@ -366,6 +366,14 @@ var createArmy = function (data) {
         
         getIcon : function () {
             return icon;
+        },
+        
+        setIcon : function (ico) {
+            icon = ico;
+        },
+        
+        setTilePosition : function (pos) {
+            tilePosition = pos;
         }
     }
 };
@@ -437,7 +445,7 @@ var createKingdom = function (data) {
 
 var createClient = function () {
     // Declare private variables and methods
-    var that, player, kingdoms = [],
+    var that, player, kingdoms = [], unitObjects = [],
         
         tick, update, animate, draw,
         
@@ -561,7 +569,7 @@ var createClient = function () {
 
             row, col,
             tilePositionX, tilePositionY,
-            tile, img;
+            tile, img, i;
             
         if ((startRow + rowCount) > map.numberOfRows) {
             rowCount = map.numberOfRows;
@@ -599,6 +607,18 @@ var createClient = function () {
                             64, 64);
                     }
                 }
+
+                for (i = 0; i < unitObjects.length; i += 1) {
+                    if (unitObjects[i].getTilePosition().row === row && 
+                        unitObjects[i].getTilePosition().col === col) {
+                        mainContext.drawImage(
+                            unitObjects[i].getIcon(),
+                            tilePositionX,
+                            tilePositionY,
+                            map.getTileWidthInPixels(),
+                            map.getTileHeightInPixels());
+                    }
+                }
             }
         }
     };  // end draw
@@ -619,10 +639,14 @@ var createClient = function () {
         onloggedin : function (data, callback) {
             console.log('gameClient : onloggedin');
             console.log(data);
-            var i, j, settlement, mycastle;
+            var i, j, settlement, mycastle, mykingdom;
             
             if (data.status === 'success') {
                 player.username = data.username;
+                mykingdom = createKingdom({
+                    player : player
+                });
+                kingdoms.push(mykingdom);
                 
                 // TODO: we need to also grab the map data from the server.
                 // but for now we are going to cheat and use a pre-defined
@@ -695,6 +719,7 @@ var createClient = function () {
                     // is this mine?
                     if (settlement.ownedBy() === player.username) {
                         mycastle = settlement;
+                        mykingdom.addHoldfast(mycastle);
                         // we want to set up the scroll values so that the user sees their castle immediately
                         // -- this involves the scroll.x and scroll.y -- look at the keyboard handler to see how panning works
                         // what we want to do is to center the home castle on the screen
@@ -788,6 +813,27 @@ var createClient = function () {
                                     jQuery('#menu_top').show('slide');
                                 }
                             });
+                        }
+                        
+                        if (context === 'Recruit') {
+                            (function () {
+                                var army, i, kingdom;
+                                    for (i = 0; i < kingdoms.length; i += 1) {
+                                        if (kingdoms[i].getPlayer() === player) {
+                                            kingdom = kingdoms[i];
+                                            break;
+                                        }
+                                    }
+                                
+                                army = createArmy({
+                                    kingdom : kingdom
+                                });
+                                
+                                army.setIcon(resources.getImageObject('ico_fighter'));
+                                army.setTilePosition(obj.containedInTiles()[0]);
+                                
+                                unitObjects.push(army);
+                            }());
                         }
                     }
                 });
