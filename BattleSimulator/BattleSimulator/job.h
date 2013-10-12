@@ -220,7 +220,7 @@ public:
 		return basicSkillIndex;
 	}
 
-	~Job() {}
+	virtual ~Job() {}
 };
 
 class Fighter : public Job
@@ -403,6 +403,32 @@ public:
 	Barbarian(Character* character);
 	virtual void init();
 	~Barbarian() {}
+};
+
+class Rogue : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_ROGUE;
+    
+	const static int BASE_HEALTH = 100;
+	const static int BASE_PHYSICAL_ATTACK = 40;
+	const static int BASE_MAGIC_ATTACK = 10;
+	const static int BASE_SPEED = 4;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	Rogue(Character* character);
+	virtual void init();
+	~Rogue() {}
 };
 
 #endif

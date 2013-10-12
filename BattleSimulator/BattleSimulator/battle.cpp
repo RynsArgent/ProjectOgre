@@ -19,7 +19,7 @@ bool compareSpeed(Unit* lhs, Unit* rhs) {
 Battle::Battle(int seed, Group* group1, Group* group2)
 	: seed(seed), group1(group1), group2(group2), roundNumber(0), turnIndex(-1), unitOrder(), 
 	globalTrigger(NULL), mainUnit(NULL), respondUnit(NULL), mainAbility(NULL), respondAbility(NULL),
-	eventStack(), cleanup(), isOver(false)
+	eventStack(), abilStack(), cleanup(), isOver(false)
 {
 	group1->turnToFace(FACING_FORWARD);
 	group2->turnToFace(FACING_FORWARD);
@@ -84,16 +84,20 @@ void Battle::executeTurn()
 
 	// Retrieve the next unit in the turn list
 	mainUnit = unitOrder[turnIndex];
-	mainUnit->setCurrentSkill(NO_STANDARD_SKILL);
-	mainUnit->setCurrentTier(2);
-	// Activate any status effects that occur on preparing for abilities
-	mainUnit->activateOnSelectAbility(mainUnit);
-	globalTrigger->activateOnSelectAbility(mainUnit);
-	mainUnit->setCurrentSkill(Ability::selectSkill(mainUnit));
-    
-	// Process unit ongoing effects
-	mainUnit->processEffects();
-	globalTrigger->processEffects();
+	
+	// Process unit beginning effects
+	mainUnit->processBeginEffects();
+	globalTrigger->processBeginEffects();
+
+	if (mainUnit->isAvailable())
+	{
+		mainUnit->setCurrentSkill(NO_STANDARD_SKILL);
+		mainUnit->setCurrentTier(2);
+		// Activate any status effects that occur on preparing for abilities
+		mainUnit->activateOnSelectAbility(mainUnit);
+		globalTrigger->activateOnSelectAbility(mainUnit);
+		mainUnit->setCurrentSkill(Ability::selectSkill(mainUnit));
+	}
 
     mainAbility = NULL;
 	// Perform the unit ability based on its position
@@ -101,8 +105,6 @@ void Battle::executeTurn()
 	{
 		// Execute the ability
 		mainAbility = Ability::getAbility(mainUnit->getCurrentSkill());
-        mainUnit->activateOnExecuteAbility(mainAbility);
-        globalTrigger->activateOnExecuteAbility(mainAbility);
 		mainAbility->action(NULL, mainUnit, this);
 	}
 
@@ -133,9 +135,7 @@ void Battle::executeTurn()
 					respondAbility = Ability::getAbility(respondUnit->getCurrentSkill());
                     
                     // Check if the responding ability can respond to the previous.
-					if (Ability::isAbleToRespond(mainAbility, respondAbility) && respondAbility->getAbilityType() != ABILITY_NONE) {
-                        respondUnit->activateOnExecuteAbility(respondAbility);
-                        globalTrigger->activateOnExecuteAbility(respondAbility);
+					if (Ability::isAbleToRespond(this, mainAbility, mainUnit, respondAbility, respondUnit) && respondAbility->getAbilityType() != ABILITY_NONE) {
 						respondAbility->action(mainAbility, respondUnit, this);
 						responded = true;
 						break; // found ability to counter used to counter, no need to look further
@@ -148,6 +148,10 @@ void Battle::executeTurn()
 			}
 		}
 	}
+	
+	// Process unit ending effects
+	mainUnit->processEndEffects();
+	globalTrigger->processEndEffects();
 
 	// Clean up any units that have died
 	group1->cleanDead();
@@ -155,7 +159,6 @@ void Battle::executeTurn()
 	// Determine whether an end result has occurred
 	if (!group1->groupIsAvailable() || !group2->groupIsAvailable())
 		isOver = true;
-    
 	
 	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
 	sort(unitOrder.begin() + turnIndex, unitOrder.end(), compareSpeed);
@@ -171,17 +174,22 @@ void Battle::cleanupTurn()
 	for (int i = 0; i < eventStack.size(); ++i)
 		delete eventStack[i];
 	eventStack.clear();
+	for (int i = 0; i < abilStack.size(); ++i)
+		delete abilStack[i];
+	abilStack.clear();
 	for (int i = 0; i < cleanup.size(); ++i)
 		delete cleanup[i];
 	cleanup.clear();
-    if (mainAbility) {
-		delete mainAbility;
-		mainAbility = NULL;
-	}
-	if (respondAbility) {
-		delete respondAbility;
-		respondAbility = NULL;
-	}
+//    if (mainAbility) {
+//		delete mainAbility;
+//		mainAbility = NULL;
+//	}
+//	if (respondAbility) {
+//		delete respondAbility;
+//		respondAbility = NULL;
+//	}
+	mainAbility = NULL;
+	respondAbility = NULL;
 	// Clean up ended effects, this must be after deleted event stacks because the event stack
 	// references effect names
 	if (mainUnit) mainUnit->cleanEffects();
@@ -190,6 +198,10 @@ void Battle::cleanupTurn()
 
 void Battle::addToEventStack(Event* value) {
     eventStack.push_back(value);
+}
+
+void Battle::addToAbilStack(Ability* value) {
+	abilStack.push_back(value);
 }
 
 void Battle::addToCleanup(StatusGroup* value) {

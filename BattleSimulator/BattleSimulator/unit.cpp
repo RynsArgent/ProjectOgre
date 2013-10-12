@@ -129,20 +129,7 @@ vector<StatusGroup*> Unit::getStatusBySubname(const string & subname) const
 	return ret;
 }
 
-// Unused..., onRound is triggered by effect list
-void Unit::activateOnRound()
-{
-	for (int i = 0; i < currentStatus.size(); ++i) {
-		vector<Status*> instances = currentStatus[i]->getInstances();
-		for (int j = 0; j < instances.size(); ++j) {
-			instances[j]->onRound();
-			currentStatus[i]->setExecuted(true);
-		}
-		currentStatus[i]->setExecuted(false);
-	}
-}
-
-void Unit::activateOnPrePerformHit(Event* evt)
+void Unit::activateOnPrePerformHit(EventAttack* evt)
 {
 	for (int i = 0; i < currentStatus.size(); ++i) {
 		vector<Status*> instances = currentStatus[i]->getInstances();
@@ -154,7 +141,7 @@ void Unit::activateOnPrePerformHit(Event* evt)
 	}
 }
 
-void Unit::activateOnPostPerformHit(Event* evt)
+void Unit::activateOnPostPerformHit(EventAttack* evt)
 {
 	for (int i = 0; i < currentStatus.size(); ++i) {
 		vector<Status*> instances = currentStatus[i]->getInstances();
@@ -166,24 +153,24 @@ void Unit::activateOnPostPerformHit(Event* evt)
 	}
 }
 
-void Unit::activateOnPreReactHit(Event* event)
+void Unit::activateOnPreReactHit(EventAttack* evt)
 {
 	for (int i = 0; i < currentStatus.size(); ++i) {
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
-			instances[j]->onPreReactHit(event);
+			instances[j]->onPreReactHit(evt);
 			currentStatus[i]->setExecuted(true);
 		}
 		currentStatus[i]->setExecuted(false);
 	}
 }
 
-void Unit::activateOnPostReactHit(Event* event)
+void Unit::activateOnPostReactHit(EventAttack* evt)
 {
 	for (int i = 0; i < currentStatus.size(); ++i) {
 		vector<Status*> instances = currentStatus[i]->getInstances();
 		for (int j = 0; j < instances.size(); ++j) {
-			instances[j]->onPostReactHit(event);
+			instances[j]->onPostReactHit(evt);
 			currentStatus[i]->setExecuted(true);
 		}
 		currentStatus[i]->setExecuted(false);
@@ -322,12 +309,26 @@ void Unit::activateOnExecuteAbility(Ability* ability)
 	}
 }
 
-void Unit::processEffects()
+void Unit::processBeginEffects()
 {
 	for (int i = 0; i < currentEffects.size(); ++i)
 	{
 		Effect* effect = currentEffects[i];
-		effect->processRound();
+		effect->processBeginRound();
+	}
+	for (int i = 0; i < currentEffects.size(); ++i)
+	{
+		Effect* effect = currentEffects[i];
+		effect->resetStatusFlag();
+	}
+}
+
+void Unit::processEndEffects()
+{
+	for (int i = 0; i < currentEffects.size(); ++i)
+	{
+		Effect* effect = currentEffects[i];
+		effect->processEndRound();
 	}
 	for (int i = 0; i < currentEffects.size(); ++i)
 	{

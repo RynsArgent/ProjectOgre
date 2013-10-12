@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include "character.h"
+#include "event.h"
 #include <cstdlib>
 #include <vector>
 
@@ -345,11 +346,10 @@ public:
 	vector<StatusGroup*> getDispellableStatusByBenefit(StatusBenefit benefit) const;
 	vector<StatusGroup*> getDispellableStatusBySubname(const string & subname) const;
 
-	void activateOnRound();
-	void activateOnPrePerformHit(Event* evt);
-	void activateOnPostPerformHit(Event* evt);
-	void activateOnPreReactHit(Event* evt);
-	void activateOnPostReactHit(Event* evt);
+	void activateOnPrePerformHit(EventAttack* evt);
+	void activateOnPostPerformHit(EventAttack* evt);
+	void activateOnPreReactHit(EventAttack* evt);
+	void activateOnPostReactHit(EventAttack* evt);
 	void activateOnPreApplyDamage(Damage* applier);
 	void activateOnPostApplyDamage(Damage* applier);
 	void activateOnPreReceiveDamage(Damage* applier);
@@ -363,7 +363,8 @@ public:
     void activateOnExecuteAbility(Ability* ability);
 
 	// Process all Effects that have originated from this unit
-	void processEffects();
+	void processBeginEffects();
+	void processEndEffects();
 
 	// Clean up all expired Effects
 	void cleanEffects();

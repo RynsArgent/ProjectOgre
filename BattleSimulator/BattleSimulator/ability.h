@@ -31,7 +31,7 @@ public:
 	static string toStringSkill(Skill skill);
 	static Ability* getAbility(Skill skill);
 	static Skill selectSkill(Unit* unit);
-	static bool isAbleToRespond(Ability* previous, Ability* current);
+	static bool isAbleToRespond(Battle* battle, Ability* previous, Unit* prevSource, Ability* current, Unit* curSource);
     
 	Ability(const string & name, ActionType act, AbilityType type, bool basic, bool respondable, bool interruptible, int cost)
     : Action(name, act, type), respondable(respondable), basic(basic), interruptible(interruptible), cost(cost), cancelled(false), targeters(), events()
@@ -319,8 +319,8 @@ class ArcaneBolt : public Ability
 {
 protected:
 	static const ActionType ACT = ABILITY_STANDARD;
-	static const AbilityType TYPE = ABILITY_SPECIAL;
-	static const bool BASIC = false;
+	static const AbilityType TYPE = ABILITY_ATTACK_MAGIC;
+	static const bool BASIC = true;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
@@ -334,7 +334,7 @@ class Fireball : public Ability
 {
 protected:
 	static const ActionType ACT = ABILITY_STANDARD;
-	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const AbilityType TYPE = ABILITY_ATTACK_MAGIC;
 	static const bool BASIC = false;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;
@@ -349,7 +349,7 @@ class WaterJet : public Ability
 {
 protected:
 	static const ActionType ACT = ABILITY_STANDARD;
-	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const AbilityType TYPE = ABILITY_ATTACK_MAGIC;
 	static const bool BASIC = false;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;
@@ -364,7 +364,7 @@ class AcidDart : public Ability
 {
 protected:
 	static const ActionType ACT = ABILITY_STANDARD;
-	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const AbilityType TYPE = ABILITY_ATTACK_MAGIC;
 	static const bool BASIC = false;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;
@@ -379,7 +379,7 @@ class FrostShard : public Ability
 {
 protected:
 	static const ActionType ACT = ABILITY_STANDARD;
-	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const AbilityType TYPE = ABILITY_ATTACK_MAGIC;
 	static const bool BASIC = false;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;
@@ -394,7 +394,7 @@ class LightningBolt : public Ability
 {
 protected:
 	static const ActionType ACT = ABILITY_STANDARD;
-	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const AbilityType TYPE = ABILITY_ATTACK_MAGIC;
 	static const bool BASIC = false;
 	static const bool RESPONDABLE = true;
 	static const bool INTERRUPTIBLE = true;
@@ -523,6 +523,66 @@ public:
 	PowerAttack() : Ability("Power Attack", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
 	~PowerAttack() {}
+};
+
+class Lasso : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_RANGE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Lasso() : Ability("Lasso", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Lasso() {}
+};
+
+class Needlelight : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Needlelight() : Ability("Needlelight", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Needlelight() {}
+};
+
+class Feint : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Feint() : Ability("Feint", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Feint() {}
+};
+
+class VenomousStrike : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	VenomousStrike() : Ability("Venomous Strike", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~VenomousStrike() {}
 };
 
 #endif

@@ -8,12 +8,22 @@
 #include "group.h"
 #include <cstdlib>
 
-Event::Event(Action* ref, const string & name, int chance, bool hiddenSource)
-	: ref(ref), name(name), chance(chance), success(true), desc(""), hiddenSource(hiddenSource)
+Event::Event(Action* ref, const string & name, EventType type, int chance, bool hiddenSource)
+	: ref(ref), name(name), type(type), chance(chance), success(true), desc(""), hiddenSource(hiddenSource)
 {
     if (ref) {
         ref->addEvent(this);
     }
+}
+
+bool Event::isAutomaticSuccess() const
+{
+	return chance > 100;
+}
+
+bool Event::isAutomaticFailure() const
+{
+	return chance < 0;
 }
 
 void Event::determineSuccess()
@@ -23,8 +33,22 @@ void Event::determineSuccess()
 	success = roll <= chance;
 }
 
+void Event::apply(Battle* battle)
+{
+	battle->addToEventStack(this);
+}
 
-void Event::determineSuccess(Unit* target)
+void Event::print(ostream& out) const
+{
+	if (!hiddenSource && ref != NULL && ref->getAction() != EFFECT_TRIGGER)
+		out << ref->getSource()->getName() << " readies " << name << endl;
+}
+
+Event::~Event()
+{
+}
+
+void EventAttack::determineSuccess(Unit* target)
 {
 	Unit* source = NULL;
 	if (!hiddenSource && ref != NULL)
@@ -53,25 +77,37 @@ void Event::determineSuccess(Unit* target)
 	}
 }
 
-void Event::apply(Battle* battle)
+void EventAttack::apply(Battle* battle)
 {
-	battle->addToEventStack(this);
+	Event::apply(battle);
+	determineSuccess(target);
 }
 
-void Event::print(ostream& out) const
+void EventAttack::print(ostream& out) const
 {
-	if (!hiddenSource && ref != NULL && ref->getAction() != EFFECT_TRIGGER)
-		out << ref->getSource()->getName() << " readies " << name << endl;
+	if (!hiddenSource && ref != NULL)
+		out << ref->getSource()->getName();
+	out << " attacks";
+	if (target)
+		out << " " << target->getName();
+	out << " with " << name;
+	
+	if (success) {
+		out << " and hits";
+	} else {
+		out << " and misses";
+	}
+	out << endl;
 }
 
-Event::~Event()
+EventAttack::~EventAttack()
 {
 }
 
 void EventCauseDamage::apply(Battle* battle)
 {
 	Event::apply(battle);
-	determineSuccess(damage->target);
+	determineSuccess();
 	if (success)
 		damage->apply(battle);
 }
@@ -82,11 +118,7 @@ void EventCauseDamage::print(ostream& out) const
 		out << ref->getSource()->getName() << "'s ";
 	out << name;
     if (damage) {
-		if (success) {
-			damage->print(out);
-		} else {
-			out << " misses " << damage->target->getName();
-		}
+		damage->print(out);
 	}
     out << endl;
 }
@@ -99,7 +131,7 @@ EventCauseDamage::~EventCauseDamage()
 void EventCauseStatus::apply(Battle* battle)
 {
 	Event::apply(battle);
-	determineSuccess(status->getTarget());
+	determineSuccess();
 	if (success)
 		status->getEffect()->addStatus(status);
 }
@@ -126,8 +158,13 @@ void EventCauseStatus::print(ostream& out) const
 
 EventCauseStatus::~EventCauseStatus()
 {
-    if (!success && status)
-        delete status; // Only delete status if not linked to an Effect
+	if (status)
+	{
+		if (!success)
+			delete status; // Only delete status if not linked to an Effect
+		else
+			status->setFresh(false);
+	}
 }
 
 void EventRemoveStatus::apply(Battle* battle)

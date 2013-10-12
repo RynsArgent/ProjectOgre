@@ -16,7 +16,7 @@ public:
 
 	~Setup() {}
 
-	friend class Renderer;
+	friend struct Renderer;
 };
 
 #endif

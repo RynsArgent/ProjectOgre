@@ -25,8 +25,9 @@ private:
 	Unit* respondUnit; // The unit responding to current unit
 	Ability* mainAbility;
 	Ability* respondAbility;
-
+	
 	vector<Event*> eventStack;
+	vector<Ability*> abilStack; // For cleanup
 	vector<StatusGroup*> cleanup;
 
 	bool isOver;
@@ -53,6 +54,7 @@ public:
 	void executeTurn();
 	void cleanupTurn();
     void addToEventStack(Event* value);
+    void addToAbilStack(Ability* value);
     void addToCleanup(StatusGroup* value);
 	int getWinner() const;
     
@@ -64,7 +66,7 @@ public:
 	~Battle();
 
 	friend class Ability;
-	friend class Renderer;
+	friend struct Renderer;
 };
 
 #endif

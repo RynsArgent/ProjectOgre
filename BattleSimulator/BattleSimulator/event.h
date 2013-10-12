@@ -12,7 +12,7 @@
 // NOTE: We may need to add more Events such as Status Triggers
 struct Event
 {
-	static const int AUTO_HIT_CHANCE = 100;
+	static const int AUTO_HIT_CHANCE = 101; // 101 used so that even blind effects will not reduce it
 	static const int MELEE_HIT_CHANCE = 100;
 	static const int RANGE_HIT_CHANCE = 100;
 	static const int MAGIC_HIT_CHANCE = 100;
@@ -25,6 +25,7 @@ struct Event
 
     Action* ref;
     string name;
+	EventType type;
 
 	int chance;
 	bool success;
@@ -33,24 +34,46 @@ struct Event
 
 	string desc;
 
-	Event(Action* ref, const string & name, int chance = 100, bool hiddenSource = false);
+	Event(Action* ref, const string & name, EventType type = EVENT_NONE, int chance = 100, bool hiddenSource = false);
 
     // Apply Event abilities if the odds were a success on a target Unit
+	bool isAutomaticSuccess() const;
+	bool isAutomaticFailure() const;
 	void determineSuccess();
-	void determineSuccess(Unit* target);
 
 	virtual void apply(Battle* battle);
     virtual void print(ostream& out) const;
     
-	~Event();
+	virtual ~Event();
+};
+
+struct EventAttack : public Event
+{
+	static const EventType TYPE = EVENT_ATTACK;
+
+	AbilityType attack; // This is separate from Ability Class for special cases (look at Feint)
+	Unit* target;
+	
+	EventAttack(Action* ref, const string & name, int chance = 100, AbilityType attack = ABILITY_NONE, Unit* target = NULL, bool hiddenSource = false)
+		: Event(ref, name, TYPE, chance, hiddenSource), attack(attack), target(target)
+	{}
+	
+	void determineSuccess(Unit* target);
+
+	virtual void apply(Battle* battle);
+    virtual void print(ostream& out) const;
+
+	~EventAttack();
 };
 
 struct EventCauseDamage : public Event
 {
+	static const EventType TYPE = EVENT_CAUSE_DAMAGE;
+
 	Damage* damage;
 
 	EventCauseDamage(Action* ref, const string & name, int chance = 100, Damage* damage = NULL, bool hiddenSource = false)
-		: Event(ref, name, chance, hiddenSource), damage(damage)
+		: Event(ref, name, TYPE, chance, hiddenSource), damage(damage)
 	{}
 	
 	virtual void apply(Battle* battle);
@@ -61,10 +84,12 @@ struct EventCauseDamage : public Event
 
 struct EventCauseStatus : public Event
 {
+	static const EventType TYPE = EVENT_CAUSE_STATUS;
+
 	Status* status;
 
 	EventCauseStatus(Action* ref, const string & name, int chance = 100, Status* status = NULL, bool hiddenSource = false)
-		: Event(ref, name, chance, hiddenSource), status(status)
+		: Event(ref, name, TYPE, chance, hiddenSource), status(status)
 	{}
 	
 	virtual void apply(Battle* battle);
@@ -75,13 +100,15 @@ struct EventCauseStatus : public Event
 
 struct EventRemoveStatus : public Event
 {
+	static const EventType TYPE = EVENT_REMOVE_STATUS;
+
 	Unit* target;
 	StatusBenefit removingType;
 
 	StatusGroup* removedResult;
 	
 	EventRemoveStatus(Action* ref, const string & name, int chance = 100, Unit* target = NULL, StatusBenefit removingType = DEBUFF, bool hiddenSource = false)
-		: Event(ref, name, chance, hiddenSource), target(target), removingType(removingType), removedResult(NULL)
+		: Event(ref, name, TYPE, chance, hiddenSource), target(target), removingType(removingType), removedResult(NULL)
 	{}
 
 	virtual void apply(Battle* battle);
@@ -92,11 +119,13 @@ struct EventRemoveStatus : public Event
 
 struct EventReposition : public Event
 {
+	static const EventType TYPE = EVENT_REPOSITION;
+
 	Unit* target;
 	GridPoint destination;
 
 	EventReposition(Action* ref, const string & name, int chance = 100, Unit* target = NULL, const GridPoint & destination = GridPoint(), bool hiddenSource = false)
-		: Event(ref, name, chance, hiddenSource), target(target), destination(destination)
+		: Event(ref, name, TYPE, chance, hiddenSource), target(target), destination(destination)
 	{}
 	
 	virtual void apply(Battle* battle);

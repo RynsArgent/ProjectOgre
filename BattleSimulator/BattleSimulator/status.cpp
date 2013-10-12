@@ -141,25 +141,29 @@ void Status::onKill()
 	setCleaning();
 }
 
-void Status::onRound() 
+void Status::onBeginRound() 
+{
+}
+
+void Status::onEndRound() 
 {	
-	if (timed && timer > 0)
+	if (!fresh && timed && timer > 0)
 		--timer;
 }
 
-void Status::onPrePerformHit(Event* evt)
+void Status::onPrePerformHit(EventAttack* evt)
 {
 }
 
-void Status::onPostPerformHit(Event* evt)
+void Status::onPostPerformHit(EventAttack* evt)
 {
 }
 
-void Status::onPreReactHit(Event* evt)
+void Status::onPreReactHit(EventAttack* evt)
 {
 }
 
-void Status::onPostReactHit(Event* evt)
+void Status::onPostReactHit(EventAttack* evt)
 {
 }
 
@@ -207,13 +211,6 @@ void Status::onExecuteAbility(Ability* ability)
 {
 }
 
-int StatusStun::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	timer += status->getTimer();
-	return appliedStacks;
-}
-
 void StatusStun::onCheckpoint(Ability* ability)
 {
     if (hasExpired())
@@ -232,13 +229,6 @@ void StatusStun::onSelectAbility(Unit* caster)
 
 	if (caster->getCurrentTier() > 0)
 		caster->setCurrentTier(0);
-}
-
-int StatusSleep::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	timer += status->getTimer();
-	return appliedStacks;
 }
 
 void StatusSleep::onPostReceiveDamage(Damage* applier)
@@ -268,14 +258,6 @@ void StatusSleep::onSelectAbility(Unit* caster)
 
 	if (caster->getCurrentTier() > 0)
 		caster->setCurrentTier(0);
-}
-
-
-int StatusFlee::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	timer += status->getTimer();
-	return appliedStacks;
 }
 
 void StatusFlee::onSpawn()
@@ -332,13 +314,6 @@ void StatusFlee::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(0);
 }
 
-int StatusConfusion::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	timer += status->getTimer();
-	return appliedStacks;
-}
-
 void StatusConfusion::onPreFindTarget(Targeter* system)
 {
     if (hasExpired())
@@ -372,13 +347,6 @@ void StatusConfusion::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(1);
 }
 
-int StatusDemoralize::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	timer += status->getTimer();
-	return appliedStacks;
-}
-
 void StatusDemoralize::onSelectAbility(Unit* caster)
 {
     if (hasExpired())
@@ -387,13 +355,6 @@ void StatusDemoralize::onSelectAbility(Unit* caster)
 	
 	if (caster->getCurrentTier() > 1)
 		caster->setCurrentTier(1);
-}
-
-int StatusCharm::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	timer += status->getTimer();
-	return appliedStacks;
 }
 
 void StatusCharm::onPostReceiveDamage(Damage* applier)
@@ -460,11 +421,11 @@ void StatusPoison::applyTimedDamage()
      */
 }
 
-void StatusPoison::onRound()
+void StatusPoison::onBeginRound()
 {
 	if (hasExpired())
 		return;
-	Status::onRound();
+	Status::onBeginRound();
 
 	if (target->isAlive() && (!collective || !grouplist->isExecuted()))
 		applyTimedDamage();
@@ -484,11 +445,11 @@ void StatusBleed::applyTimedDamage()
 	log->apply(effect->getBattle());
 }
 
-void StatusBleed::onRound()
+void StatusBleed::onBeginRound()
 {
 	if (hasExpired())
 		return;
-	Status::onRound();
+	Status::onBeginRound();
     
 	if (target->isAlive() && (!collective || !grouplist->isExecuted()))
 		applyTimedDamage();
@@ -496,7 +457,8 @@ void StatusBleed::onRound()
 
 int StatusBurn::onMerge(Status* status)
 {
-	int appliedStacks = Status::onMerge(status);
+	timer += status->getTimer();
+	int appliedStacks = Status::onMerge(status); // Order matters, timer is set to 0 here
 	return appliedStacks;
 }
 
@@ -508,11 +470,11 @@ void StatusBurn::applyTimedDamage()
 	log->apply(effect->getBattle());
 }
 
-void StatusBurn::onRound()
+void StatusBurn::onBeginRound()
 {
 	if (hasExpired())
 		return;
-	Status::onRound();
+	Status::onBeginRound();
     
 	if (target->isAlive() && (!collective || !grouplist->isExecuted()))
 		applyTimedDamage();
@@ -534,30 +496,14 @@ void StatusRegeneration::applyTimedHeal()
 	log->apply(effect->getBattle());
 }
 
-void StatusRegeneration::onRound()
+void StatusRegeneration::onBeginRound()
 {
 	if (hasExpired())
 		return;
-	Status::onRound();
+	Status::onBeginRound();
     
 	if (target->isAlive() && (!collective || !grouplist->isExecuted()))
 		applyTimedHeal();
-}
-
-int StatusPolymorph::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	timer += status->getTimer();
-	return appliedStacks;
-}
-
-void StatusPolymorph::onPostReceiveDamage(Damage* applier)
-{
-    if (hasExpired())
-        return;
-    
-    if (applier->final > 0)
-        onKill();
 }
 
 void StatusPolymorph::onCheckpoint(Ability* ability)
@@ -580,27 +526,19 @@ void StatusPolymorph::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(0);
 }
 
-int StatusBlind::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	timer += status->getTimer();
-	return appliedStacks;
-}
-
-void StatusBlind::onPrePerformHit(Event* evt)
+void StatusBlind::onPrePerformHit(EventAttack* evt)
 {
 	if (hasExpired())
 		return;
 	Status::onPrePerformHit(evt);
 
-	Action* act = evt->ref;
-	if (act != NULL) {
-		AbilityType type = act->getAbilityType();
-		if (type == ABILITY_ATTACK_MELEE ||
-			type == ABILITY_ATTACK_RANGE)
-		{
-			evt->chance -= 50;
-		}
+	AbilityType atkType = evt->attack;
+	if (!evt->isAutomaticSuccess() &&
+		(atkType == ABILITY_ATTACK_MELEE ||
+		 atkType == ABILITY_ATTACK_RANGE ||
+		 atkType == ABILITY_ATTACK_MAGIC))
+	{
+		evt->chance -= 50;
 	}
 }
 
@@ -645,7 +583,7 @@ void StatusShield::applyDamagePrevention(Damage* applier)
 { 
 	int currentPrevention = useStacks() * amount;
 	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
-		if (n->type == DAMAGE_PHYSICAL) {
+		if (n->type == DAMAGE_PHYSICAL && !n->pierce) {
 			int startingDamage = n->amount;
 			int resultantDamage = startingDamage - currentPrevention;
 			bound(resultantDamage, VALUE_DAMAGE);
@@ -679,7 +617,7 @@ int StatusBlock::onMerge(Status* status)
 void StatusBlock::applyDamageReduction(Damage* applier)
 { 
 	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
-		if (n->type == DAMAGE_PHYSICAL) {
+		if (n->type == DAMAGE_PHYSICAL && !n->pierce) {
 			int startingDamage = n->amount;
 			int resultantDamage = startingDamage / 2;
 			bound(resultantDamage, VALUE_DAMAGE);
@@ -701,6 +639,7 @@ void StatusBlock::onPreReceiveDamage(Damage* applier)
 		source->getGridY() < target->getGridY()) // target is behind blocker
 	{
 		applyDamageReduction(applier);
+		onKill();
 	}
 }
 
@@ -881,6 +820,38 @@ int StatusTangleTrap::onMerge(Status* status)
 	return appliedStacks;
 }
 
+void StatusTangleTrap::onPreReactHit(EventAttack* evt)
+{
+	if (hasExpired())
+		return;
+	Status::onPreReactHit(evt);
+	
+	AbilityType atkType = evt->attack;
+	if (atkType == ABILITY_ATTACK_MELEE && evt->ref)
+	{
+		Damage* damage = new Damage(NULL, target, useStacks() * AMOUNT, DAMAGE_MEDIUM, DAMAGE_EARTH);
+	
+		Event* log = new EventCauseDamage(this->effect, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage, true);
+		log->apply(effect->getBattle());
+
+		if (damage->final > 0)
+		{
+			Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), evt->ref->getSource());
+			Status* status = new StatusStun(neffect, evt->ref->getSource(), 1);
+		
+			Event* log = new EventCauseStatus(effect, effect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+			log->apply(effect->getBattle());
+
+			if (log->success)
+				evt->chance = -1; // Auto fail if stun succeeded
+
+			neffect->applyEffect();
+		}
+		onKill();
+	}
+
+}
+/*
 void StatusTangleTrap::onPostBecomeTarget(Targeter* system)
 {
 	if (hasExpired())
@@ -890,33 +861,61 @@ void StatusTangleTrap::onPostBecomeTarget(Targeter* system)
 	if (system->ref && system->ref->getSource() &&
 		system->ref->getAbilityType() == ABILITY_ATTACK_MELEE)
 	{
-		Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), system->ref->getSource());
-		Status* status = new StatusStun(neffect, system->ref->getSource(), 1);
-		
-		Event* log = new EventCauseStatus(effect, effect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+		Damage* damage = new Damage(NULL, target, useStacks() * AMOUNT, DAMAGE_MEDIUM, DAMAGE_EARTH);
+	
+		Event* log = new EventCauseDamage(this->effect, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage, true);
 		log->apply(effect->getBattle());
 
-		neffect->applyEffect();
+		if (damage->final > 0)
+		{
+			Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), system->ref->getSource());
+			Status* status = new StatusStun(neffect, system->ref->getSource(), 1);
+		
+			Event* log = new EventCauseStatus(effect, effect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+			log->apply(effect->getBattle());
 
+			neffect->applyEffect();
+		}
 		onKill();
 	}
 }
-
-int StatusRally::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	return appliedStacks;
-}
-
+*/
 void StatusRally::onExecuteAbility(Ability* ability)
 {
 	if (hasExpired())
 		return;
 	Status::onExecuteAbility(ability);
     
-    ability->setRespondable(false);
-    ability->setInterruptible(false);
-    onKill();
+	Unit* source = effect->getSource();
+	Unit* caster = ability->getSource();
+	if (source && caster && source->getGrid() == caster->getGrid()) // Same group
+	{
+		ability->setRespondable(false);
+		ability->setInterruptible(false);
+		onKill();
+	}
+}
+
+void StatusFeint::onExecuteAbility(Ability* ability)
+{
+	if (hasExpired())
+		return;
+	Status::onExecuteAbility(ability);
+	
+	Unit* source = effect->getSource();
+	Unit* caster = ability->getSource();
+	if (source && caster && source->getGrid() != caster->getGrid()) // Not same group
+	{
+		if (source->isAvailable() && Targeter::canReach(source, caster, effect->getBattle(), 1, 1))
+		{
+			Ability* response = NULL;
+			// Execute the ability
+			response = Ability::getAbility(FEINT);
+			response->action(ability, source, effect->getBattle());
+
+			onKill();
+		}
+	}
 }
 
 void Effect::print(ostream& out) const

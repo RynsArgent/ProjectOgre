@@ -13,10 +13,11 @@ struct DamageNode
 	int final;
 	DamageRating rating;
 	DamageType type;
+	bool pierce; // ignore damage reduction
 
 	DamageNode* next;
 	
-	DamageNode(int amount, DamageRating rating, DamageType type = DAMAGE_TYPELESS, DamageNode* next = NULL);
+	DamageNode(int amount, DamageRating rating, DamageType type = DAMAGE_TYPELESS, bool pierce = false, DamageNode* next = NULL);
 
 	void modify(Unit* target);
 	int apply(Unit* target);
@@ -49,13 +50,13 @@ struct Damage
 	int start; // initial damage
 	int final; // Final calculated damage
 
-	Damage(Action* aref, Unit* target, int amount, DamageRating rating, DamageType type = DAMAGE_TYPELESS) 
-		: action(aref), target(target), head(new DamageNode(amount, rating, type)), tail(head), size(1), start(amount), final(0)
+	Damage(Action* aref, Unit* target, int amount, DamageRating rating, DamageType type = DAMAGE_TYPELESS, bool pierce = false) 
+		: action(aref), target(target), head(new DamageNode(amount, rating, type, pierce)), tail(head), size(1), start(amount), final(0)
 	{
     }
     
-	void add(int amount, DamageRating rating, DamageType type = DAMAGE_TYPELESS) {
-		tail->next = new DamageNode(amount, rating, type);
+	void add(int amount, DamageRating rating, DamageType type = DAMAGE_TYPELESS, bool pierce = false) {
+		tail->next = new DamageNode(amount, rating, type, pierce);
 		tail = tail->next;
 		start += amount;
 		++size;

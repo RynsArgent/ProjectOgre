@@ -39,8 +39,11 @@ bool compareNumDebuffsMore(Unit* lhs, Unit* rhs) {
 		(lhs->getNumDebuffs() == rhs->getNumDebuffs() && lhs->getRValue() > rhs->getRValue());
 }
 
-
-
+// This scans for all possible targets. In a valid battle, it should always return at least 1 unit.
+// It first starts usually at a column range of 1 (startingAdjacencyRange). 
+// Row range is used as the maximum number of units to count starting from the front.
+// If no units exist, the column range extends 1 step further and scans the new rows for units again.
+// This repeats until maximum column range.
 vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Battle* battle, Group* allyGroup, Group* enemyGroup, int startingAdjacencyRange, int rowRange)
 {
 	int adjacencyRange = startingAdjacencyRange;
@@ -60,6 +63,19 @@ vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Battle* battle, Gro
 			targets.push_back(uRight[i]);
 	} 
 	return targets;
+}
+
+bool Targeter::canReach(Unit* current, Unit* target, Battle* battle, int startingAdjacencyRange, int rowRange)
+{
+	if (!current || !target)
+		return false;
+	if (current->getGrid() == target->getGrid()) // If on same group, it is always reachable
+		return true;
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+
+	vector<Unit*> reachables = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, startingAdjacencyRange, rowRange);
+	return find(reachables.begin(), reachables.end(), target) != reachables.end();
 }
 
 void Targeter::set(Battle* battle, int n) 

@@ -6,8 +6,8 @@
 #include "battle.h"
 #include <algorithm>
 
-DamageNode::DamageNode(int amount, DamageRating rating, DamageType type, DamageNode* next)
-	: start(Damage::getDamageValue(rating, amount)), amount(start), final(0), rating(rating), type(type), next(next)
+DamageNode::DamageNode(int amount, DamageRating rating, DamageType type, bool pierce, DamageNode* next)
+	: start(Damage::getDamageValue(rating, amount)), amount(start), final(0), rating(rating), type(type), pierce(pierce), next(next)
 {}
 
 void DamageNode::modify(Unit* target)
@@ -42,7 +42,8 @@ void DamageNode::modify(Unit* target)
 		break;
 	}
 
-	amount = totalDamage;
+	if (!pierce || totalDamage > amount)
+		amount = totalDamage;
 	if (next)
 		next->modify(target);
 }

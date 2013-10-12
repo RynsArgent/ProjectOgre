@@ -32,7 +32,7 @@ struct InfoBox
 	InfoBox() : box(), highlighted() {}
 	void renderOutline(const Color & col) const;
 	virtual void render(Renderer* renderer) const; 
-	~InfoBox() {}
+	virtual ~InfoBox() {}
 };
 
 struct StatusInfoBox : public InfoBox

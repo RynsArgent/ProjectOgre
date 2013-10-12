@@ -37,7 +37,7 @@ public:
 
     virtual void print(ostream& out) const = 0;
     
-    ~Action();
+    virtual ~Action();
 };
 
 #endif

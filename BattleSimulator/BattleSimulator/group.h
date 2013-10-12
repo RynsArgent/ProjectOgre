@@ -107,6 +107,7 @@ public:
 	
 	bool groupIsAvailable() const;
 	bool withinColumnRange(int x, int xmin, int xmax) const;
+	bool enemyWithinRange(int x, int y, Unit* enemy, Group* group, int rowRange, int columnRange) const;
     
 	// NOTE: The functions below returns only available units
 	// Returns units of this group based on function request

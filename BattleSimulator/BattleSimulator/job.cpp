@@ -22,6 +22,8 @@ Job* Job::getJob(JobType job, Character* target)
             return new Knight(target);
     case JOB_BARBARIAN:
             return new Barbarian(target);
+    case JOB_ROGUE:
+            return new Rogue(target);
 	default:
 		return NULL;
 	}
@@ -83,7 +85,7 @@ void Scout::init()
 	backSkills.push_back(SHOOT);
 	backSkills.push_back(SCOPE);
 	midSkills.push_back(SHOOT);
-	midSkills.push_back(TANGLE_TRAP);
+	midSkills.push_back(SCOPE);
 	frontSkills.push_back(SHOOT);
 	frontSkills.push_back(TANGLE_TRAP);
 	basicSkills.push_back(SHOOT);
@@ -192,4 +194,25 @@ void Barbarian::init()
 	frontSkills.push_back(STRIKE);
 	frontSkills.push_back(DEMORALIZING_SHOUT);
 	basicSkills.push_back(STRIKE);
+}
+
+Rogue::Rogue(Character* character)
+: Job(character, JOB_TYPE, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
+      BASE_PHYSICAL_DEFENSE, BASE_ARCANE_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+      BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
+      BASE_UPKEEP)
+{
+	init();
+}
+
+void Rogue::init()
+{
+	Job::init();
+	backSkills.push_back(FEINT);
+	backSkills.push_back(VENOMOUS_STRIKE);
+	midSkills.push_back(FEINT);
+	midSkills.push_back(VENOMOUS_STRIKE);
+	frontSkills.push_back(STRIKE);
+	frontSkills.push_back(LASSO);
+	basicSkills.push_back(NEEDLELIGHT);
 }

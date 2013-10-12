@@ -101,6 +101,7 @@ bool Group::groupIsAvailable() const
 	return units.size() > 0;
 }
 
+// returns true if x is within min and max for this group
 bool Group::withinColumnRange(int x, int xmin, int xmax) const
 {
 	return xmin <= x && x <= xmax;

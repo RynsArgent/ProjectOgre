@@ -78,13 +78,14 @@ protected:
 	int timer;
 
 	// Used for efficient memory usage
+	bool fresh;
 	Status* merger;
 	StatusGroup* grouplist;
 	bool clean;
 public:
 	Status(Effect* effect, const string & subname, Unit* target = NULL, StatusBenefit benefit = NEUTRAL, StatusMatch match = STATUS_UNMATCHABLE, StatusCategory category = STATUS_UNCATEGORIZED, bool dispellable = true, bool instancing = false, bool collective = false, bool timed = false, int timer = 0, int stacks = 0)
 		: effect(effect), subname(subname), target(target), benefit(benefit), match(match), category(category),
-		dispellable(dispellable), instancing(instancing), collective(collective), stacks(stacks), timed(timed), timer(timer), merger(NULL), grouplist(NULL), clean(false)
+		dispellable(dispellable), instancing(instancing), collective(collective), stacks(stacks), timed(timed), timer(timer), fresh(true), merger(NULL), grouplist(NULL), clean(false)
 	{
 	}
 
@@ -119,7 +120,7 @@ public:
 	int getStacks() const {
 		return stacks;
 	}
-	
+
 	bool isInstancing() const {
 		return instancing;
 	}
@@ -153,6 +154,14 @@ public:
 		return timer;
 	}
     
+	void setFresh(bool value) {
+		fresh = value;
+	}
+
+	bool isFresh() const {
+		return fresh;
+	}
+
 	void setMerger(Status* value) {
 		merger = value;
 	}
@@ -209,25 +218,27 @@ public:
 	virtual void onSpawn();
 	virtual void onKill();
     
-	// This deals with Status Effects that occur every round. 
+	// This deals with Status Effects that occur every round. If attached to globalTrigger, it is every turn.
 	// (i.e. Poison/Burn/Bleed)
-	virtual void onRound();
+	// (i.e. Timed status update at the end of turns)
+	virtual void onBeginRound();
+	virtual void onEndRound();
     
 	// This deals with events that can have a roller's chance to succeed or fail
 	// (i.e. Blind will affect the chances of success for an attack)
-	virtual void onPrePerformHit(Event* evt);
+	virtual void onPrePerformHit(EventAttack* evt);
 
 	// This deals with events that have already determined a roller's chance of success or fail
 	// (i.e. Convert a miss for an attack to an auto-hit)
-	virtual void onPostPerformHit(Event* evt);
+	virtual void onPostPerformHit(EventAttack* evt);
 	
 	// This deals with events that can have a target be victim to a chance of success or fail
 	// (i.e. Evasion increases chance of failure for an attack to succeed on self)
-	virtual void onPreReactHit(Event* evt);
+	virtual void onPreReactHit(EventAttack* evt);
 	
 	// This deals with events that have already a target be victim to a chance of success or fail
 	// (i.e. Convert a successful hit to an auto-miss)
-	virtual void onPostReactHit(Event* evt);
+	virtual void onPostReactHit(EventAttack* evt);
 
 	// This deals with the triggers after damage is applied. 
 	// (i.e. Extra damage against beasts)
@@ -280,7 +291,7 @@ public:
 	virtual void onExecuteAbility(Ability* ability);
     
     
-	~Status() {}
+	virtual ~Status() {}
 	
 	friend class Effect;
 };
@@ -291,7 +302,7 @@ private:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
 	static const StatusCategory CATEGORY = STATUS_CC;
-	static const bool DISPELLABLE = true;
+	static const bool DISPELLABLE = false;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
 	static const bool TIMED = true;
@@ -307,7 +318,6 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onCheckpoint(Ability* ability);
     virtual void onSelectAbility(Unit* caster);
 	
@@ -336,7 +346,6 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onCheckpoint(Ability* ability);
     virtual void onSelectAbility(Unit* caster);
@@ -350,7 +359,7 @@ private:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
 	static const StatusCategory CATEGORY = STATUS_CC;
-	static const bool DISPELLABLE = true;
+	static const bool DISPELLABLE = false;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
 	static const bool TIMED = true;
@@ -366,7 +375,6 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onSpawn();
 	virtual void onCheckpoint(Ability* ability);
     virtual void onKill();
@@ -397,7 +405,6 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onPreFindTarget(Targeter* system);
     virtual void onSelectAbility(Unit* caster);
 
@@ -426,7 +433,6 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 
 	// Main Function
-	virtual int onMerge(Status* status);
     virtual void onSelectAbility(Unit* caster);
 
     ~StatusDemoralize() {}
@@ -454,7 +460,6 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onPreFindTarget(Targeter* system);
     virtual void onSelectAbility(Unit* caster);
@@ -472,10 +477,10 @@ protected:
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
 	static const bool TIMED = true;
-	static const int MAX_SINGLE_STACKS = 5;
-	static const int MAX_GROUP_STACKS = 5;
+	static const int MAX_SINGLE_STACKS = 20;
+	static const int MAX_GROUP_STACKS = 20;
 
-	static const int TIMER = 3;
+	static const int TIMER = 5;
 	static const int AMOUNT = 5;
 
 	int amount;
@@ -491,7 +496,7 @@ public:
 	
 	// Main Function
 	virtual int onMerge(Status* status);
-	virtual void onRound();
+	virtual void onBeginRound();
 
 	~StatusPoison() {}
 };
@@ -502,14 +507,14 @@ protected:
 	static const StatusBenefit BENEFIT = DEBUFF;
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
 	static const StatusCategory CATEGORY = STATUS_DOT;
-	static const bool DISPELLABLE = true;
+	static const bool DISPELLABLE = false;
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = true;
 	static const bool TIMED = true;
 	static const int MAX_SINGLE_STACKS = 5;
 	static const int MAX_GROUP_STACKS = 5;
 	
-	static const int TIMER = 2;
+	static const int TIMER = 3;
 	static const int AMOUNT = 10;
 
 	int amount;
@@ -525,7 +530,7 @@ public:
 	
 	// Main Function
 	virtual int onMerge(Status* status);
-	virtual void onRound();
+	virtual void onBeginRound();
     
 	~StatusBleed() {}
 };
@@ -537,19 +542,18 @@ protected:
 	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
 	static const StatusCategory CATEGORY = STATUS_DOT;
 	static const bool DISPELLABLE = true;
-	static const bool INSTANCING = true;
-	static const bool COLLECTIVE = true;
+	static const bool INSTANCING = false;
+	static const bool COLLECTIVE = false;
 	static const bool TIMED = true;
-	static const int MAX_SINGLE_STACKS = 5;
-	static const int MAX_GROUP_STACKS = 5;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
 	
-	static const int TIMER = 1;
 	static const int AMOUNT = 15;
 
 	int amount;
 public:
 	StatusBurn(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Burn", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+        : Status(effect, "Burn", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS), amount(AMOUNT)
 	{}
 	
 	// Helper Functions
@@ -559,7 +563,7 @@ public:
 	
 	// Main Function
 	virtual int onMerge(Status* status);
-	virtual void onRound();
+	virtual void onBeginRound();
     
 	~StatusBurn() {}
 };
@@ -593,7 +597,7 @@ public:
 	
 	// Main Function
 	virtual int onMerge(Status* status);
-	virtual void onRound();
+	virtual void onBeginRound();
     
 	~StatusRegeneration() {}
 };
@@ -620,8 +624,7 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 
 	// Main Function
-	virtual int onMerge(Status* status);
-	virtual void onPrePerformHit(Event* evt);
+	virtual void onPrePerformHit(EventAttack* evt);
 
 	~StatusBlind() {}
 };
@@ -648,8 +651,6 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 
 	// Main Function
-	virtual int onMerge(Status* status);
-	virtual void onPostReceiveDamage(Damage* applier);
 	virtual void onCheckpoint(Ability* ability);
     virtual void onSelectAbility(Unit* caster);
     
@@ -669,7 +670,7 @@ protected:
 	static const int MAX_SINGLE_STACKS = 20;
 	static const int MAX_GROUP_STACKS = 20;
 
-	static const int TIMER = 3;
+	static const int TIMER = 5;
 	static const int AMOUNT = 10;
 
 	int amount;
@@ -735,7 +736,7 @@ private:
 	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
 	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
 	static const bool DISPELLABLE = false;
-	static const bool INSTANCING = true;
+	static const bool INSTANCING = false;
 	static const bool COLLECTIVE = false;
 	static const bool TIMED = true;
 	static const int MAX_SINGLE_STACKS = 1;
@@ -791,7 +792,7 @@ public:
 	virtual int onMerge(Status* status);
 	virtual void onPreFindTarget(Targeter* system);
 
-	~StatusTaunt();
+	~StatusTaunt() {}
 };
 
 class StatusBattleShout : public Status
@@ -876,8 +877,8 @@ protected:
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
 	static const bool TIMED = true;
-	static const int MAX_SINGLE_STACKS = 1;
-	static const int MAX_GROUP_STACKS = 3;
+	static const int MAX_SINGLE_STACKS = 5;
+	static const int MAX_GROUP_STACKS = 5;
 
 	static const int TIMER = 3;
 	static const int AMOUNT = 1;
@@ -912,8 +913,8 @@ protected:
 	static const bool INSTANCING = true;
 	static const bool COLLECTIVE = false;
 	static const bool TIMED = true;
-	static const int MAX_SINGLE_STACKS = 1;
-	static const int MAX_GROUP_STACKS = 3;
+	static const int MAX_SINGLE_STACKS = 5;
+	static const int MAX_GROUP_STACKS = 5;
 
 	static const int TIMER = 3;
 	static const int AMOUNT = 1;
@@ -985,6 +986,7 @@ protected:
 	static const int MAX_GROUP_STACKS = 3;
 
 	static const int TIMER = 1;
+	static const int AMOUNT = 10;
 public:
 	StatusTangleTrap(Effect* effect, Unit* target)
         : Status(effect, "TangleTrap", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
@@ -996,7 +998,7 @@ public:
 
 	// Main Function
 	virtual int onMerge(Status* status);
-	virtual void onPostBecomeTarget(Targeter* system);
+	virtual void onPreReactHit(EventAttack* evt);
 
 	~StatusTangleTrap() {}
 };
@@ -1005,7 +1007,7 @@ class StatusRally : public Status
 {
 private:
 	static const StatusBenefit BENEFIT = NEUTRAL;
-	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
 	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
 	static const bool DISPELLABLE = false;
 	static const bool INSTANCING = false;
@@ -1023,10 +1025,36 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 	
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onExecuteAbility(Ability* ability);
     
 	~StatusRally() {}
+};
+
+class StatusFeint : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = NEUTRAL;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = false;
+	static const bool INSTANCING = false;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = false;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+public:
+	StatusFeint(Effect* effect, Unit* target)
+    : Status(effect, "Feint", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, 0, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	
+	// Main Function
+	virtual void onExecuteAbility(Ability* ability);
+    
+	~StatusFeint() {}
 };
 
 class StatusGroup
@@ -1184,21 +1212,30 @@ public:
 
 	// Each ongoing status effect is processed every round starting from the origin.
 	// For example, most effects that are timed will be updated here.
-	void processRound() {
+	void processBeginRound() {
 		for (int i = 0; i < status.size(); ++i) {
 			// Process the Status effect
-			status[i]->onRound();
+			status[i]->onBeginRound();
+            if (status[i]->grouplist)
+                status[i]->grouplist->setExecuted(true);
+		}
+		// Executed is reset in function that called it (diff status in groups in diff effects)
+	}
+	
+	void processEndRound() {
+		for (int i = 0; i < status.size(); ++i) {
+			// Process the Status effect
+			status[i]->onEndRound();
             if (status[i]->grouplist)
                 status[i]->grouplist->setExecuted(true);
 
 			// Sets the clean flag and on End effects
 			if (status[i]->hasExpired())
 				status[i]->onKill();
-			else
-                status[i]->grouplist->setExecuted(true);
 		}
+		// Executed is reset in function that called it (diff status in groups in diff effects)
 	}
-	
+
 	void resetStatusFlag() {
 		// Reset Status Group has executed flag back to false
 		for (int i = 0; i < status.size(); ++i) {

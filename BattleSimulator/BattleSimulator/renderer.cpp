@@ -18,7 +18,7 @@
 extern bool change;
 extern int seed;
 
-JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT, JOB_BARBARIAN };
+JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT, JOB_BARBARIAN, JOB_ROGUE };
 static const int NUM_JOBS = sizeof(jobs) / sizeof(JobType);
 
 Color getColor(StatusGroup* status)
@@ -124,9 +124,18 @@ void StatusInfoBox::render(Renderer* renderer) const
 		renderOutline(RED);
 	
 	renderer->GLoutputString12(box.center(), toStringInt(info->getTotalStacks()), BLACK, true);
-	Status* status = info->getInstances()[info->getInstances().size() - 1];
-	if (status->isTimed())
-		renderer->GLoutputString12(box.center() + Point2D(0.0, box.height), toStringInt(status->getTimer()), BLACK, true);
+
+	// Output the highest timer
+	int maxTimer = -1;
+	vector<Status*> instances = info->getInstances();
+	for (int i = 0; i < instances.size(); ++i)
+	{
+		Status* status = instances[i];
+		if (status->isTimed() && status->getTimer() > maxTimer)
+			maxTimer = status->getTimer();
+	}
+	if (maxTimer > 0)
+		renderer->GLoutputString12(box.center() + Point2D(0.0, box.height), toStringInt(maxTimer), BLACK, true);
 }
 
 void TextInfoBox::render(Renderer* renderer) const
