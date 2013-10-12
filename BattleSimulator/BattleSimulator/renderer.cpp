@@ -18,7 +18,7 @@
 extern bool change;
 extern int seed;
 
-JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT };
+JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT, JOB_BARBARIAN };
 static const int NUM_JOBS = sizeof(jobs) / sizeof(JobType);
 
 Color getColor(StatusGroup* status)

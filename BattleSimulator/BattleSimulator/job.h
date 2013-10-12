@@ -379,4 +379,30 @@ public:
 	~Knight() {}
 };
 
+class Barbarian : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_BARBARIAN;
+    
+	const static int BASE_HEALTH = 100;
+	const static int BASE_PHYSICAL_ATTACK = 50;
+	const static int BASE_MAGIC_ATTACK = 10;
+	const static int BASE_SPEED = 4;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	Barbarian(Character* character);
+	virtual void init();
+	~Barbarian() {}
+};
+
 #endif

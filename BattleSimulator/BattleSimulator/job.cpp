@@ -20,6 +20,8 @@ Job* Job::getJob(JobType job, Character* target)
 		return new Warrior(target);
     case JOB_KNIGHT:
             return new Knight(target);
+    case JOB_BARBARIAN:
+            return new Barbarian(target);
 	default:
 		return NULL;
 	}
@@ -168,5 +170,26 @@ void Knight::init()
 	midSkills.push_back(STRIKE);
 	frontSkills.push_back(CHARGE);
 	frontSkills.push_back(BLOCK);
+	basicSkills.push_back(STRIKE);
+}
+
+Barbarian::Barbarian(Character* character)
+: Job(character, JOB_TYPE, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
+      BASE_PHYSICAL_DEFENSE, BASE_ARCANE_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+      BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
+      BASE_UPKEEP)
+{
+	init();
+}
+
+void Barbarian::init()
+{
+	Job::init();
+	backSkills.push_back(FLURRY);
+	backSkills.push_back(POWER_ATTACK);
+	midSkills.push_back(HUNDRED_BLADES);
+	midSkills.push_back(DEMORALIZING_SHOUT);
+	frontSkills.push_back(STRIKE);
+	frontSkills.push_back(DEMORALIZING_SHOUT);
 	basicSkills.push_back(STRIKE);
 }

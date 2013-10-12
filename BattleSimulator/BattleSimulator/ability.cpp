@@ -82,6 +82,8 @@ Ability* Ability::getAbility(Skill skill)
         return new Challenge();
     case FLURRY:
         return new Flurry();
+    case POWER_ATTACK:
+        return new PowerAttack();
 	default:
 		return new NoSkill();
 	}
@@ -1232,7 +1234,7 @@ void Flurry::action(Ability* previous, Unit* current, Battle* battle)
 				Unit* target = targeter->chosen[0];
 				targeter->provoked = true;
                 
-				Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
+				Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_LOW, DAMAGE_PHYSICAL);
                 
 				Event* log = new EventCauseDamage(this, name, Event::MELEE_HIT_CHANCE, damage);
 				log->apply(battle);
@@ -1244,5 +1246,38 @@ void Flurry::action(Ability* previous, Unit* current, Battle* battle)
 			}
 			targeters.push_back(targeter);
 		}
+	}
+}
+
+void PowerAttack::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+	
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+    
+	int rowRange = 1;
+	int initialColumnRange = 1;
+	vector<Unit*> targets = Targeter::searchForFrontTargets(current, battle, allyGroup, enemyGroup, initialColumnRange, rowRange);
+	
+	if (targets.size() > 0)
+	{
+		Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, allyGroup->getTargetOrder(), 1);
+		targeter->set(battle, 1);
+
+		if (checkpoint(current)) return;
+
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+			targeter->provoked = true;
+
+			Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_HIGH, DAMAGE_PHYSICAL);
+			
+			Event* log = new EventCauseDamage(this, name, Event::MELEE_HIT_CHANCE, damage);
+			log->apply(battle);
+		}
+		targeters.push_back(targeter);
 	}
 }

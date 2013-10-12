@@ -510,4 +510,19 @@ public:
 	~Flurry() {}
 };
 
+class PowerAttack : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	PowerAttack() : Ability("Power Attack", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~PowerAttack() {}
+};
+
 #endif

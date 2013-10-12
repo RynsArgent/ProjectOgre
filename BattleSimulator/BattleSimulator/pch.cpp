@@ -149,6 +149,8 @@ string toStringJob(JobType val)
             return "Warrior";
         case JOB_KNIGHT:
             return "Knight";
+        case JOB_BARBARIAN:
+            return "Barbarian";
     }
 	return "";
 }
