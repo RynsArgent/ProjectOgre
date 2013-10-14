@@ -8,7 +8,8 @@
 
 DamageNode::DamageNode(int amount, DamageRating rating, DamageType type, bool pierce, DamageNode* next)
 	: start(Damage::getDamageValue(rating, amount)), amount(start), final(0), rating(rating), type(type), pierce(pierce), next(next)
-{}
+{
+}
 
 void DamageNode::modify(Unit* target)
 {

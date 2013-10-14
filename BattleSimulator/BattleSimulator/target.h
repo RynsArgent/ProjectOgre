@@ -28,10 +28,7 @@ struct Targeter
 	bool provoked; // If set to true, that means the Action has processed long enough (before completion or cancellation)
 					// for a primary unit in this targeting system to respond
 
-	Targeter(Action* ref, const vector<Unit*> & candidates, TargetGroup group, TargetType method, int numPrimaries)
-		: ref(ref), base(candidates), candidates(candidates), priorities(), chosen(), group(group), method(method), numPrimaries(numPrimaries), provoked(false)
-	{
-    }
+	Targeter(Action* ref, const vector<Unit*> & candidates, TargetGroup group, TargetType method, int numPrimaries);
             
 	vector<Unit*> getPrimaries() const {
 		vector<Unit*> ret;

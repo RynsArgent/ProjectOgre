@@ -53,9 +53,10 @@ struct EventAttack : public Event
 
 	AbilityType attack; // This is separate from Ability Class for special cases (look at Feint)
 	Unit* target;
+	bool indirect; // This means the attacker or source is not directly focused on this target (splash damage for example)
 	
-	EventAttack(Action* ref, const string & name, int chance = 100, AbilityType attack = ABILITY_NONE, Unit* target = NULL, bool hiddenSource = false)
-		: Event(ref, name, TYPE, chance, hiddenSource), attack(attack), target(target)
+	EventAttack(Action* ref, const string & name, int chance = 100, AbilityType attack = ABILITY_NONE, Unit* target = NULL, bool indirect = false, bool hiddenSource = false)
+		: Event(ref, name, TYPE, chance, hiddenSource), attack(attack), indirect(indirect), target(target)
 	{}
 	
 	void determineSuccess(Unit* target);
@@ -107,9 +108,16 @@ struct EventRemoveStatus : public Event
 
 	StatusGroup* removedResult;
 	
+	// Doesn't have something to remove, but a category BUFF DEBUFF or NEUTRAL
 	EventRemoveStatus(Action* ref, const string & name, int chance = 100, Unit* target = NULL, StatusBenefit removingType = DEBUFF, bool hiddenSource = false)
 		: Event(ref, name, TYPE, chance, hiddenSource), target(target), removingType(removingType), removedResult(NULL)
 	{}
+	
+	// Know what to remove
+	EventRemoveStatus(Action* ref, const string & name, int chance = 100, Unit* target = NULL, StatusGroup* status = NULL, bool hiddenSource = false)
+		: Event(ref, name, TYPE, chance, hiddenSource), target(target), removingType(NEUTRAL), removedResult(status)
+	{}
+
 
 	virtual void apply(Battle* battle);
     virtual void print(ostream& out) const;

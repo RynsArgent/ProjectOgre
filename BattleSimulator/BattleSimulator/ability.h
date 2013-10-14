@@ -25,8 +25,6 @@ protected:
     
 	// Variables that depend on the unit during the execution of an ability
 	bool cancelled;
-	vector<Targeter*> targeters;
-	vector<Event*> events;
 public:
 	static string toStringSkill(Skill skill);
 	static Ability* getAbility(Skill skill);
@@ -34,7 +32,7 @@ public:
 	static bool isAbleToRespond(Battle* battle, Ability* previous, Unit* prevSource, Ability* current, Unit* curSource);
     
 	Ability(const string & name, ActionType act, AbilityType type, bool basic, bool respondable, bool interruptible, int cost)
-    : Action(name, act, type), respondable(respondable), basic(basic), interruptible(interruptible), cost(cost), cancelled(false), targeters(), events()
+    : Action(name, act, type), respondable(respondable), basic(basic), interruptible(interruptible), cost(cost), cancelled(false)
 	{
 	}
     
@@ -47,8 +45,6 @@ public:
     void setInterruptible(bool value) { interruptible = value; }
     bool isCancelled() const { return cancelled; }
     void setCancelled(bool value) { cancelled = value; }
-	vector<Targeter*> getTargeters() const { return targeters; }
-	void setTargeters(const vector<Targeter*> & value) { targeters = value; }
 
 	// This is used to check whether the unit is stunned, sleep, fleeing, ect.
 	// Because if the unit is, the ability is probably cancelled
@@ -283,6 +279,21 @@ public:
 	Blind() : Ability("Blind", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
 	~Blind() {}
+};
+
+class Flash : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = true;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Flash() : Ability("Flash", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Flash() {}
 };
 
 class Barrier : public Ability
@@ -540,7 +551,7 @@ public:
 	~Lasso() {}
 };
 
-class Needlelight : public Ability
+class Piercethrough : public Ability
 {
 protected:
 	static const ActionType ACT = ABILITY_STANDARD;
@@ -550,9 +561,9 @@ protected:
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
-	Needlelight() : Ability("Needlelight", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	Piercethrough() : Ability("Piercethrough", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
-	~Needlelight() {}
+	~Piercethrough() {}
 };
 
 class Feint : public Ability
@@ -583,6 +594,306 @@ public:
 	VenomousStrike() : Ability("Venomous Strike", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
 	~VenomousStrike() {}
+};
+
+class CripplingShot : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_RANGE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	CripplingShot() : Ability("Crippling Shot", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~CripplingShot() {}
+};
+
+class ConfuseTrap : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	ConfuseTrap() : Ability("Confuse Trap", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~ConfuseTrap() {}
+};
+
+class HuntersMark : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_RANGE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	HuntersMark() : Ability("Hunter's Mark", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~HuntersMark() {}
+};
+
+class TranquilizingShot : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_RANGE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	TranquilizingShot() : Ability("Tranquilizing Shot", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~TranquilizingShot() {}
+};
+
+class CharmTrap : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	CharmTrap() : Ability("Charm Trap", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~CharmTrap() {}
+};
+
+class QuickNock : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	QuickNock() : Ability("Quick Nock", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~QuickNock() {}
+};
+
+class RapidShot : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_RANGE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	RapidShot() : Ability("Rapid Shot", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~RapidShot() {}
+};
+
+class Volley : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_RANGE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Volley() : Ability("Volley", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Volley() {}
+};
+
+class Snipe : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_RANGE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Snipe() : Ability("Snipe", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Snipe() {}
+};
+
+class Reformation : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = true;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Reformation() : Ability("Reformation", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Reformation() {}
+};
+
+class Lullaby : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Lullaby() : Ability("Lullaby", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Lullaby() {}
+};
+
+class BalladOfHeroes : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	BalladOfHeroes() : Ability("Ballad Of Heroes", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~BalladOfHeroes() {}
+};
+
+class RequiemOfWar : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	RequiemOfWar() : Ability("Requiem of War", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~RequiemOfWar() {}
+};
+
+class Banish : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MAGIC;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Banish() : Ability("Banish", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Banish() {}
+};
+
+class GreaterHeal : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	GreaterHeal() : Ability("Greater Heal", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~GreaterHeal() {}
+};
+
+class Raise : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Raise() : Ability("Raise", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Raise() {}
+};
+
+class LightningKicks : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	LightningKicks() : Ability("Lightning Kicks", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~LightningKicks() {}
+};
+
+class HurricaneKick : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	HurricaneKick() : Ability("Hurricane Kick", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~HurricaneKick() {}
+};
+
+class Roundhouse : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Roundhouse() : Ability("Roundhouse", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Roundhouse() {}
+};
+
+class LegSweep : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = true;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	LegSweep() : Ability("Leg Sweep", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~LegSweep() {}
 };
 
 #endif

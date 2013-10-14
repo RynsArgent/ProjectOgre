@@ -18,7 +18,7 @@
 extern bool change;
 extern int seed;
 
-JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT, JOB_BARBARIAN, JOB_ROGUE };
+JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT, JOB_BARBARIAN, JOB_ROGUE, JOB_HUNTER, JOB_ARCHER, JOB_BARD, JOB_PRIEST, JOB_PUGILIST };
 static const int NUM_JOBS = sizeof(jobs) / sizeof(JobType);
 
 Color getColor(StatusGroup* status)
@@ -52,8 +52,12 @@ Color getColor(StatusGroup* status)
 		return Color(0.3, 0.3, 0.3);
 	else if (name == "Taunt")
 		return Color(0.7, 0.3, 0.0);
+	else if (name == "Marked")
+		return Color(0.5, 0.3, 0.3);
 	else if (name == "BattleShout")
 		return Color(1.0, 0.7, 0.0);
+	else if (name == "Determination")
+		return Color(1.0, 0.3, 0.3);
 	else if (name == "Barrier")
 		return Color(0.5, 0.5, 1.0);
 	else if (name == "Haste")
@@ -66,6 +70,24 @@ Color getColor(StatusGroup* status)
 		return Color(0.3, 0.0, 0.3);
 	else if (name == "Demoralize")
 		return Color(0.7, 0.3, 0.3);
+	else if (name == "ConfuseTrap")
+		return Color(0.5, 0.3, 0.7);
+	else if (name == "CharmTrap")
+		return Color(1.0, 0.3, 0.7);
+	else if (name == "Weaken")
+		return Color(3.0, 0.0, 0.0);
+	else if (name == "Resistance")
+		return Color(0.7, 0.7, 1.0);
+	else if (name == "Vulnerability")
+		return Color(1.0, 0.7, 0.7);
+	else if (name == "Vitality")
+		return Color(1.0, 1.0, 0.7);
+	else if (name == "Paralyze")
+		return Color(0.7, 0.5, 0.0);
+	else if (name == "Shield")
+		return Color(0.7, 0.7, 0.7);
+	else if (name == "Shell")
+		return Color(0.7, 0.7, 0.7);
 	return Color(0.0, 0.0, 0.0);
 }
 
@@ -698,7 +720,7 @@ void Renderer::load(const string & filename)
 {
 	ifstream infile(filename.c_str());
 	if (!infile) return;
-	
+
 	Formation* formA = setupInfo.formAInfo.info;
 	Formation* formB = setupInfo.formBInfo.info;
 
@@ -707,7 +729,6 @@ void Renderer::load(const string & filename)
 		{
 			Character* character = formA->getCharacterAt(i, j);
 			if (character) {
-				delete character->getJob();
 				delete character;
 			}
 			formA->setCharacterAt(GridPoint(i, j), NULL);
@@ -717,7 +738,6 @@ void Renderer::load(const string & filename)
 		{
 			Character* character = formB->getCharacterAt(i, j);
 			if (character) {
-				delete character->getJob();
 				delete character;
 			}
 			formB->setCharacterAt(GridPoint(i, j), NULL);
@@ -749,7 +769,7 @@ void Renderer::load(const string & filename)
 			infile >> ind1 >> ind2 >> ind3 >> ind4;
 			formA->setCharacterAt(formPos, new Character(name, job, ele), ind1, ind2, ind3, ind4);
 		}
-
+		
 	infile >> inputInt1;
 	formB->setTargetOrder((TargetType)inputInt1);
 	infile >> inputInt1 >> inputInt2;
@@ -1088,7 +1108,11 @@ void Renderer::processMouseRightClickSetup(const Point2D & loc)
 			if (battleInfo.groupAInfo.info) delete battleInfo.groupAInfo.info;
 			if (battleInfo.groupBInfo.info) delete battleInfo.groupBInfo.info;
 			if (battleInfo.info) delete battleInfo.info;
+			
+			if (i % 10 == 0)
+				cout << i / 10;
 		}
+		cout << endl;
 		cout << "Group1/Tie/Group2 Win Ratio - " << totalWins1 << ":" << totalTies << ":" << totalWins2 << endl;
 		cout << "Indefinite Battles - " << totalTerminates << endl;
 	}

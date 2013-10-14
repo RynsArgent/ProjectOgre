@@ -78,7 +78,7 @@ void initialize() {
 	formB->setCharacterAt(1, 2, new Character("Fighter3B",JOB_FIGHTER, ELEMENT_PHYSICAL), 0, 0, 0);
 	formB->setLeaderPosition(1, 2);
 	formB->setTargetOrder(TARGET_LEADER);
-
+	
 	setup = new Setup(formA, formB);
 	renderer->initSetupRenderer(setup);
 	renderer->load("data.txt");

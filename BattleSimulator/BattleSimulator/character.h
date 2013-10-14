@@ -246,7 +246,7 @@ public:
 		this->name = name;
 	}
 
-	~Character() {}
+	~Character();
 };
 
 #endif

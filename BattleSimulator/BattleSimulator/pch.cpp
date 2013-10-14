@@ -9,7 +9,7 @@ Skill retrieveSkill(SkillSet set, ElementType element)
 			case ELEMENT_NONE: 
 				return ARCANE_BOLT;
 			case ELEMENT_PHYSICAL: 
-				return NO_STANDARD_SKILL;
+				return ARCANE_BOLT;
 			case ELEMENT_ARCANE:
 				return ARCANE_BOLT;
 			case ELEMENT_FIRE:
@@ -153,6 +153,16 @@ string toStringJob(JobType val)
             return "Barbarian";
         case JOB_ROGUE:
             return "Rogue";
+        case JOB_HUNTER:
+            return "Hunter";
+        case JOB_ARCHER:
+            return "Archer";
+        case JOB_BARD:
+            return "Bard";
+        case JOB_PRIEST:
+            return "Priest";
+        case JOB_PUGILIST:
+            return "Pugilist";
     }
 	return "";
 }

@@ -324,6 +324,33 @@ public:
     ~StatusStun() {}
 };
 
+class StatusParalyze : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
+	static const bool DISPELLABLE = false;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = true;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+public:
+    StatusParalyze(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Paralyze", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+    {}
+    
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+
+	// Main Function
+	virtual void onExecuteAbility(Ability* ability);
+	
+    ~StatusParalyze() {}
+};
+
 class StatusSleep : public Status
 {
 private:
@@ -692,6 +719,41 @@ public:
 	~StatusMortality() {}
 };
 
+class StatusVitality : public Status
+{
+protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_STAT;
+	static const bool DISPELLABLE = true;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 20;
+	static const int MAX_GROUP_STACKS = 20;
+
+	static const int TIMER = 5;
+	static const int AMOUNT = 10;
+
+	int amount;
+public:
+	StatusVitality(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Vitality", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS), amount(AMOUNT)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	void modifyAttributes(int dvalue);
+
+	// Main Function
+	virtual int onMerge(Status* status);
+	virtual void onSpawn();
+	virtual void onKill();
+
+	~StatusVitality() {}
+};
+
 class StatusShield : public Status
 {
 private:
@@ -706,14 +768,12 @@ private:
 	static const int MAX_GROUP_STACKS = 1;
 
 	static const int TIMER = 1;
-	static const bool LIMITED = true;
-	static const int AMOUNT = 30;
 
-	bool limited; // If set, amount will drop on use and expire at 0. Otherwise, amount will not drop
+	bool applied; 
 	int amount;
 public:
-	StatusShield(Effect* effect, Unit* target)
-        : Status(effect, "Shield", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), limited(LIMITED), amount(AMOUNT)
+	StatusShield(Effect* effect, Unit* target, int amount)
+        : Status(effect, "Shield", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), applied(false), amount(amount)
 	{}
 	
 	// Helper Functions
@@ -723,10 +783,43 @@ public:
 	void applyDamagePrevention(Damage* applier);
 	
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onPreReceiveDamage(Damage* applier);
 
 	~StatusShield() {}
+};
+
+class StatusShell : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = true;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+
+	static const int TIMER = 1;
+
+	bool applied; 
+	int amount;
+public:
+	StatusShell(Effect* effect, Unit* target, int amount)
+        : Status(effect, "Shell", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), applied(false), amount(amount)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	virtual bool hasExpired() const;
+	void applyDamagePrevention(Damage* applier);
+	
+	// Main Function
+	virtual void onPreReceiveDamage(Damage* applier);
+
+	~StatusShell() {}
 };
 
 class StatusBlock : public Status
@@ -743,7 +836,6 @@ private:
 	static const int MAX_GROUP_STACKS = 1;
 
 	static const int TIMER = 1;
-
 public:
 	StatusBlock(Effect* effect, Unit* target)
         : Status(effect, "Block", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
@@ -752,16 +844,71 @@ public:
 	// Helper Functions
 	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
-	void applyDamageReduction(Damage* applier);
 	
 	// Main Function
-	virtual int onMerge(Status* status);
-	virtual void onPreReceiveDamage(Damage* applier);
+	virtual void onPreReactHit(EventAttack* evt);
 
 	~StatusBlock() {}
 };
 
-class StatusTaunt : public Status
+class StatusBarrier : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = NEUTRAL;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = false;
+	static const bool INSTANCING = false;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+
+	static const int TIMER = 1;
+public:
+	StatusBarrier(Effect* effect, Unit* target)
+        : Status(effect, "Barrier", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	
+	// Main Function
+	virtual void onPreReactHit(EventAttack* evt);
+
+	~StatusBarrier() {}
+};
+
+class StatusWounding : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = true;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = true;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+public:
+	StatusWounding(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Wounding", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, stacks, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	void applyHealingReduction(Damage* applier);
+	
+	// Main Function
+	virtual void onPreReceiveDamage(Damage* applier);
+
+	~StatusWounding() {}
+};
+
+class StatusProvoke : public Status
 {
 protected:
 	static const StatusBenefit BENEFIT = NEUTRAL;
@@ -778,8 +925,8 @@ protected:
 
 	Unit* focus; 
 public:
-	StatusTaunt(Effect* effect, Unit* target, Unit* focus)
-        : Status(effect, "Taunt", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), focus(focus)
+	StatusProvoke(Effect* effect, Unit* target, Unit* focus)
+        : Status(effect, "Provoke", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS), focus(focus)
 	{
 	}
 	
@@ -789,10 +936,40 @@ public:
 	void addToPriorityList(Targeter* system) const;
 	
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onPreFindTarget(Targeter* system);
 
-	~StatusTaunt() {}
+	~StatusProvoke() {}
+};
+
+class StatusMarked : public Status
+{
+protected:
+	static const StatusBenefit BENEFIT = NEUTRAL;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_CC;
+	static const bool DISPELLABLE = false;
+	static const bool INSTANCING = false;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+
+	static const int TIMER = 1;
+public:
+	StatusMarked(Effect* effect, Unit* target, Unit* focus)
+        : Status(effect, "Marked", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
+	{
+	}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	void addToPriorityList(Targeter* system) const;
+	
+	// Main Function
+	virtual void onPreBecomeTarget(Targeter* system);
+
+	~StatusMarked() {}
 };
 
 class StatusBattleShout : public Status
@@ -831,7 +1008,7 @@ public:
 	~StatusBattleShout() {}
 };
 
-class StatusBarrier : public Status
+class StatusDetermination : public Status
 {
 protected:
 	static const StatusBenefit BENEFIT = BUFF;
@@ -845,12 +1022,12 @@ protected:
 	static const int MAX_GROUP_STACKS = 3;
 
 	static const int TIMER = 1;
-	static const int AMOUNT = 5;
+	static const int AMOUNT = 10;
 
 	int amount;
 public:
-	StatusBarrier(Effect* effect, Unit* target, int stacks)
-        : Status(effect, "Barrier", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+	StatusDetermination(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Determination", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
 	{
 	}
 	
@@ -864,7 +1041,115 @@ public:
 	virtual void onSpawn();
 	virtual void onKill();
 
-	~StatusBarrier() {}
+	~StatusDetermination() {}
+};
+
+class StatusWeaken : public Status
+{
+protected:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_STAT;
+	static const bool DISPELLABLE = true;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 3;
+
+	static const int TIMER = 1;
+	static const int AMOUNT = 10;
+
+	int amount;
+public:
+	StatusWeaken(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Weaken", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+	{
+	}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	void modifyAttributes(int dvalue);
+	
+	// Main Function
+	virtual int onMerge(Status* status);
+	virtual void onSpawn();
+	virtual void onKill();
+
+	~StatusWeaken() {}
+};
+
+class StatusResistance : public Status
+{
+protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_STAT;
+	static const bool DISPELLABLE = true;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 3;
+
+	static const int TIMER = 1;
+	static const int AMOUNT = 10;
+
+	int amount;
+public:
+	StatusResistance(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Resistance", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+	{
+	}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	void modifyAttributes(int dvalue);
+	
+	// Main Function
+	virtual int onMerge(Status* status);
+	virtual void onSpawn();
+	virtual void onKill();
+
+	~StatusResistance() {}
+};
+
+class StatusVulnerability : public Status
+{
+protected:
+	static const StatusBenefit BENEFIT = DEBUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_STAT;
+	static const bool DISPELLABLE = true;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 3;
+
+	static const int TIMER = 1;
+	static const int AMOUNT = 10;
+
+	int amount;
+public:
+	StatusVulnerability(Effect* effect, Unit* target, int stacks)
+        : Status(effect, "Vulnerability", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, stacks), amount(AMOUNT)
+	{
+	}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	void modifyAttributes(int dvalue);
+	
+	// Main Function
+	virtual int onMerge(Status* status);
+	virtual void onSpawn();
+	virtual void onKill();
+
+	~StatusVulnerability() {}
 };
 
 class StatusHaste : public Status
@@ -966,7 +1251,6 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 	
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onPreApplyDamage(Damage* applier);
 
 	~StatusScope() {}
@@ -997,7 +1281,6 @@ public:
 	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
 
 	// Main Function
-	virtual int onMerge(Status* status);
 	virtual void onPreReactHit(EventAttack* evt);
 
 	~StatusTangleTrap() {}
@@ -1055,6 +1338,93 @@ public:
 	virtual void onExecuteAbility(Ability* ability);
     
 	~StatusFeint() {}
+};
+
+class StatusQuickNock : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = NEUTRAL;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = false;
+	static const bool INSTANCING = false;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = false;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+public:
+	StatusQuickNock(Effect* effect, Unit* target)
+    : Status(effect, "Quick Nock", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, 0, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	
+	// Main Function
+	virtual void onExecuteAbility(Ability* ability);
+    
+	~StatusQuickNock() {}
+};
+
+class StatusConfuseTrap : public Status
+{
+protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = true;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 3;
+
+	static const int TIMER = 1;
+	static const int AMOUNT = 30;
+public:
+	StatusConfuseTrap(Effect* effect, Unit* target)
+        : Status(effect, "ConfuseTrap", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+
+	// Main Function
+	virtual void onPreReactHit(EventAttack* evt);
+
+	~StatusConfuseTrap() {}
+};
+
+class StatusCharmTrap : public Status
+{
+protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = true;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 3;
+
+	static const int TIMER = 1;
+	static const int AMOUNT = 10;
+public:
+	StatusCharmTrap(Effect* effect, Unit* target)
+        : Status(effect, "CharmTrap", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+
+	// Main Function
+	virtual void onPreReactHit(EventAttack* evt);
+
+	~StatusCharmTrap() {}
 };
 
 class StatusGroup
@@ -1194,7 +1564,7 @@ private:
 	Unit* trigger; // Unit that processes Effects on its turn
 public:
 	Effect(Unit* source = NULL, Battle* battle = NULL, const string & name = "", Unit* trigger = NULL)
-		: Action(name, EFFECT_TRIGGER, ABILITY_SPECIAL, source, battle), status(), trigger(trigger)
+		: Action(name, EFFECT_TRIGGER, ABILITY_NONE, source, battle), status(), trigger(trigger)
 	{
 	}
 

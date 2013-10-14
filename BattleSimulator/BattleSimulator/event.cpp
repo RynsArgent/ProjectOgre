@@ -41,7 +41,9 @@ void Event::apply(Battle* battle)
 void Event::print(ostream& out) const
 {
 	if (!hiddenSource && ref != NULL && ref->getAction() != EFFECT_TRIGGER)
+	{
 		out << ref->getSource()->getName() << " readies " << name << endl;
+	}
 }
 
 Event::~Event()
@@ -171,19 +173,24 @@ void EventRemoveStatus::apply(Battle* battle)
 {
 	Event::apply(battle);
 	determineSuccess();
-	if (!success && !target->isAvailable())
+	if (!success && !target->isAvailable()) {
+		removedResult = NULL; // to notify failure
 		return;
-	
-	// Removes the most recent status effect of the matching type
-	vector<StatusGroup*> candidateStatusList = target->getDispellableStatusByBenefit(removingType);
-	vector<StatusGroup*> targetStatusList;
-	if (candidateStatusList.size() > 0)
-	{
-		removedResult = candidateStatusList[candidateStatusList.size() - 1];
-		vector<Status*> instances = removedResult->getInstances();
-		for (int j = 0; j < instances.size(); ++j)
-			instances[j]->onKill();
 	}
+	
+	if (!removedResult)
+	{
+		// Removes the most recent status effect of the matching type
+		vector<StatusGroup*> candidateStatusList = target->getDispellableStatusByBenefit(removingType);
+		vector<StatusGroup*> targetStatusList;
+		if (candidateStatusList.size() > 0)
+		{
+			removedResult = candidateStatusList[candidateStatusList.size() - 1];
+		} 
+	}
+	vector<Status*> instances = removedResult->getInstances();
+	for (int j = 0; j < instances.size(); ++j)
+		instances[j]->onKill();
 }
 
 void EventRemoveStatus::print(ostream& out) const

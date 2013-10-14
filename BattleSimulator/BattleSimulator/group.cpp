@@ -107,6 +107,20 @@ bool Group::withinColumnRange(int x, int xmin, int xmax) const
 	return xmin <= x && x <= xmax;
 }
 
+vector<Unit*> Group::unitsAdjacentTo(int x, int y) const
+{
+	vector<Unit*> ret;
+	if (x - 1 >= 0 && hasUnitAt(x - 1, y))
+		ret.push_back(getUnitAt(x - 1, y));
+	if (y - 1 >= 0 && hasUnitAt(x, y - 1))
+		ret.push_back(getUnitAt(x, y - 1));
+	if (x + 1 <= 2 && hasUnitAt(x + 1, y))
+		ret.push_back(getUnitAt(x + 1, y));
+	if (y + 1 <= 2 && hasUnitAt(x, y + 1))
+		ret.push_back(getUnitAt(x, y + 1));
+	return ret;
+}
+
 vector<Unit*> Group::allyUnits() const
 {
 	vector<Unit*> ret;

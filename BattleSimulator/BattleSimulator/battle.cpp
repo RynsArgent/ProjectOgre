@@ -84,7 +84,7 @@ void Battle::executeTurn()
 
 	// Retrieve the next unit in the turn list
 	mainUnit = unitOrder[turnIndex];
-	
+
 	// Process unit beginning effects
 	mainUnit->processBeginEffects();
 	globalTrigger->processBeginEffects();
@@ -180,6 +180,7 @@ void Battle::cleanupTurn()
 	for (int i = 0; i < cleanup.size(); ++i)
 		delete cleanup[i];
 	cleanup.clear();
+
 //    if (mainAbility) {
 //		delete mainAbility;
 //		mainAbility = NULL;

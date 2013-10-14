@@ -53,13 +53,14 @@ protected:
 	vector<StatusGroup*> currentStatus;
 
 	bool leader;
+	bool summoned;
 	bool done;
 
 	int rValue; // Used to settle ties, can be used for multiple things
 
 	void carryOverCharacterStatistics();
 public:
-	Unit(Character* character, int gid, int x, int y);
+	Unit(Character* character, int gid, int x, int y, bool summoned = false);
 
 	void applyCharacterSkillSets() {
 		basicSkill = character->getBasicSkill();
@@ -321,7 +322,11 @@ public:
 		return currentHealth <= 0;
 	}
 	
-	// For fleeing units ect. - not implemented yet
+	bool isSummoned() const {
+		return summoned;
+	}
+
+	// For fleeing units ect.
 	bool isAvailable() const {
 		return isAlive() && gridX >= 0 && gridY >= 0;
 	}
@@ -371,7 +376,7 @@ public:
 
 	void print() const;
 
-	~Unit() {}
+	~Unit();
 
 	friend class Ability;
 	friend class Effect;

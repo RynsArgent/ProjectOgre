@@ -431,4 +431,134 @@ public:
 	~Rogue() {}
 };
 
+class Hunter : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_HUNTER;
+    
+	const static int BASE_HEALTH = 100;
+	const static int BASE_PHYSICAL_ATTACK = 30;
+	const static int BASE_MAGIC_ATTACK = 10;
+	const static int BASE_SPEED = 4;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	Hunter(Character* character);
+	virtual void init();
+	~Hunter() {}
+};
+
+class Archer : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_ARCHER;
+    
+	const static int BASE_HEALTH = 100;
+	const static int BASE_PHYSICAL_ATTACK = 30;
+	const static int BASE_MAGIC_ATTACK = 10;
+	const static int BASE_SPEED = 4;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	Archer(Character* character);
+	virtual void init();
+	~Archer() {}
+};
+
+class Bard : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_BARD;
+    
+	const static int BASE_HEALTH = 80;
+	const static int BASE_PHYSICAL_ATTACK = 10;
+	const static int BASE_MAGIC_ATTACK = 20;
+	const static int BASE_SPEED = 4;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	Bard(Character* character);
+	virtual void init();
+	~Bard() {}
+};
+
+class Priest : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_PRIEST;
+    
+	const static int BASE_HEALTH = 80;
+	const static int BASE_PHYSICAL_ATTACK = 10;
+	const static int BASE_MAGIC_ATTACK = 30;
+	const static int BASE_SPEED = 1;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	Priest(Character* character);
+	virtual void init();
+	~Priest() {}
+};
+
+class Pugilist : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_PUGILIST;
+    
+	const static int BASE_HEALTH = 80;
+	const static int BASE_PHYSICAL_ATTACK = 30;
+	const static int BASE_MAGIC_ATTACK = 10;
+	const static int BASE_SPEED = 1;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 3;
+	const static int BASE_UPKEEP = 0;
+public:
+	Pugilist(Character* character);
+	virtual void init();
+	~Pugilist() {}
+};
+
 #endif

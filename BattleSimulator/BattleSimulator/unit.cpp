@@ -27,12 +27,12 @@ void Unit::carryOverCharacterStatistics()
 	currentElement = character->getFavoredElement();
 }
 
-Unit::Unit(Character* character, int gid, int x, int y)
+Unit::Unit(Character* character, int gid, int x, int y, bool summoned)
 	: character(character), 
 	basicSkill(NO_STANDARD_SKILL), backSkill(NO_STANDARD_SKILL), midSkill(NO_STANDARD_SKILL), frontSkill(NO_STANDARD_SKILL), 
 	currentSkill(NO_STANDARD_SKILL), currentTier(0),
 	gid(gid), formX(x), formY(y), gridX(x), gridY(y), currentEffects(), currentStatus(),
-	leader(false), done(false), rValue(0)
+	leader(false), summoned(summoned), done(false), rValue(0)
 {
 	if (character != NULL)
 		carryOverCharacterStatistics();
@@ -378,4 +378,9 @@ void Unit::print() const
 			cout << currentStatus[i]->getSubname() << currentStatus[i]->getTotalStacks() << " ";
 	}
 	cout << endl;
+}
+
+Unit::~Unit()
+{
+	delete character;
 }

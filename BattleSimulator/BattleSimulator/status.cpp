@@ -231,12 +231,26 @@ void StatusStun::onSelectAbility(Unit* caster)
 		caster->setCurrentTier(0);
 }
 
+void StatusParalyze::onExecuteAbility(Ability* ability)
+{
+    if (hasExpired())
+        return;
+	Status::onExecuteAbility(ability);
+
+	if (ability->isInterruptible())
+	{
+		int r = rand() % 100 + 1;
+		if (r > 50)
+			ability->setCancelled(true);
+	}
+}
+
 void StatusSleep::onPostReceiveDamage(Damage* applier)
 {
     if (hasExpired())
         return;
     
-    if (applier->final > 0)
+    if (applier->final > 0 && !fresh)
         onKill();
 }
 
@@ -285,7 +299,7 @@ void StatusFlee::onCheckpoint(Ability* ability)
 
 void StatusFlee::onKill()
 {
-    if (GridPoint(target->getGridX(), target->getGridY()) == GridPoint(-1, -1))
+    if (GridPoint(target->getGridX(), target->getGridY()) == GridPoint(-1, -1) && !target->isDead())
     {
         Battle* battle = effect->getBattle();
         Group* allyGroup = battle->getAllyGroup(target->getGrid());
@@ -363,7 +377,7 @@ void StatusCharm::onPostReceiveDamage(Damage* applier)
         return;
 	Status::onPostReceiveDamage(applier);
 	
-    if (applier->final > 0)
+    if (applier->final > 0 && !fresh)
         onKill();
 }
 
@@ -568,32 +582,56 @@ void StatusMortality::onKill()
 	Status::onKill();
 }
 
-int StatusShield::onMerge(Status* status)
+void StatusVitality::modifyAttributes(int dvalue)
+{
+	int val = target->getMaxHealth();
+	val += dvalue;
+	target->setMaxHealth(val);
+	if (dvalue > 0)
+		target->setCurrentHealth(target->getCurrentHealth() + dvalue);
+}
+
+int StatusVitality::onMerge(Status* status)
 {
 	int appliedStacks = Status::onMerge(status);
+	modifyAttributes(appliedStacks * amount);
 	return appliedStacks;
+}
+
+void StatusVitality::onSpawn()
+{
+	Status::onSpawn();
+	modifyAttributes(stacks * amount);
+}
+
+void StatusVitality::onKill()
+{
+	modifyAttributes(-stacks * amount);
+	Status::onKill();
 }
 
 bool StatusShield::hasExpired() const
 {
-	return Status::hasExpired() || (limited && amount <= 0);
+	return Status::hasExpired() || amount <= 0 || applied;
 }
 
 void StatusShield::applyDamagePrevention(Damage* applier)
 { 
 	int currentPrevention = useStacks() * amount;
 	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
-		if (n->type == DAMAGE_PHYSICAL && !n->pierce) {
-			int startingDamage = n->amount;
-			int resultantDamage = startingDamage - currentPrevention;
-			bound(resultantDamage, VALUE_DAMAGE);
-			n->amount = resultantDamage;
-
-			currentPrevention -= (startingDamage - resultantDamage);
+		if (n->type == DAMAGE_PHYSICAL) {
+			if (!n->pierce)
+			{
+				int startingDamage = n->amount;
+				int resultantDamage = startingDamage - currentPrevention;
+				bound(resultantDamage, VALUE_DAMAGE);
+				n->amount = resultantDamage;
+				currentPrevention -= (startingDamage - resultantDamage);
+			}
 		}
 	}
-	if (limited)
-		amount = currentPrevention;
+	amount = currentPrevention;
+	applied = true;
 }
 	
 void StatusShield::onPreReceiveDamage(Damage* applier)
@@ -608,16 +646,96 @@ void StatusShield::onPreReceiveDamage(Damage* applier)
 		onKill();
 }
 
-int StatusBlock::onMerge(Status* status)
+bool StatusShell::hasExpired() const
 {
-	int appliedStacks = Status::onMerge(status);
-	return appliedStacks;
+	return Status::hasExpired() || amount <= 0 || applied;
 }
 
-void StatusBlock::applyDamageReduction(Damage* applier)
+void StatusShell::applyDamagePrevention(Damage* applier)
+{ 
+	int currentPrevention = useStacks() * amount;
+	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
+		if (n->type != DAMAGE_PHYSICAL) {
+			if (!n->pierce)
+			{
+				int startingDamage = n->amount;
+				int resultantDamage = startingDamage - currentPrevention;
+				bound(resultantDamage, VALUE_DAMAGE);
+				n->amount = resultantDamage;
+				currentPrevention -= (startingDamage - resultantDamage);
+			}
+		}
+	}
+	amount = currentPrevention;
+	applied = true;
+}
+	
+void StatusShell::onPreReceiveDamage(Damage* applier)
+{
+	if (hasExpired())
+		return;
+	Status::onPreReceiveDamage(applier);
+	
+	applyDamagePrevention(applier);
+
+	if (hasExpired())
+		onKill();
+}
+
+void StatusBlock::onPreReactHit(EventAttack* evt)
+{
+	if (hasExpired())
+		return;
+	Status::onPreReactHit(evt);
+	
+	Unit* source = effect->getSource();
+	Unit* target = evt->target;
+	if (source && target && source->getGrid() == target->getGrid()) // Same group
+	{
+		// check if source is alive, target is behind blocker, the attack is an ability and a melee or ranged attack
+		if (source->isAvailable() && 
+			source->getGridY() < target->getGridY() && evt->ref->getAction() != EFFECT_TRIGGER &&
+			(evt->ref->getAbilityType() == ABILITY_ATTACK_MELEE || evt->ref->getAbilityType() == ABILITY_ATTACK_RANGE)) 
+		{
+			Ability* response = NULL;
+			// Execute the ability
+			response = Ability::getAbility(BLOCK);
+			response->action(static_cast<Ability*>(evt->ref), source, effect->getBattle());
+			
+			onKill();
+		}
+	}
+}
+
+void StatusBarrier::onPreReactHit(EventAttack* evt)
+{
+	if (hasExpired())
+		return;
+	Status::onPreReactHit(evt);
+	
+	Unit* source = effect->getSource();
+	Unit* target = evt->target;
+	if (source && target && source->getGrid() == target->getGrid()) // Same group
+	{
+		// check if source is alive, target is behind blocker, the attack is an ability and a magic attack
+		if (source->isAvailable() && 
+			source->getGridY() < target->getGridY() && evt->ref->getAction() != EFFECT_TRIGGER &&
+			evt->ref->getAbilityType() == ABILITY_ATTACK_MAGIC)
+		{
+			Ability* response = NULL;
+			// Execute the ability
+			response = Ability::getAbility(BARRIER);
+			response->action(static_cast<Ability*>(evt->ref), source, effect->getBattle());
+			
+			onKill();
+		}
+	}
+}
+
+void StatusWounding::applyHealingReduction(Damage* applier)
 { 
 	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
-		if (n->type == DAMAGE_PHYSICAL && !n->pierce) {
+		if (n->type == DAMAGE_HEALING && !n->pierce) {
 			int startingDamage = n->amount;
 			int resultantDamage = startingDamage / 2;
 			bound(resultantDamage, VALUE_DAMAGE);
@@ -626,30 +744,16 @@ void StatusBlock::applyDamageReduction(Damage* applier)
 	}
 }
 	
-void StatusBlock::onPreReceiveDamage(Damage* applier)
+void StatusWounding::onPreReceiveDamage(Damage* applier)
 {
 	if (hasExpired())
 		return;
 	Status::onPreReceiveDamage(applier);
 
-	// Special rules for global trigger
-	Unit* source = effect->getSource();
-	Unit* target = applier->target;
-	if (source->getGrid() == target->getGrid() && // from same group?
-		source->getGridY() < target->getGridY()) // target is behind blocker
-	{
-		applyDamageReduction(applier);
-		onKill();
-	}
+	applyHealingReduction(applier);
 }
 
-int StatusTaunt::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	return appliedStacks;
-}
-
-void StatusTaunt::addToPriorityList(Targeter* system) const
+void StatusProvoke::addToPriorityList(Targeter* system) const
 {
 	for (int i = 0; i < system->candidates.size(); ++i) {
 		if (focus == system->candidates[i])
@@ -657,13 +761,31 @@ void StatusTaunt::addToPriorityList(Targeter* system) const
 	}
 }
 
-void StatusTaunt::onPreFindTarget(Targeter* system)
+void StatusProvoke::onPreFindTarget(Targeter* system)
 {
 	if (hasExpired())
 		return;
 	Status::onPreFindTarget(system);
 	
 	addToPriorityList(system);
+}
+
+void StatusMarked::addToPriorityList(Targeter* system) const
+{
+	for (int i = 0; i < system->candidates.size(); ++i) {
+		if (target == system->candidates[i])
+			system->priorities.push_back(i);
+	}
+}
+	
+void StatusMarked::onPreBecomeTarget(Targeter* system)
+{
+	if (hasExpired())
+		return;
+	Status::onPreBecomeTarget(system);
+
+	if (system->group == TARGET_ENEMIES)
+		addToPriorityList(system);
 }
 
 void StatusBattleShout::modifyAttributes(int dvalue)
@@ -692,9 +814,72 @@ void StatusBattleShout::onKill()
 	Status::onKill();
 }
 
-void StatusBarrier::modifyAttributes(int dvalue)
+void StatusDetermination::modifyAttributes(int dvalue)
 {
 	int val;
+	val = target->getCurrentPhysicalAttack();
+	val += dvalue;
+	target->setCurrentPhysicalAttack(val);
+	val = target->getCurrentMagicAttack();
+	val += dvalue;
+	target->setCurrentMagicAttack(val);
+}
+
+int StatusDetermination::onMerge(Status* status)
+{
+	int appliedStacks = Status::onMerge(status);
+	modifyAttributes(appliedStacks * amount);
+	return appliedStacks;
+}
+
+void StatusDetermination::onSpawn()
+{
+	Status::onSpawn();
+	modifyAttributes(stacks * amount);
+}
+
+void StatusDetermination::onKill()
+{
+	modifyAttributes(-stacks * amount);
+	Status::onKill();
+}
+
+void StatusWeaken::modifyAttributes(int dvalue)
+{
+	int val;
+	val = target->getCurrentPhysicalAttack();
+	val += dvalue;
+	target->setCurrentPhysicalAttack(val);
+	val = target->getCurrentMagicAttack();
+	val += dvalue;
+	target->setCurrentMagicAttack(val);
+}
+
+int StatusWeaken::onMerge(Status* status)
+{
+	int appliedStacks = Status::onMerge(status);
+	modifyAttributes(-appliedStacks * amount);
+	return appliedStacks;
+}
+
+void StatusWeaken::onSpawn()
+{
+	Status::onSpawn();
+	modifyAttributes(-stacks * amount);
+}
+
+void StatusWeaken::onKill()
+{
+	modifyAttributes(stacks * amount);
+	Status::onKill();
+}
+
+void StatusResistance::modifyAttributes(int dvalue)
+{
+	int val;
+	val = target->getCurrentPhysicalDefense();
+	val += dvalue;
+	target->setCurrentPhysicalDefense(val);
 	val = target->getCurrentArcaneDefense();
 	val += dvalue;
 	target->setCurrentArcaneDefense(val);
@@ -715,22 +900,67 @@ void StatusBarrier::modifyAttributes(int dvalue)
 	target->setCurrentLightningDefense(val);
 }
 
-int StatusBarrier::onMerge(Status* status)
+int StatusResistance::onMerge(Status* status)
 {
 	int appliedStacks = Status::onMerge(status);
 	modifyAttributes(appliedStacks * amount);
 	return appliedStacks;
 }
 
-void StatusBarrier::onSpawn()
+void StatusResistance::onSpawn()
 {
 	Status::onSpawn();
 	modifyAttributes(stacks * amount);
 }
 
-void StatusBarrier::onKill()
+void StatusResistance::onKill()
 {
 	modifyAttributes(-stacks * amount);
+	Status::onKill();
+}
+
+void StatusVulnerability::modifyAttributes(int dvalue)
+{
+	int val;
+	val = target->getCurrentPhysicalDefense();
+	val += dvalue;
+	target->setCurrentPhysicalDefense(val);
+	val = target->getCurrentArcaneDefense();
+	val += dvalue;
+	target->setCurrentArcaneDefense(val);
+	val = target->getCurrentFireDefense();
+	val += dvalue;
+	target->setCurrentFireDefense(val);
+	val = target->getCurrentWaterDefense();
+	val += dvalue;
+	target->setCurrentWaterDefense(val);
+	val = target->getCurrentEarthDefense();
+	val += dvalue;
+	target->setCurrentEarthDefense(val);
+	val = target->getCurrentIceDefense();
+	val += dvalue;
+	target->setCurrentIceDefense(val);
+	val = target->getCurrentLightningDefense();
+	val += dvalue;
+	target->setCurrentLightningDefense(val);
+}
+
+int StatusVulnerability::onMerge(Status* status)
+{
+	int appliedStacks = Status::onMerge(status);
+	modifyAttributes(-appliedStacks * amount);
+	return appliedStacks;
+}
+
+void StatusVulnerability::onSpawn()
+{
+	Status::onSpawn();
+	modifyAttributes(-stacks * amount);
+}
+
+void StatusVulnerability::onKill()
+{
+	modifyAttributes(stacks * amount);
 	Status::onKill();
 }
 
@@ -786,12 +1016,6 @@ void StatusChill::onKill()
 	modifyAttributes(stacks * amount);
 }
 
-int StatusScope::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	return appliedStacks;
-}
-
 void StatusScope::onPreApplyDamage(Damage* applier)
 {
 	if (hasExpired())
@@ -814,12 +1038,6 @@ void StatusScope::onPreApplyDamage(Damage* applier)
 	}
 }
 
-int StatusTangleTrap::onMerge(Status* status)
-{
-	int appliedStacks = Status::onMerge(status);
-	return appliedStacks;
-}
-
 void StatusTangleTrap::onPreReactHit(EventAttack* evt)
 {
 	if (hasExpired())
@@ -827,7 +1045,7 @@ void StatusTangleTrap::onPreReactHit(EventAttack* evt)
 	Status::onPreReactHit(evt);
 	
 	AbilityType atkType = evt->attack;
-	if (atkType == ABILITY_ATTACK_MELEE && evt->ref)
+	if (atkType == ABILITY_ATTACK_MELEE && !evt->indirect && evt->ref)
 	{
 		Damage* damage = new Damage(NULL, target, useStacks() * AMOUNT, DAMAGE_MEDIUM, DAMAGE_EARTH);
 	
@@ -849,7 +1067,6 @@ void StatusTangleTrap::onPreReactHit(EventAttack* evt)
 		}
 		onKill();
 	}
-
 }
 /*
 void StatusTangleTrap::onPostBecomeTarget(Targeter* system)
@@ -915,6 +1132,90 @@ void StatusFeint::onExecuteAbility(Ability* ability)
 
 			onKill();
 		}
+	}
+}
+
+void StatusQuickNock::onExecuteAbility(Ability* ability)
+{
+	if (hasExpired())
+		return;
+	Status::onExecuteAbility(ability);
+	
+	Unit* source = effect->getSource();
+	Unit* caster = ability->getSource();
+	if (source && caster && source->getGrid() != caster->getGrid()) // Not same group
+	{
+		if (source->isAvailable() && Targeter::canReach(source, caster, effect->getBattle(), 1, 2))
+		{
+			Ability* response = NULL;
+			// Execute the ability
+			response = Ability::getAbility(QUICK_NOCK);
+			response->action(ability, source, effect->getBattle());
+
+			onKill();
+		}
+	}
+}
+
+void StatusConfuseTrap::onPreReactHit(EventAttack* evt)
+{
+	if (hasExpired())
+		return;
+	Status::onPreReactHit(evt);
+	
+	AbilityType atkType = evt->attack;
+	if (atkType == ABILITY_ATTACK_MELEE && !evt->indirect && evt->ref)
+	{
+		Damage* damage = new Damage(NULL, target, useStacks() * AMOUNT, DAMAGE_MEDIUM, DAMAGE_EARTH);
+	
+		Event* log = new EventCauseDamage(this->effect, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage, true);
+		log->apply(effect->getBattle());
+
+		if (damage->final > 0)
+		{
+			Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), evt->ref->getSource());
+			Status* status = new StatusConfusion(neffect, evt->ref->getSource(), 1);
+		
+			Event* log = new EventCauseStatus(effect, effect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+			log->apply(effect->getBattle());
+
+			if (log->success)
+				evt->chance = -1; // Auto fail if stun succeeded
+
+			neffect->applyEffect();
+		}
+		onKill();
+	}
+}
+
+void StatusCharmTrap::onPreReactHit(EventAttack* evt)
+{
+	if (hasExpired())
+		return;
+	Status::onPreReactHit(evt);
+	
+	AbilityType atkType = evt->attack;
+	if (atkType == ABILITY_ATTACK_MELEE && !evt->indirect && evt->ref)
+	{
+		Damage* damage = new Damage(NULL, target, useStacks() * AMOUNT, DAMAGE_MEDIUM, DAMAGE_EARTH);
+	
+		Event* log = new EventCauseDamage(this->effect, grouplist->getSubname(), Event::AUTO_HIT_CHANCE, damage, true);
+		log->apply(effect->getBattle());
+
+		if (damage->final > 0)
+		{
+			Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), evt->ref->getSource());
+			Status* status = new StatusCharm(neffect, evt->ref->getSource(), 1);
+		
+			Event* log = new EventCauseStatus(effect, effect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+			log->apply(effect->getBattle());
+
+			if (log->success)
+				evt->chance = -1; // Auto fail if stun succeeded
+
+			neffect->applyEffect();
+		}
+		onKill();
 	}
 }
 

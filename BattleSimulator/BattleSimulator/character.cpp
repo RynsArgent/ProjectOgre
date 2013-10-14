@@ -54,3 +54,8 @@ void Character::updateJobInfo()
 	job->init();
 	carryOverJobStatistics();
 }
+
+Character::~Character() 
+{
+	delete job;
+}

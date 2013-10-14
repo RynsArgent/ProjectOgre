@@ -28,7 +28,7 @@ private:
 	
 	vector<Event*> eventStack;
 	vector<Ability*> abilStack; // For cleanup
-	vector<StatusGroup*> cleanup;
+	vector<StatusGroup*> cleanup; // dead status effects to clean
 
 	bool isOver;
 public:
@@ -56,6 +56,7 @@ public:
     void addToEventStack(Event* value);
     void addToAbilStack(Ability* value);
     void addToCleanup(StatusGroup* value);
+    void addToTempSummons(Unit* value);
 	int getWinner() const;
     
 	void simulate();

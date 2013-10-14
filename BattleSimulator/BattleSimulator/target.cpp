@@ -1,5 +1,6 @@
 #include "target.h"
 
+#include "action.h"
 #include "unit.h"
 #include "group.h"
 #include "status.h"
@@ -37,6 +38,12 @@ bool compareNumDebuffsLess(Unit* lhs, Unit* rhs) {
 bool compareNumDebuffsMore(Unit* lhs, Unit* rhs) {
 	return lhs->getNumDebuffs() > rhs->getNumDebuffs() ||
 		(lhs->getNumDebuffs() == rhs->getNumDebuffs() && lhs->getRValue() > rhs->getRValue());
+}
+
+Targeter::Targeter(Action* ref, const vector<Unit*> & candidates, TargetGroup group, TargetType method, int numPrimaries)
+	: ref(ref), base(candidates), candidates(candidates), priorities(), chosen(), group(group), method(method), numPrimaries(numPrimaries), provoked(false)
+{
+	ref->addTargeter(this);
 }
 
 // This scans for all possible targets. In a valid battle, it should always return at least 1 unit.
