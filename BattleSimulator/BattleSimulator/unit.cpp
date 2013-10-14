@@ -375,7 +375,9 @@ void Unit::print() const
 		cout << "Status: ";
 		*/
 		for (int i = 0; i < currentStatus.size(); ++i)
+		{
 			cout << currentStatus[i]->getSubname() << currentStatus[i]->getTotalStacks() << " ";
+		}
 	}
 	cout << endl;
 }

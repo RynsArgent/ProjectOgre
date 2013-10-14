@@ -1086,7 +1086,8 @@ void Renderer::processMouseRightClickSetup(const Point2D & loc)
 			battleInfo.groupAInfo.info = new Group(setupInfo.formAInfo.info);
 			battleInfo.groupBInfo.info = new Group(setupInfo.formBInfo.info);
 			battleInfo.info = new Battle(seed, battleInfo.groupAInfo.info, battleInfo.groupBInfo.info);
-			
+		
+			//battleInfo.info->simulate(true);
 			battleInfo.info->simulate();
 			switch (battleInfo.info->getWinner())
 			{

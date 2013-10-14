@@ -59,7 +59,7 @@ public:
     void addToTempSummons(Unit* value);
 	int getWinner() const;
     
-	void simulate();
+	void simulate(bool print = false);
 	
 	void preprint() const;
 	void postprint() const;

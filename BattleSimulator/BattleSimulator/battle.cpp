@@ -209,12 +209,16 @@ void Battle::addToCleanup(StatusGroup* value) {
     cleanup.push_back(value);
 }
 
-void Battle::simulate()
+void Battle::simulate(bool print)
 {
 	while (!isBattleOver() && roundNumber <= 100)
 	{
+		if (print)
+			preprint();
 		cleanupTurn();
 		executeTurn();
+		if (print)
+			postprint();
 	}
 }
 

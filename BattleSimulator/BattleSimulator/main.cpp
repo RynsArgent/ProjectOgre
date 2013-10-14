@@ -48,7 +48,7 @@ Battle* battle = NULL;
 Renderer* renderer = new Renderer(WINDOW_WIDTH, WINDOW_HEIGHT, VIEWPORT_LEFT, VIEWPORT_RIGHT, VIEWPORT_TOP, VIEWPORT_BOTTOM);
 
 void initialize() {
-	seed = time(NULL);
+	seed = 0; //time(NULL);
 	srand(seed);
 
 	/*

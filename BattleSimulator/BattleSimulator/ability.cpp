@@ -2342,6 +2342,7 @@ void Raise::action(Ability* previous, Unit* current, Battle* battle)
 		target->setOnGrid(pos.x, pos.y);
 
 		dead.erase(dead.begin());
+		allyGroup->setDead(dead);
 	}
 }
 
