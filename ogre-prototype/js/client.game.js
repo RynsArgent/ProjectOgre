@@ -280,7 +280,8 @@ var createSettlement = function (data) {
         food = data.food || Math.floor(Math.random() * 100),
         order = data.order || Math.floor(Math.random() * 100),
         
-        owner = data.owner;
+        owner = data.owner,
+        armies = [], units = [];
         
         return {
             containedInTiles : function () {
@@ -330,6 +331,18 @@ var createSettlement = function (data) {
             setGold : function (n) {
                 gold = n;
             },
+            addUnit : function (unit) {
+                units.push(unit);
+            },
+            addArmy : function (army) {
+                armies.push(army);
+            },
+            getArmies : function () {
+                return armies;
+            },
+            getUnits : function () {
+                return units;
+            },
             
             containingTiles : containingTiles,
             Name : name,
@@ -353,7 +366,8 @@ var createArmy = function (data) {
         units = [],
         tilePosition,
         pixelPosition,
-        icon;
+        icon,
+        deployed = false;
         
     return {
         belongsTo : function () {
@@ -374,6 +388,15 @@ var createArmy = function (data) {
         
         setTilePosition : function (pos) {
             tilePosition = pos;
+        },
+        
+        deploy : function (pos) {
+            tilePosition = pos;
+            deployed = true;
+        },
+        
+        isDeployed : function () {
+            return deployed;
         }
     }
 };
@@ -560,6 +583,7 @@ var createClient = function () {
         bgContext.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
         
         stContext.clearRect(0, 0, stCanvas.width, stCanvas.height);
+        mainContext.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
         
         var startRow = Math.floor(scroll.y / map.getTileHeightInPixels()), 
             startCol = Math.floor(scroll.x / map.getTileWidthInPixels()), 
@@ -817,7 +841,7 @@ var createClient = function () {
                         
                         if (context === 'Recruit') {
                             (function () {
-                                var army, i, kingdom;
+                                var army, i, kingdom, img;
                                     for (i = 0; i < kingdoms.length; i += 1) {
                                         if (kingdoms[i].getPlayer() === player) {
                                             kingdom = kingdoms[i];
@@ -829,10 +853,15 @@ var createClient = function () {
                                     kingdom : kingdom
                                 });
                                 
-                                army.setIcon(resources.getImageObject('ico_fighter'));
-                                army.setTilePosition(obj.containedInTiles()[0]);
                                 
-                                unitObjects.push(army);
+                                img = jQuery.clone(resources.getImageObject('ico_fighter'));
+                                army.setIcon(img);
+                                
+                                jQuery('#army_details').append(img);
+                                //army.setIcon(resources.getImageObject('ico_fighter'));
+                                //army.setTilePosition(obj.containedInTiles()[0]);
+                                obj.addArmy(army);
+                                //unitObjects.push(army);
                             }());
                         }
                     }
