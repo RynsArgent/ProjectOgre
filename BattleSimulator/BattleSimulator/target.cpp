@@ -152,9 +152,9 @@ void Targeter::set(Battle* battle, int n)
 			for (int i = 0; i < cand.size(); ++i)
 				cand[i]->setRValue();
 			sort(cand.begin(), cand.end(), compareCurrentLifePreferLess);
-			for (; ni < n && cand.size() > 0; ++ni) {
+			for (; ni < n && ni < cand.size() && cand.size() > 0; ++ni) 
 				chosen.push_back(cand[ni]);
-			}
+			
 			break;
 		}
 	case TARGET_STRONGEST:
@@ -162,7 +162,7 @@ void Targeter::set(Battle* battle, int n)
 			for (int i = 0; i < cand.size(); ++i)
 				cand[i]->setRValue();
 			sort(cand.begin(), cand.end(), compareCurrentLifePreferMore);
-			for (; ni < n && cand.size() > 0; ++ni)
+			for (; ni < n && ni < cand.size() && cand.size() > 0; ++ni) 
 				chosen.push_back(cand[ni]);
 			break;
 		}
@@ -192,7 +192,7 @@ void Targeter::set(Battle* battle, int n)
 			for (int i = 0; i < cand.size(); ++i)
 				cand[i]->setRValue();
 			sort(cand.begin(), cand.end(), comparePercentLifePreferLess);
-			for (; ni < n && cand.size() > 0; ++ni)
+			for (; ni < n && ni < cand.size() && cand.size() > 0; ++ni) 
 				chosen.push_back(cand[ni]);
 			break;
 		}
@@ -201,7 +201,7 @@ void Targeter::set(Battle* battle, int n)
 			for (int i = 0; i < cand.size(); ++i)
 				cand[i]->setRValue();
 			sort(cand.begin(), cand.end(), compareNumDebuffsMore);
-			for (; ni < n && cand.size() > 0; ++ni)
+			for (; ni < n && ni < cand.size() && cand.size() > 0; ++ni) 
 				chosen.push_back(cand[ni]);
 			break;
 		}
@@ -210,7 +210,7 @@ void Targeter::set(Battle* battle, int n)
 			for (int i = 0; i < cand.size(); ++i)
 				cand[i]->setRValue();
 			sort(cand.begin(), cand.end(), compareNumBuffsMore);
-			for (; ni < n && cand.size() > 0; ++ni)
+			for (; ni < n && ni < cand.size() && cand.size() > 0; ++ni) 
 				chosen.push_back(cand[ni]);
 			break;
 		}

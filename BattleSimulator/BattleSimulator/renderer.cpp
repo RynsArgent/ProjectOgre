@@ -88,6 +88,8 @@ Color getColor(StatusGroup* status)
 		return Color(0.7, 0.7, 0.7);
 	else if (name == "Shell")
 		return Color(0.7, 0.7, 0.7);
+	else if (name == "Blink")
+		return Color(0.5, 0.5, 1.0);
 	return Color(0.0, 0.0, 0.0);
 }
 
@@ -1086,7 +1088,7 @@ void Renderer::processMouseRightClickSetup(const Point2D & loc)
 			battleInfo.groupAInfo.info = new Group(setupInfo.formAInfo.info);
 			battleInfo.groupBInfo.info = new Group(setupInfo.formBInfo.info);
 			battleInfo.info = new Battle(seed, battleInfo.groupAInfo.info, battleInfo.groupBInfo.info);
-		
+	
 			//battleInfo.info->simulate(true);
 			battleInfo.info->simulate();
 			switch (battleInfo.info->getWinner())

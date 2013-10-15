@@ -251,6 +251,21 @@ public:
 	~Cleanse() {}
 };
 
+class Dispel : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Dispel() : Ability("Dispel", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Dispel() {}
+};
+
 class Regeneration : public Ability
 {
 protected:
@@ -894,6 +909,21 @@ public:
 	LegSweep() : Ability("Leg Sweep", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
 	~LegSweep() {}
+};
+
+class Blink : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Blink() : Ability("Blink", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Blink() {}
 };
 
 #endif

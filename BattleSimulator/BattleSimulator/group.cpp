@@ -95,6 +95,18 @@ void Group::cleanDead()
 		}
 }
 
+void Group::eraseDead(Unit* unit)
+{
+	for (vector<Unit*>::iterator it = dead.begin(); it != dead.end(); ++it)
+	{
+		if ((*it) == unit)
+		{
+			dead.erase(it);
+			return;
+		}
+	}
+}
+
 bool Group::groupIsAvailable() const
 {
 	vector<Unit*> units = allyUnits();

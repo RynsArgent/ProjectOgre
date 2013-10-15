@@ -160,6 +160,7 @@ public:
 
 	void turnToFace(Facing face);
 	void cleanDead();
+	void eraseDead(Unit* unit);
 	
 	bool groupIsAvailable() const;
 	bool withinColumnRange(int x, int xmin, int xmax) const;

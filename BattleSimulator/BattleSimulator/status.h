@@ -880,6 +880,35 @@ public:
 	~StatusBarrier() {}
 };
 
+class StatusBlink : public Status
+{
+private:
+	static const StatusBenefit BENEFIT = NEUTRAL;
+	static const StatusMatch MATCH = STATUS_SELFMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = false;
+	static const bool INSTANCING = false;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 1;
+
+	static const int TIMER = 1;
+public:
+	StatusBlink(Effect* effect, Unit* target)
+    : Status(effect, "Blink", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+	
+	// Main Function
+	virtual void onPreReactHit(EventAttack* evt);
+    
+	~StatusBlink() {}
+};
+
 class StatusWounding : public Status
 {
 private:
@@ -1295,12 +1324,14 @@ private:
 	static const bool DISPELLABLE = false;
 	static const bool INSTANCING = false;
 	static const bool COLLECTIVE = false;
-	static const bool TIMED = false;
+	static const bool TIMED = true;
 	static const int MAX_SINGLE_STACKS = 1;
 	static const int MAX_GROUP_STACKS = 1;
+
+	static const int TIMER = 1;
 public:
 	StatusRally(Effect* effect, Unit* target)
-    : Status(effect, "Rally", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, 0, MAX_SINGLE_STACKS)
+    : Status(effect, "Rally", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
 	{}
 	
 	// Helper Functions
@@ -1322,12 +1353,14 @@ private:
 	static const bool DISPELLABLE = false;
 	static const bool INSTANCING = false;
 	static const bool COLLECTIVE = false;
-	static const bool TIMED = false;
+	static const bool TIMED = true;
 	static const int MAX_SINGLE_STACKS = 1;
 	static const int MAX_GROUP_STACKS = 1;
+
+	static const int TIMER = 1;
 public:
 	StatusFeint(Effect* effect, Unit* target)
-    : Status(effect, "Feint", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, 0, MAX_SINGLE_STACKS)
+    : Status(effect, "Feint", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
 	{}
 	
 	// Helper Functions
@@ -1349,12 +1382,14 @@ private:
 	static const bool DISPELLABLE = false;
 	static const bool INSTANCING = false;
 	static const bool COLLECTIVE = false;
-	static const bool TIMED = false;
+	static const bool TIMED = true;
 	static const int MAX_SINGLE_STACKS = 1;
 	static const int MAX_GROUP_STACKS = 1;
+
+	static const int TIMER = 1;
 public:
 	StatusQuickNock(Effect* effect, Unit* target)
-    : Status(effect, "Quick Nock", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, 0, MAX_SINGLE_STACKS)
+    : Status(effect, "Quick Nock", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
 	{}
 	
 	// Helper Functions

@@ -48,6 +48,8 @@ Ability* Ability::getAbility(Skill skill)
 		return new Heal();
 	case CLEANSE:
 		return new Cleanse();
+	case DISPEL:
+		return new Dispel();
 	case REGENERATION:
 		return new Regeneration();
 	case BLIND:
@@ -134,6 +136,8 @@ Ability* Ability::getAbility(Skill skill)
 		return new Roundhouse();
 	case LEG_SWEEP:
 		return new LegSweep();
+	case BLINK:
+		return new Blink();
 	default:
 		return new NoSkill();
 	}
@@ -297,7 +301,6 @@ void Block::action(Ability* previous, Unit* current, Battle* battle)
 		Effect* effect = new Effect(current, battle, name, current);
 
 		Status* status = new StatusBlock(effect, battle->getGlobalTrigger());
-		status->setTimed(true, 1);
 
 		Event* log = new EventCauseStatus(this, name, Event::AUTO_HIT_CHANCE, status, true);
 		log->apply(battle);
@@ -398,7 +401,6 @@ void BattleShout::action(Ability* previous, Unit* current, Battle* battle)
 	for (int i = 0; i < targets.size(); ++i)
 	{
 		Status* status = new StatusBattleShout(effect, targets[i], 1);
-		status->setTimed(true, 1);
 
 		Event* log = new EventCauseStatus(this, name, Event::BUFF_HIT_CHANCE, status);
 		log->apply(battle);
@@ -652,9 +654,43 @@ void Cleanse::action(Ability* previous, Unit* current, Battle* battle)
 			vector<StatusGroup*> statuslist = target->getCurrentStatus();
 			for (int i = 0; i < statuslist.size(); ++i)
 			{
-				if (statuslist[i]->getBenefit() == DEBUFF)
+				if (statuslist[i]->getBenefit() == DEBUFF && statuslist[i]->isDispellable())
 				{
 					Event* log = new EventRemoveStatus(this, name, Event::CLEANSE_HIT_CHANCE, target, statuslist[i]);
+					log->apply(battle);
+				}
+			}
+		}
+	}
+}
+
+void Dispel::action(Ability* previous, Unit* current, Battle* battle)
+{   
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+
+	vector<Unit*> targets = enemyGroup->allyUnits();
+
+	if (targets.size() > 0)
+	{
+		Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, TARGET_MOST_BUFFS, 1);
+		targeter->set(battle, 1);
+
+		if (checkpoint(current)) return;
+
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+			targeter->provoked = true;
+
+			vector<StatusGroup*> statuslist = target->getCurrentStatus();
+			for (int i = 0; i < statuslist.size(); ++i)
+			{
+				if (statuslist[i]->getBenefit() == BUFF && statuslist[i]->isDispellable())
+				{
+					Event* log = new EventRemoveStatus(this, name, Event::DISPEL_HIT_CHANCE, target, statuslist[i]);
 					log->apply(battle);
 				}
 			}
@@ -813,7 +849,6 @@ void Barrier::action(Ability* previous, Unit* current, Battle* battle)
 		Effect* effect = new Effect(current, battle, name, current);
 
 		Status* status = new StatusBarrier(effect, battle->getGlobalTrigger());
-		status->setTimed(true, 1);
 
 		Event* log = new EventCauseStatus(this, name, Event::AUTO_HIT_CHANCE, status, true);
 		log->apply(battle);
@@ -1008,7 +1043,7 @@ void WaterJet::action(Ability* previous, Unit* current, Battle* battle)
 						possibleFlee = true;
 					}
 
-					Event* log = new EventReposition(this, name, Event::KNOCKBACK_HIT_CHANCE, target, pos);
+					Event* log = new EventReposition(this, name, Event::REPOSITION_HIT_CHANCE, target, pos);
 					log->apply(battle);
 
 					if (log->success && possibleFlee)
@@ -1328,7 +1363,7 @@ void Charge::action(Ability* previous, Unit* current, Battle* battle)
 						pos.y = 2;
 					Unit* behindUnit = enemyGroup->getUnitAt(pos);
 
-					Event* log = new EventReposition(this, name, Event::KNOCKBACK_HIT_CHANCE, target, pos);
+					Event* log = new EventReposition(this, name, Event::REPOSITION_HIT_CHANCE, target, pos);
 					log->apply(battle);
 
 					if (log->success && behindUnit != NULL && behindUnit != target)
@@ -1561,7 +1596,7 @@ void Lasso::action(Ability* previous, Unit* current, Battle* battle)
 					if (pos.y < 0)
 						pos.y = 0;
 
-					Event* log = new EventReposition(this, name, Event::KNOCKBACK_HIT_CHANCE, target, pos);
+					Event* log = new EventReposition(this, name, Event::REPOSITION_HIT_CHANCE, target, pos);
 					log->apply(battle);
 				}
 			}
@@ -1642,7 +1677,6 @@ void Feint::action(Ability* previous, Unit* current, Battle* battle)
 		Effect* effect = new Effect(current, battle, name, current);
 
 		Status* status = new StatusFeint(effect, battle->getGlobalTrigger());
-		status->setTimed(true, 1);
 
 		Event* log = new EventCauseStatus(this, name, Event::AUTO_HIT_CHANCE, status, true);
 		log->apply(battle);
@@ -1953,7 +1987,6 @@ void QuickNock::action(Ability* previous, Unit* current, Battle* battle)
 		Effect* effect = new Effect(current, battle, name, current);
 
 		Status* status = new StatusQuickNock(effect, battle->getGlobalTrigger());
-		status->setTimed(true, 1);
 
 		Event* log = new EventCauseStatus(this, name, Event::AUTO_HIT_CHANCE, status, true);
 		log->apply(battle);
@@ -2028,32 +2061,32 @@ void Volley::action(Ability* previous, Unit* current, Battle* battle)
 		if (targeter->chosen.size() > 0) {
 			Unit* target = targeter->chosen[0];
 			targeter->provoked = true;
-
+			
+			vector<Unit*> sides = enemyGroup->unitsAdjacentTo(target->getGridX(), target->getGridY());
 			Event* log = new EventAttack(this, name, Event::RANGE_HIT_CHANCE, type, target);
 			log->apply(battle);
 
-			if (log)
+			if (log->success)
 			{
-				Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
+				Damage* damage = new Damage(this, target, current->getCurrentPhysicalAttack(), DAMAGE_LOW, DAMAGE_PHYSICAL);
 
 				Event* log = new EventCauseDamage(this, name, Event::AUTO_HIT_CHANCE, damage);
 				log->apply(battle);
+			}
 
-				vector<Unit*> sides = enemyGroup->unitsAdjacentTo(target->getGridX(), target->getGridY());
-				for (int i = 0; i < sides.size(); ++i)
+			for (int i = 0; i < sides.size(); ++i)
+			{
+				Unit* side = sides[i];
+	
+				Event* log = new EventAttack(this, name, Event::RANGE_HIT_CHANCE, type, side, true);
+				log->apply(battle);
+
+				if (log->success)
 				{
-					Unit* side = sides[i];
-
-					Event* log = new EventAttack(this, name, Event::RANGE_HIT_CHANCE, type, side, true);
+					Damage* damage = new Damage(this, side, current->getCurrentPhysicalAttack(), DAMAGE_LOW, DAMAGE_PHYSICAL);
+					
+					Event* log = new EventCauseDamage(this, name, Event::AUTO_HIT_CHANCE, damage);
 					log->apply(battle);
-
-					if (log->success)
-					{
-						Damage* damage = new Damage(this, side, current->getCurrentPhysicalAttack(), DAMAGE_MEDIUM, DAMAGE_PHYSICAL);
-
-						Event* log = new EventCauseDamage(this, name, Event::AUTO_HIT_CHANCE, damage);
-						log->apply(battle);
-					}
 				}
 			}
 		}
@@ -2216,7 +2249,6 @@ void RequiemOfWar::action(Ability* previous, Unit* current, Battle* battle)
 	for (int i = 0; i < targets.size(); ++i)
 	{
 		Status* status = new StatusDetermination(effect, targets[i], 1);
-		status->setTimed(true, 1);
 
 		Event* log = new EventCauseStatus(this, name, Event::BUFF_HIT_CHANCE, status);
 		log->apply(battle);
@@ -2336,13 +2368,9 @@ void Raise::action(Ability* previous, Unit* current, Battle* battle)
 		if (allyGroup->hasUnitAt(pos)) {
 			pos = positions[rand() % positions.size()];
 		}
-
-		target->setCurrentHealth(target->getMaxHealth() / 2);
-		allyGroup->setUnitAt(pos, target);
-		target->setOnGrid(pos.x, pos.y);
-
-		dead.erase(dead.begin());
-		allyGroup->setDead(dead);
+		
+		Event* log = new EventRaise(this, name, Event::RAISE_HIT_CHANCE, target, pos);
+		log->apply(battle);
 	}
 }
 
@@ -2417,7 +2445,7 @@ void HurricaneKick::action(Ability* previous, Unit* current, Battle* battle)
 		if (targeter->chosen.size() > 0) {
 			Unit* target = targeter->chosen[0];
 			targeter->provoked = true;
-
+			
 			Event* log = new EventAttack(this, name, Event::RANGE_HIT_CHANCE, type, target);
 			log->apply(battle);
 
@@ -2439,7 +2467,7 @@ void HurricaneKick::action(Ability* previous, Unit* current, Battle* battle)
 					
 					effect->applyEffect();
 				}
-
+				
 				vector<Unit*> sides = enemyGroup->unitsAdjacentTo(target->getGridX(), target->getGridY());
 				for (int i = 0; i < sides.size(); ++i)
 				{
@@ -2511,7 +2539,7 @@ void Roundhouse::action(Ability* previous, Unit* current, Battle* battle)
 				if (damage->final > 0 && positions.size() > 0)
 				{
 					GridPoint pos = positions[rand() % positions.size()];
-					Event* log = new EventReposition(this, name, Event::KNOCKBACK_HIT_CHANCE, target, pos);
+					Event* log = new EventReposition(this, name, Event::REPOSITION_HIT_CHANCE, target, pos);
 					log->apply(battle);
 				}
 			}
@@ -2538,7 +2566,7 @@ void LegSweep::action(Ability* previous, Unit* current, Battle* battle)
 		targeter->set(battle, maxTargets);
 
 		if (checkpoint(current)) return;
-		
+
 		for (int i = 0; i < targeter->chosen.size(); ++i) {
 			Unit* target = targeter->chosen[i];
 			targeter->provoked = true;
@@ -2566,5 +2594,46 @@ void LegSweep::action(Ability* previous, Unit* current, Battle* battle)
 				}
 			}
 		}
+	}
+}
+
+void Blink::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	if (previous != NULL)
+	{
+		if (previous->getSource() != NULL && previous->getSource()->isAvailable())
+		{
+			// Guaranteed that this ability responds with an EventAttack at the top of the stack
+			EventAttack* evt = static_cast<EventAttack*>(previous->getEvents()[previous->getEvents().size() - 1]);
+		
+			Group* allyGroup = battle->getAllyGroup(current->getGrid());
+			
+			vector<GridPoint> positions = allyGroup->getAvailablePoints();
+			if (positions.size() > 0)
+			{
+				GridPoint pos = positions[rand() % positions.size()];
+				
+				Event* log = new EventReposition(this, name, Event::REPOSITION_HIT_CHANCE, current, pos);
+				log->apply(battle);
+
+				if (log->success)
+					evt->chance = -1;
+			}
+		}
+	}
+	else
+	{
+		Effect* effect = new Effect(current, battle, name, current);
+
+		Status* status = new StatusBlink(effect, current);
+
+		Event* log = new EventCauseStatus(this, name, Event::AUTO_HIT_CHANCE, status, true);
+		log->apply(battle);
+
+		effect->applyEffect();
 	}
 }

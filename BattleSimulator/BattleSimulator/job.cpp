@@ -139,7 +139,7 @@ void Mage::init()
 	midSkills.push_back(retrieveSkill(SPELL1, character->getFavoredElement()));
 	midSkills.push_back(POLYMORPH);
 	frontSkills.push_back(retrieveSkill(SPELL1, character->getFavoredElement()));
-	frontSkills.push_back(BARRIER);
+	frontSkills.push_back(BLINK);
 	basicSkills.push_back(ARCANE_BOLT);
 }
 
@@ -305,7 +305,7 @@ void Priest::init()
 	backSkills.push_back(GREATER_HEAL);
 	backSkills.push_back(RAISE);
 	midSkills.push_back(GREATER_HEAL);
-	midSkills.push_back(CLEANSE);
+	midSkills.push_back(DISPEL);
 	frontSkills.push_back(HEAL);
 	frontSkills.push_back(BANISH);
 	basicSkills.push_back(MEND);

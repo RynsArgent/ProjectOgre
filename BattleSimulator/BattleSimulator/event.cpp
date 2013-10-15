@@ -239,3 +239,33 @@ void EventReposition::print(ostream& out) const
 EventReposition::~EventReposition()
 {
 }
+
+void EventRaise::apply(Battle* battle)
+{
+	Event::apply(battle);
+	determineSuccess();
+	if (success) {
+		Group* allyGroup = battle->getAllyGroup(target->getGrid());
+
+		target->setCurrentHealth(target->getMaxHealth() / 2);
+		allyGroup->setUnitAt(destination, target);
+		target->setOnGrid(destination.x, destination.y);
+
+		allyGroup->eraseDead(target);
+	}
+}
+
+void EventRaise::print(ostream& out) const
+{
+    if (success) {
+		if (!hiddenSource && ref != NULL)
+			out << ref->getSource()->getName() << "'s "; 
+		out << name;
+		out << " resurrects " << target->getName();
+	}
+	out << endl;
+}
+	
+EventRaise::~EventRaise()
+{
+}

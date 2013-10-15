@@ -732,6 +732,32 @@ void StatusBarrier::onPreReactHit(EventAttack* evt)
 	}
 }
 
+void StatusBlink::onPreReactHit(EventAttack* evt)
+{
+	if (hasExpired())
+		return;
+	Status::onPreReactHit(evt);
+
+	Unit* target = evt->target;
+	if (target)
+	{
+		// check if target is alive and the attack is an ability and a melee/ranged/magic attack
+		if (target->isAvailable() && 
+			evt->ref->getAction() != EFFECT_TRIGGER &&
+			(evt->ref->getAbilityType() == ABILITY_ATTACK_MELEE || 
+			evt->ref->getAbilityType() == ABILITY_ATTACK_RANGE || 
+			evt->ref->getAbilityType() == ABILITY_ATTACK_MAGIC)) 
+		{
+			Ability* response = NULL;
+			// Execute the ability
+			response = Ability::getAbility(BLINK);
+			response->action(static_cast<Ability*>(evt->ref), target, effect->getBattle());
+			
+			onKill();
+		}
+	}
+}
+
 void StatusWounding::applyHealingReduction(Damage* applier)
 { 
 	for (DamageNode* n = applier->head; n != NULL; n = n->next) {
