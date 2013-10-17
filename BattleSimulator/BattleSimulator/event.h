@@ -18,7 +18,7 @@ struct Event
 	static const int MAGIC_HIT_CHANCE = 100;
 	static const int HEAL_HIT_CHANCE = 100;
 	static const int BUFF_HIT_CHANCE = 100;
-	static const int DEBUFF_HIT_CHANCE = 100;
+	static const int DEBUFF_HIT_CHANCE = 50;
 	static const int UNBUFF_HIT_CHANCE = 100;
 	static const int CLEANSE_HIT_CHANCE = 100;
 	static const int DISPEL_HIT_CHANCE = 100;
@@ -133,9 +133,10 @@ struct EventReposition : public Event
 
 	Unit* target;
 	GridPoint destination;
+    bool pointless;
 
 	EventReposition(Action* ref, const string & name, int chance = 100, Unit* target = NULL, const GridPoint & destination = GridPoint(), bool hiddenSource = false)
-		: Event(ref, name, TYPE, chance, hiddenSource), target(target), destination(destination)
+		: Event(ref, name, TYPE, chance, hiddenSource), target(target), destination(destination), pointless(false)
 	{}
 	
 	virtual void apply(Battle* battle);

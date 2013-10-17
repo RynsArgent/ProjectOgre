@@ -1083,7 +1083,7 @@ void StatusTangleTrap::onPreReactHit(EventAttack* evt)
 			Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), evt->ref->getSource());
 			Status* status = new StatusStun(neffect, evt->ref->getSource(), 1);
 		
-			Event* log = new EventCauseStatus(effect, effect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+			Event* log = new EventCauseStatus(effect, neffect->getName(), Event::DEBUFF_HIT_CHANCE, status);
 			log->apply(effect->getBattle());
 
 			if (log->success)
@@ -1202,7 +1202,7 @@ void StatusConfuseTrap::onPreReactHit(EventAttack* evt)
 			Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), evt->ref->getSource());
 			Status* status = new StatusConfusion(neffect, evt->ref->getSource(), 1);
 		
-			Event* log = new EventCauseStatus(effect, effect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+			Event* log = new EventCauseStatus(effect, neffect->getName(), Event::DEBUFF_HIT_CHANCE, status);
 			log->apply(effect->getBattle());
 
 			if (log->success)
@@ -1233,7 +1233,7 @@ void StatusCharmTrap::onPreReactHit(EventAttack* evt)
 			Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), evt->ref->getSource());
 			Status* status = new StatusCharm(neffect, evt->ref->getSource(), 1);
 		
-			Event* log = new EventCauseStatus(effect, effect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+			Event* log = new EventCauseStatus(effect, neffect->getName(), Event::DEBUFF_HIT_CHANCE, status);
 			log->apply(effect->getBattle());
 
 			if (log->success)
@@ -1243,6 +1243,52 @@ void StatusCharmTrap::onPreReactHit(EventAttack* evt)
 		}
 		onKill();
 	}
+}
+
+void StatusFascination::onPreReactHit(EventAttack* evt)
+{
+	if (hasExpired())
+		return;
+	Status::onPreReactHit(evt);
+	
+	AbilityType atkType = evt->attack;
+	if ((atkType == ABILITY_ATTACK_MELEE ||
+        atkType == ABILITY_ATTACK_RANGE ||
+        atkType == ABILITY_ATTACK_MAGIC) && !evt->indirect && evt->ref)
+	{
+        Effect* neffect = new Effect(effect->getSource(), effect->getBattle(), effect->getName(), evt->ref->getSource());
+        Status* status = new StatusCharm(neffect, evt->ref->getSource(), 1);
+            
+        Event* log = new EventCauseStatus(effect, neffect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+        log->apply(effect->getBattle());
+            
+        if (log->success)
+            evt->chance = -1; // Auto fail if charm succeeded
+            
+        neffect->applyEffect();
+	}
+}
+
+void StatusFascination::onPostReceiveDamage(Damage* applier)
+{
+	if (hasExpired())
+		return;
+	Status::onPostReceiveDamage(applier);
+	
+	if (applier->action && applier->action->getSource() && applier->action->getAction() != EFFECT_TRIGGER &&
+        applier->final > 0)
+    {
+        Unit* target = applier->action->getSource();
+        
+        Effect* neffect = new Effect(target, effect->getBattle(), effect->getName(), target);
+        
+        Status* status = new StatusCharm(neffect, target, 1);
+        
+        Event* log = new EventCauseStatus(effect, neffect->getName(), Event::DEBUFF_HIT_CHANCE, status);
+        log->apply(effect->getBattle());
+        
+		onKill();
+    }
 }
 
 void Effect::print(ostream& out) const

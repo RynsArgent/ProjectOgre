@@ -18,7 +18,7 @@
 extern bool change;
 extern int seed;
 
-JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT, JOB_BARBARIAN, JOB_ROGUE, JOB_HUNTER, JOB_ARCHER, JOB_BARD, JOB_PRIEST, JOB_PUGILIST };
+JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT, JOB_BARBARIAN, JOB_ROGUE, JOB_HUNTER, JOB_ARCHER, JOB_BARD, JOB_PRIEST, JOB_PUGILIST, JOB_WIZARD, JOB_ENCHANTER };
 static const int NUM_JOBS = sizeof(jobs) / sizeof(JobType);
 
 Color getColor(StatusGroup* status)
@@ -33,7 +33,7 @@ Color getColor(StatusGroup* status)
 	else if (name == "Confusion")
 		return Color(0.0, 1.0, 1.0);
 	else if (name == "Charm")
-		return Color(1.0, 0.0, 1.0);
+		return Color(1.0, 0.7, 0.7);
 	else if (name == "Poison")
 		return Color(0.0, 1.0, 0.0);
 	else if (name == "Bleed")
@@ -50,7 +50,7 @@ Color getColor(StatusGroup* status)
 		return Color(0.5, 0.0, 0.0);
 	else if (name == "Block")
 		return Color(0.3, 0.3, 0.3);
-	else if (name == "Taunt")
+	else if (name == "Provoke")
 		return Color(0.7, 0.3, 0.0);
 	else if (name == "Marked")
 		return Color(0.5, 0.3, 0.3);
@@ -90,6 +90,8 @@ Color getColor(StatusGroup* status)
 		return Color(0.7, 0.7, 0.7);
 	else if (name == "Blink")
 		return Color(0.5, 0.5, 1.0);
+	else if (name == "Fascination")
+		return Color(1.0, 0.0, 1.0);
 	return Color(0.0, 0.0, 0.0);
 }
 
@@ -302,10 +304,16 @@ void BattleInfoBox::render(Renderer* renderer) const
 	double dheight = 0.05;
 
 	vector<Event*> eventStack = info->getEventStack();
+    int textloc = 0;
 	for (int i = 0; i < eventStack.size(); ++i) {
 		stringstream ss;
 		eventStack[i]->print(ss);
-		renderer->GLoutputString12(sidebox.p.x + wpadding, sidebox.p.y + hpadding + dheight * i, ss.str(), 1.0, 1.0, 1.0);
+        string val = ss.str();
+        if (val != "")
+        {
+            renderer->GLoutputString12(sidebox.p.x + wpadding, sidebox.p.y + hpadding + dheight * textloc, val, 1.0, 1.0, 1.0);
+            ++textloc;
+        }
 	}
 	renderer->GLoutputString12(sidebox.p.x + wpadding, sidebox.p.y + sidebox.height - hpadding, "seed: " + toStringInt(info->getSeed()), 1.0, 1.0, 1.0);
 }

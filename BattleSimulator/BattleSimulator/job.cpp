@@ -34,6 +34,10 @@ Job* Job::getJob(JobType job, Character* target)
             return new Priest(target);
     case JOB_PUGILIST:
             return new Pugilist(target);
+    case JOB_WIZARD:
+        return new Wizard(target);
+    case JOB_ENCHANTER:
+        return new Enchanter(target);
 	default:
 		return NULL;
 	}
@@ -114,9 +118,9 @@ void Acolyte::init()
 {
 	Job::init();
 	backSkills.push_back(HEAL);
-	backSkills.push_back(REGENERATION);
+	backSkills.push_back(CLEANSE);
 	midSkills.push_back(HEAL);
-	midSkills.push_back(REGENERATION);
+	midSkills.push_back(CLEANSE);
 	frontSkills.push_back(HEAL);
 	frontSkills.push_back(FLASH);
 	basicSkills.push_back(MEND);
@@ -139,7 +143,7 @@ void Mage::init()
 	midSkills.push_back(retrieveSkill(SPELL1, character->getFavoredElement()));
 	midSkills.push_back(POLYMORPH);
 	frontSkills.push_back(retrieveSkill(SPELL1, character->getFavoredElement()));
-	frontSkills.push_back(BLINK);
+	frontSkills.push_back(BARRIER);
 	basicSkills.push_back(ARCANE_BOLT);
 }
 
@@ -330,5 +334,47 @@ void Pugilist::init()
 	frontSkills.push_back(LIGHTNING_KICKS);
 	frontSkills.push_back(HURRICANE_KICK);
 	basicSkills.push_back(MEND);
+}
+
+Wizard::Wizard(Character* character)
+: Job(character, JOB_TYPE, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
+      BASE_PHYSICAL_DEFENSE, BASE_ARCANE_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+      BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
+      BASE_UPKEEP)
+{
+	init();
+}
+
+void Wizard::init()
+{
+	Job::init();
+	backSkills.push_back(retrieveSkill(SPELL2, character->getFavoredElement()));
+	backSkills.push_back(ARCANE_MISSIL);
+	midSkills.push_back(retrieveSkill(SPELL2, character->getFavoredElement()));
+	midSkills.push_back(ARCANE_MISSIL);
+	frontSkills.push_back(retrieveSkill(SPELL1, character->getFavoredElement()));
+	frontSkills.push_back(BLINK);
+	basicSkills.push_back(ARCANE_BOLT);
+}
+
+Enchanter::Enchanter(Character* character)
+: Job(character, JOB_TYPE, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
+      BASE_PHYSICAL_DEFENSE, BASE_ARCANE_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+      BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
+      BASE_UPKEEP)
+{
+	init();
+}
+
+void Enchanter::init()
+{
+	Job::init();
+	backSkills.push_back(retrieveSkill(SPELL_DEBUFF1, character->getFavoredElement()));
+	backSkills.push_back(STUN_WAVE);
+	midSkills.push_back(retrieveSkill(SPELL_DEBUFF1, character->getFavoredElement()));
+	midSkills.push_back(FASCINATION);
+	frontSkills.push_back(retrieveSkill(SPELL_DEBUFF1, character->getFavoredElement()));
+	frontSkills.push_back(FASCINATION);
+	basicSkills.push_back(ARCANE_BOLT);
 }
 
