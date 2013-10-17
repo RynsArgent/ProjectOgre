@@ -3,27 +3,65 @@
 #include <sstream>
 
 Skill retrieveSkill(SkillSet set, ElementType element)
-{	
+{
 	if (set == SPELL1) {
 		switch (element) {
-			case ELEMENT_NONE: 
+			case ELEMENT_NONE:
 				return ARCANE_BOLT;
-			case ELEMENT_PHYSICAL: 
+			case ELEMENT_PHYSICAL:
 				return ARCANE_BOLT;
 			case ELEMENT_ARCANE:
 				return ARCANE_BOLT;
 			case ELEMENT_FIRE:
 				return FIREBALL;
-			case ELEMENT_WATER: 
+			case ELEMENT_WATER:
 				return WATER_JET;
-			case ELEMENT_EARTH: 
+			case ELEMENT_EARTH:
 				return ACID_DART;
 			case ELEMENT_ICE:
 				return FROST_SHARD;
 			case ELEMENT_LIGHTNING:
 				return LIGHTNING_BOLT;
 		}
-	}
+	} else if (set == SPELL2) {
+		switch (element) {
+			case ELEMENT_NONE:
+				return ARCANE_MISSIL;
+			case ELEMENT_PHYSICAL:
+				return ARCANE_MISSIL;
+			case ELEMENT_ARCANE:
+				return ARCANE_MISSIL;
+			case ELEMENT_FIRE:
+				return FLAMESTRIKE;
+			case ELEMENT_WATER:
+				return WATERBLAST;
+			case ELEMENT_EARTH:
+				return ROCKSLIDE;
+			case ELEMENT_ICE:
+				return ICICLE;
+			case ELEMENT_LIGHTNING:
+				return ELECTRIC_CURTAIN;
+		}
+    } else if (set == SPELL_DEBUFF1) {
+		switch (element) {
+			case ELEMENT_NONE:
+				return STUN_WAVE;
+			case ELEMENT_PHYSICAL:
+				return STUN_WAVE;
+			case ELEMENT_ARCANE:
+				return STUN_WAVE;
+			case ELEMENT_FIRE:
+				return DISORIENTING_MIST;
+			case ELEMENT_WATER:
+				return SLEEP_MIASMA;
+			case ELEMENT_EARTH:
+				return NOXIOUS_SPORES;
+			case ELEMENT_ICE:
+				return CHILLING_FOG;
+			case ELEMENT_LIGHTNING:
+				return PARALYTIC_CLOUD;
+		}
+    }
 	return NO_STANDARD_SKILL;
 }
 
@@ -163,6 +201,10 @@ string toStringJob(JobType val)
             return "Priest";
         case JOB_PUGILIST:
             return "Pugilist";
+        case JOB_WIZARD:
+            return "Wizard";
+        case JOB_ENCHANTER:
+            return "Enchanter";
     }
 	return "";
 }

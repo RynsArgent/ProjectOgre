@@ -97,7 +97,7 @@ void EventAttack::print(ostream& out) const
 	if (success) {
 		out << " and hits";
 	} else {
-		out << " and misses";
+		out << " but fails";
 	}
 	out << endl;
 }
@@ -215,6 +215,8 @@ void EventReposition::apply(Battle* battle)
 	Event::apply(battle);
 	determineSuccess();
 	if (success) {
+        pointless = target->getGridX() == destination.x && target->getGridY() == destination.y;
+        
 		Group* group = battle->getAllyGroup(target->getGrid());
 		if (group->getUnitAt(destination) == NULL)
 		{
@@ -227,13 +229,13 @@ void EventReposition::apply(Battle* battle)
 
 void EventReposition::print(ostream& out) const
 {
-    if (success) {
+    if (success && !pointless) {
 		if (!hiddenSource && ref != NULL)
 			out << ref->getSource()->getName() << "'s "; 
 		out << name;
 		out << " repositions " << target->getName();
+        out << endl;
 	}
-	out << endl;
 }
 	
 EventReposition::~EventReposition()
@@ -262,8 +264,8 @@ void EventRaise::print(ostream& out) const
 			out << ref->getSource()->getName() << "'s "; 
 		out << name;
 		out << " resurrects " << target->getName();
+        out << endl;
 	}
-	out << endl;
 }
 	
 EventRaise::~EventRaise()

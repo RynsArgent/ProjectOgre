@@ -1462,6 +1462,36 @@ public:
 	~StatusCharmTrap() {}
 };
 
+class StatusFascination : public Status
+{
+protected:
+	static const StatusBenefit BENEFIT = BUFF;
+	static const StatusMatch MATCH = STATUS_ALLMATCHABLE;
+	static const StatusCategory CATEGORY = STATUS_UNCATEGORIZED;
+	static const bool DISPELLABLE = true;
+	static const bool INSTANCING = true;
+	static const bool COLLECTIVE = false;
+	static const bool TIMED = true;
+	static const int MAX_SINGLE_STACKS = 1;
+	static const int MAX_GROUP_STACKS = 3;
+    
+	static const int TIMER = 1;
+public:
+	StatusFascination(Effect* effect, Unit* target)
+    : Status(effect, "Fascination", target, BENEFIT, MATCH, CATEGORY, DISPELLABLE, INSTANCING, COLLECTIVE, TIMED, TIMER, MAX_SINGLE_STACKS)
+	{}
+	
+	// Helper Functions
+	virtual int getMaxSingleStacks() const { return MAX_SINGLE_STACKS; }
+	virtual int getMaxGroupStacks() const { return MAX_GROUP_STACKS; }
+    
+	// Main Function
+	virtual void onPreReactHit(EventAttack* evt);
+	virtual void onPostReceiveDamage(Damage* applier);
+    
+	~StatusFascination() {}
+};
+
 class StatusGroup
 {
 private:
