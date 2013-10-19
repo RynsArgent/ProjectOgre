@@ -38,6 +38,10 @@ Job* Job::getJob(JobType job, Character* target)
         return new Wizard(target);
     case JOB_ENCHANTER:
         return new Enchanter(target);
+    case JOB_DRUID:
+        return new Druid(target);
+    case JOB_TREE_OF_LIFE:
+        return new TreeOfLife(target);
 	default:
 		return NULL;
 	}
@@ -378,3 +382,44 @@ void Enchanter::init()
 	basicSkills.push_back(ARCANE_BOLT);
 }
 
+Druid::Druid(Character* character)
+: Job(character, JOB_TYPE, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
+      BASE_PHYSICAL_DEFENSE, BASE_ARCANE_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+      BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
+      BASE_UPKEEP)
+{
+	init();
+}
+
+void Druid::init()
+{
+	Job::init();
+	backSkills.push_back(NATURES_EMBRACE);
+	backSkills.push_back(MANA_TREE);
+	midSkills.push_back(NATURES_EMBRACE);
+	midSkills.push_back(NATURES_GRASP);
+	frontSkills.push_back(ENERVATE);
+	frontSkills.push_back(NATURES_GRASP);
+	basicSkills.push_back(ARCANE_BOLT);
+}
+
+TreeOfLife::TreeOfLife(Character* character)
+: Job(character, JOB_TYPE, BASE_HEALTH, BASE_PHYSICAL_ATTACK, BASE_MAGIC_ATTACK, BASE_SPEED,
+      BASE_PHYSICAL_DEFENSE, BASE_ARCANE_DEFENSE, BASE_FIRE_DEFENSE, BASE_WATER_DEFENSE,
+      BASE_EARTH_DEFENSE, BASE_ICE_DEFENSE, BASE_LIGHTNING_DEFENSE,
+      BASE_UPKEEP)
+{
+	init();
+}
+
+void TreeOfLife::init()
+{
+	Job::init();
+	backSkills.push_back(TRANQUILITY);
+	backSkills.push_back(TRANQUILITY);
+	midSkills.push_back(TRANQUILITY);
+	midSkills.push_back(TRANQUILITY);
+	frontSkills.push_back(TRANQUILITY);
+	frontSkills.push_back(TRANQUILITY);
+	basicSkills.push_back(TRANQUILITY);
+}

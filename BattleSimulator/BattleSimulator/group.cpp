@@ -93,6 +93,19 @@ void Group::cleanDead()
 				dead.push_back(unit);
 			}
 		}
+
+	vector<Unit*> temp(summoned.size());
+	int ind = 0;
+	for (int i = 0; i < summoned.size(); ++i)
+	{
+		if (summoned[i]->isAvailable())
+		{
+			temp[ind] = summoned[i];
+			++ind;
+		}
+	}
+	temp.resize(ind);
+	summoned = temp;
 }
 
 void Group::eraseDead(Unit* unit)
@@ -354,4 +367,8 @@ void Group::printGroup(bool mirrored) const
 			cout << endl;
 		}
 	}
+}
+
+Group::~Group() 
+{
 }

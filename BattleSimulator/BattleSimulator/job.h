@@ -595,7 +595,7 @@ protected:
 	const static int BASE_HEALTH = 60;
 	const static int BASE_PHYSICAL_ATTACK = 10;
 	const static int BASE_MAGIC_ATTACK = 30;
-	const static int BASE_SPEED = 1;
+	const static int BASE_SPEED = 2;
 	
 	const static int BASE_PHYSICAL_DEFENSE = 0;
 	const static int BASE_ARCANE_DEFENSE = 0;
@@ -611,6 +611,58 @@ public:
 	Enchanter(Character* character);
 	virtual void init();
 	~Enchanter() {}
+};
+
+class Druid : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_DRUID;
+    
+	const static int BASE_HEALTH = 60;
+	const static int BASE_PHYSICAL_ATTACK = 10;
+	const static int BASE_MAGIC_ATTACK = 30;
+	const static int BASE_SPEED = 2;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	Druid(Character* character);
+	virtual void init();
+	~Druid() {}
+};
+
+class TreeOfLife : public Job
+{
+protected:
+	const static JobType JOB_TYPE = JOB_DRUID;
+    
+	const static int BASE_HEALTH = 10;
+	const static int BASE_PHYSICAL_ATTACK = 10;
+	const static int BASE_MAGIC_ATTACK = 30;
+	const static int BASE_SPEED = 1;
+	
+	const static int BASE_PHYSICAL_DEFENSE = 0;
+	const static int BASE_ARCANE_DEFENSE = 0;
+	const static int BASE_FIRE_DEFENSE = 0;
+	const static int BASE_WATER_DEFENSE = 0;
+	const static int BASE_EARTH_DEFENSE = 0;
+	const static int BASE_ICE_DEFENSE = 0;
+	const static int BASE_LIGHTNING_DEFENSE = 0;
+	
+	const static int BASE_SIZE = 1;
+	const static int BASE_UPKEEP = 0;
+public:
+	TreeOfLife(Character* character);
+	virtual void init();
+	~TreeOfLife() {}
 };
 
 #endif

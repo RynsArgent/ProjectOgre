@@ -172,10 +172,16 @@ Ability* Ability::getAbility(Skill skill)
         return new ChillingFog();
     case DISORIENTING_MIST:
         return new DisorientingMist();
+    case ENERVATE:
+        return new Enervate();
     case NATURES_GRASP:
         return new NaturesGrasp();
     case NATURES_EMBRACE:
         return new NaturesEmbrace();
+	case MANA_TREE:
+		return new ManaTree();
+	case TRANQUILITY:
+		return new Tranquility();
 	default:
 		return new NoSkill();
 	}
@@ -1265,21 +1271,14 @@ void Slash::action(Ability* previous, Unit* current, Battle* battle)
 	if (checkpoint(current)) return;
 
 	int rowRange = 1;
-	vector<Unit*> targets = allyGroup->enemyUnitsInRowFurthestInFront(enemyGroup, rowRange);
+	vector<Unit*> targets = Targeter::selectRowTargets(current, battle, allyGroup, enemyGroup, rowRange, false);
 
 	if (targets.size() > 0)
 	{
-		int maxTargets = 3;
-		Targeter* targeter = new Targeter(this, targets, TARGET_ENEMIES, allyGroup->getTargetOrder(), maxTargets);
-		targeter->set(battle, maxTargets);
+		for (int i = 0; i < targets.size(); ++i) {
+			Unit* target = targets[i];
 
-		if (checkpoint(current)) return;
-
-		for (int i = 0; i < targeter->chosen.size(); ++i) {
-			Unit* target = targeter->chosen[i];
-			targeter->provoked = true;
-
-			Event* log = new EventAttack(this, name, Event::MELEE_HIT_CHANCE, type, target);
+			Event* log = new EventAttack(this, name, Event::MELEE_HIT_CHANCE, type, target, true);
 			log->apply(battle);
 
 			if (log->success)
@@ -2113,7 +2112,9 @@ void Volley::action(Ability* previous, Unit* current, Battle* battle)
 			{
 				Unit* side = sides[i];
 	
-				Event* log = new EventAttack(this, name, Event::RANGE_HIT_CHANCE, type, side, true);
+				Event* log = NULL;
+				if (side == target) log = new EventAttack(this, name, Event::RANGE_HIT_CHANCE, type, side, false);
+				else log = new EventAttack(this, name, Event::RANGE_HIT_CHANCE, type, side, true);
 				log->apply(battle);
 
 				if (log->success)
@@ -2208,8 +2209,10 @@ void Reformation::action(Ability* previous, Unit* current, Battle* battle)
 		allyGroup->setUnitAt(pos, summonedList[s]);
 		summonedList[s]->setOnGrid(pos.x, pos.y);
 	}
-	summonedList.resize(s);
-	allyGroup->setSummoned(summonedList);
+	for (; s < summonedList.size(); ++s)
+	{
+		summonedList[s]->setOnGrid(-1, -1);
+	}
 }
 
 void Lullaby::action(Ability* previous, Unit* current, Battle* battle)
@@ -2364,13 +2367,10 @@ void GreaterHeal::action(Ability* previous, Unit* current, Battle* battle)
 		if (targeter->chosen.size() > 0) {
 			Unit* target = targeter->chosen[0];
 			targeter->provoked = true;
-
-			Damage* damage = new Damage(this, target, current->getCurrentMagicAttack(), DAMAGE_MEDIUM, DAMAGE_HEALING);
-
-			Event* log = new EventCauseDamage(this, name, Event::HEAL_HIT_CHANCE, damage);
-			log->apply(battle);
-
+			
 			vector<Unit*> sides = allyGroup->unitsAdjacentTo(target->getGridX(), target->getGridY());
+			sides.push_back(target);
+
 			for (int i = 0; i < sides.size(); ++i)
 			{
 				Unit* side = sides[i];
@@ -2743,7 +2743,9 @@ void Waterblast::action(Ability* previous, Unit* current, Battle* battle)
 			{
 				Unit* side = sides[i];
                 
-				Event* log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
+				Event* log = NULL;
+				if (side == target) log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, false);
+				else log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
 				log->apply(battle);
                 
 				if (log->success)
@@ -2814,7 +2816,9 @@ void Flamestrike::action(Ability* previous, Unit* current, Battle* battle)
 			{
 				Unit* side = sides[i];
                 
-				Event* log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
+				Event* log = NULL;
+				if (side == target) log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, false);
+				else log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
 				log->apply(battle);
                 
 				if (log->success)
@@ -2872,7 +2876,9 @@ void Icicle::action(Ability* previous, Unit* current, Battle* battle)
 			{
 				Unit* side = sides[i];
                 
-				Event* log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
+				Event* log = NULL;
+				if (side == target) log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, false);
+				else log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
 				log->apply(battle);
                 
 				if (log->success)
@@ -2930,7 +2936,9 @@ void ElectricCurtain::action(Ability* previous, Unit* current, Battle* battle)
 			{
 				Unit* side = sides[i];
                 
-				Event* log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
+				Event* log = NULL;
+				if (side == target) log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, false);
+				else log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
 				log->apply(battle);
                 
 				if (log->success)
@@ -2988,7 +2996,9 @@ void Rockslide::action(Ability* previous, Unit* current, Battle* battle)
 			{
 				Unit* side = sides[i];
                 
-				Event* log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
+				Event* log = NULL;
+				if (side == target) log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, false);
+				else log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, side, true);
 				log->apply(battle);
                 
 				if (log->success)
@@ -3163,3 +3173,170 @@ void DisorientingMist::action(Ability* previous, Unit* current, Battle* battle)
 	}
 }
 
+void Enervate::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+    
+	if (checkpoint(current)) return;
+    
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+    
+	vector<Unit*> targets = enemyGroup->allyUnits();
+	for (int i = 0; i < targets.size(); ++i)
+	{
+        Effect* effect = new Effect(current, battle, name, targets[i]);
+        
+		Status* status = new StatusWeaken(effect, targets[i], 1);
+        
+		Event* log = new EventCauseStatus(this, name, Event::DEBUFF_HIT_CHANCE, status);
+		log->apply(battle);
+        
+        effect->applyEffect();
+	}
+}
+
+void NaturesGrasp::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+	Group* enemyGroup = battle->getEnemyGroup(current->getGrid());
+
+	if (checkpoint(current)) return;
+
+	int rowRange = 2;
+	vector<Unit*> targets = Targeter::selectRowTargets(current, battle, allyGroup, enemyGroup, rowRange, true);
+
+	if (targets.size() > 0)
+	{
+		for (int i = 0; i < targets.size(); ++i) {
+			Unit* target = targets[i];
+
+			Event* log = new EventAttack(this, name, Event::MAGIC_HIT_CHANCE, type, target, true);
+			log->apply(battle);
+
+			if (log->success)
+			{
+				Damage* damage = new Damage(this, target, current->getCurrentMagicAttack(), DAMAGE_LOW, DAMAGE_EARTH);
+
+				Event* log = new EventCauseDamage(this, name, Event::AUTO_HIT_CHANCE, damage);
+				log->apply(battle);
+				
+				if (damage->final > 0)
+				{
+					Effect* effect = new Effect(current, battle, name, target);
+
+					Status* status = new StatusParalyze(effect, target, 1);
+
+					Event* log = new EventCauseStatus(this, name, Event::DEBUFF_HIT_CHANCE, status);
+					log->apply(battle);
+
+					effect->applyEffect();
+				}
+			}
+		}
+	}
+}
+
+void NaturesEmbrace::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+
+	vector<Unit*> targets = allyGroup->allyUnits();
+
+	if (targets.size() > 0)
+	{
+		Targeter* targeter = new Targeter(this, targets, TARGET_ALLIES, TARGET_HEALING, 1);
+		targeter->set(battle, 1);
+
+		if (checkpoint(current)) return;
+
+		if (targeter->chosen.size() > 0) {
+			Unit* target = targeter->chosen[0];
+			targeter->provoked = true;
+			
+			vector<Unit*> sides = allyGroup->unitsAdjacentTo(target->getGridX(), target->getGridY());
+			sides.push_back(target);
+
+			for (int i = 0; i < sides.size(); ++i)
+			{
+				Unit* side = sides[i];
+
+				Damage* damage = new Damage(this, side, current->getCurrentMagicAttack(), DAMAGE_LOW, DAMAGE_HEALING);
+
+				Event* log = new EventCauseDamage(this, name, Event::AUTO_HIT_CHANCE, damage);
+				log->apply(battle);
+
+				if (damage->final < 0)
+				{
+					Effect* effect = new Effect(current, battle, name, side);
+
+					Status* status = new StatusRegeneration(effect, side, 1);
+
+					Event* log = new EventCauseStatus(this, name, Event::BUFF_HIT_CHANCE, status);
+					log->apply(battle);
+
+					effect->applyEffect();
+				}
+			}
+		}
+	}
+}
+
+void ManaTree::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+
+	vector<GridPoint> positions = allyGroup->getAvailablePoints();
+
+	if (positions.size() > 0)
+	{
+		GridPoint pos = positions[rand() % positions.size()];
+
+		if (allyGroup->getSummon(current) == NULL)
+		{
+			Character* character = new Character("Mana Tree", JOB_TREE_OF_LIFE, ELEMENT_EARTH);
+			allyGroup->addSummonAt(pos.x, pos.y, character, current);
+			battle->addToUnitOrder(allyGroup->getUnitAt(pos));
+		}
+	}
+}
+
+void Tranquility::action(Ability* previous, Unit* current, Battle* battle)
+{
+	Ability::action(previous, current, battle);
+
+	if (checkpoint(current)) return;
+
+	Group* allyGroup = battle->getAllyGroup(current->getGrid());
+
+	vector<Unit*> targets = allyGroup->allyUnits();
+
+	for (int i = 0; i < targets.size(); ++i)
+	{
+		Unit* target = targets[i];
+		
+		Event* log = new EventRemoveStatus(this, name, Event::CLEANSE_HIT_CHANCE, target, DEBUFF);
+		log->apply(battle);
+
+		if (log->success)
+		{
+			Effect* effect = new Effect(current, battle, name, target);
+
+			Status* status = new StatusRegeneration(effect, target, 1);
+
+			Event* log = new EventCauseStatus(this, name, Event::BUFF_HIT_CHANCE, status);
+			log->apply(battle);
+
+			effect->applyEffect();
+		}
+	}
+}

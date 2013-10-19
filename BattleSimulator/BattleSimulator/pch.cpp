@@ -205,6 +205,10 @@ string toStringJob(JobType val)
             return "Wizard";
         case JOB_ENCHANTER:
             return "Enchanter";
+        case JOB_DRUID:
+            return "Druid";
+        case JOB_TREE_OF_LIFE:
+            return "TreeOfLife";
     }
 	return "";
 }

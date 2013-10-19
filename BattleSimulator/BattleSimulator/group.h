@@ -107,6 +107,29 @@ public:
 	void setUnitAt(const GridPoint & p, Unit* unit) {
 		grid[p.x][p.y] = unit;
 	}
+	
+	Unit* getSummon(Unit* summoner)
+	{
+		for (int i = 0; i < summoned.size(); ++i)
+			if (summoned[i]->getSummoner() == summoner)
+				return summoned[i];
+		return NULL;
+	}
+
+	Unit* addSummonAt(int x, int y, Character* character, Unit* summoner) {
+		character->setBackSkillIndex(0);
+		character->setMidSkillIndex(0);
+		character->setFrontSkillIndex(0);
+		character->setBasicSkillIndex(0);
+		
+		Unit* unit = new Unit(character, gid, x, y);
+		unit->applyCharacterSkillSets();
+		unit->setSummoner(summoner);
+		setUnitAt(x, y, unit);
+
+		summoned.push_back(unit);
+		return unit;
+	}
 
 	Unit* getLeader() const {
 		return leader;
@@ -192,7 +215,7 @@ public:
 
 	void printGroup(bool mirrored) const;
 
-	~Group() {}
+	~Group();
 };
 
 #endif

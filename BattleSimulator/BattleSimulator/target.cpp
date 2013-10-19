@@ -72,6 +72,31 @@ vector<Unit*> Targeter::searchForFrontTargets(Unit* current, Battle* battle, Gro
 	return targets;
 }
 
+// Randomly selects a row of units based on range
+vector<Unit*> Targeter::selectRowTargets(Unit* current, Battle* battle, Group* allyGroup, Group* enemyGroup, int rowRange, bool preferMostUnits)
+{
+	vector<int > rows;
+	int bestNum = 0;
+	int r = 0;
+	for (int i = 0; i < enemyGroup->getHeight() && r < rowRange; ++i)
+	{
+		vector<Unit*> vals = enemyGroup->allyUnitsAtRow(i);
+		if (vals.size() >= bestNum ) {
+			++r;
+			if (rowRange == 1)
+				return vals;
+
+			if (preferMostUnits && vals.size() > bestNum)
+			{
+				rows.clear();
+				bestNum = vals.size();
+			}
+			rows.push_back(i);
+		}
+	}
+	return enemyGroup->allyUnitsAtRow(rows[rowRange <= rows.size() ? rand() % rowRange : rand() % rows.size()]);
+}
+
 bool Targeter::canReach(Unit* current, Unit* target, Battle* battle, int startingAdjacencyRange, int rowRange)
 {
 	if (!current || !target)

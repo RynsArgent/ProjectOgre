@@ -188,9 +188,13 @@ void EventRemoveStatus::apply(Battle* battle)
 			removedResult = candidateStatusList[candidateStatusList.size() - 1];
 		} 
 	}
-	vector<Status*> instances = removedResult->getInstances();
-	for (int j = 0; j < instances.size(); ++j)
-		instances[j]->onKill();
+
+	if (removedResult)
+	{
+		vector<Status*> instances = removedResult->getInstances();
+		for (int j = 0; j < instances.size(); ++j)
+			instances[j]->onKill();
+	}
 }
 
 void EventRemoveStatus::print(ostream& out) const

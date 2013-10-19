@@ -53,7 +53,7 @@ protected:
 	vector<StatusGroup*> currentStatus;
 
 	bool leader;
-	bool summoned;
+	Unit* summoner;
 	bool done;
 
 	int rValue; // Used to settle ties, can be used for multiple things
@@ -100,7 +100,7 @@ public:
 	int getCurrentPhysicalAttack() const {
 		return currentPhysicalAttack;
 	}
-
+	
 	void setCurrentPhysicalAttack(int physicalAttack) {
 		this->currentPhysicalAttack = physicalAttack;
 	}
@@ -310,8 +310,16 @@ public:
 		return currentEffects;
 	}
 
+	int numCurrentEffects() const {
+		return currentEffects.size();
+	}
+
 	vector<StatusGroup*> getCurrentStatus() const {
 		return currentStatus;
+	}
+
+	int numCurrentStatus() const {
+		return currentStatus.size();
 	}
 
 	bool isAlive() const {
@@ -322,8 +330,16 @@ public:
 		return currentHealth <= 0;
 	}
 	
+	void setSummoner(Unit* value) {
+		summoner = value;
+	}
+	
+	Unit* getSummoner() const {
+		return summoner;
+	}
+
 	bool isSummoned() const {
-		return summoned;
+		return summoner != NULL;
 	}
 
 	// For fleeing units ect.

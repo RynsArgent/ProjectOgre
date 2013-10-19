@@ -44,6 +44,9 @@ public:
 	Unit* getMainUnit() const { return mainUnit; }
 	Unit* getRespondUnit() const { return respondUnit; }
 	vector<Event*> getEventStack() const { return eventStack; }
+	vector<Ability*> getAbilStack() const { return abilStack; }
+	vector<StatusGroup*> getCleanup() const { return cleanup; }
+	vector<Unit*> getUnitOrder() const { return unitOrder; }
 
 	Group* getAllyGroup(int gid) const;
 	Group* getEnemyGroup(int gid) const;
@@ -56,7 +59,7 @@ public:
     void addToEventStack(Event* value);
     void addToAbilStack(Ability* value);
     void addToCleanup(StatusGroup* value);
-    void addToTempSummons(Unit* value);
+    void addToUnitOrder(Unit* value);
 	int getWinner() const;
     
 	void simulate(bool print = false);

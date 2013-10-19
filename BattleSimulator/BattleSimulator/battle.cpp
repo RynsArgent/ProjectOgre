@@ -156,13 +156,33 @@ void Battle::executeTurn()
 	// Clean up any units that have died
 	group1->cleanDead();
 	group2->cleanDead();
+	// Update Unit Order removing unused summoned units
+	vector<Unit*> temp(unitOrder.size());
+	int ind = 0;
+	for (int i = 0; i < unitOrder.size(); ++i)
+	{
+		if (unitOrder[i]->isSummoned() &&
+			!unitOrder[i]->isAvailable() &&
+			unitOrder[i]->numCurrentEffects() <= 0 &&
+			unitOrder[i]->numCurrentStatus() <= 0)
+		{
+			delete unitOrder[i];
+		}
+		else
+		{
+			temp[ind] = unitOrder[i];
+			++ind;
+		}
+	}
+	temp.resize(ind);
+	unitOrder = temp;
+	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
+	sort(unitOrder.begin() + turnIndex, unitOrder.end(), compareSpeed);
+
 	// Determine whether an end result has occurred
 	if (!group1->groupIsAvailable() || !group2->groupIsAvailable())
 		isOver = true;
 	
-	// Will need to sort based on only units that have not moved yet, especially when units can start changing speeds
-	sort(unitOrder.begin() + turnIndex, unitOrder.end(), compareSpeed);
-
 	// Increment to the next turn
 	mainUnit->setDone(true);
 	++turnIndex;
@@ -207,6 +227,10 @@ void Battle::addToAbilStack(Ability* value) {
 
 void Battle::addToCleanup(StatusGroup* value) {
     cleanup.push_back(value);
+}
+
+void Battle::addToUnitOrder(Unit* value) {
+    unitOrder.push_back(value);
 }
 
 void Battle::simulate(bool print)
@@ -273,16 +297,20 @@ void Battle::postprint() const
 
 int Battle::getWinner() const
 {
-	if (group1->groupIsAvailable())
-		return 1;
-	else if (group2->groupIsAvailable())
-		return 2;
-	else
+	bool avail1 = group1->groupIsAvailable();
+	bool avail2 = group2->groupIsAvailable();
+	if (avail1 & avail2)
 		return 0;
+	else if (avail1)
+		return 1;
+	else
+		return 2;
 }
 
 Battle::~Battle()
 {
 	cleanupTurn();
 	delete globalTrigger;
+	delete group1;
+	delete group2;
 }

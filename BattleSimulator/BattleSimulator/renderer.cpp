@@ -18,7 +18,7 @@
 extern bool change;
 extern int seed;
 
-JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT, JOB_BARBARIAN, JOB_ROGUE, JOB_HUNTER, JOB_ARCHER, JOB_BARD, JOB_PRIEST, JOB_PUGILIST, JOB_WIZARD, JOB_ENCHANTER };
+JobType jobs[] = { JOB_NONE, JOB_FIGHTER, JOB_SCOUT, JOB_ACOLYTE, JOB_MAGE, JOB_WARRIOR, JOB_KNIGHT, JOB_BARBARIAN, JOB_ROGUE, JOB_HUNTER, JOB_ARCHER, JOB_BARD, JOB_PRIEST, JOB_PUGILIST, JOB_WIZARD, JOB_ENCHANTER, JOB_DRUID };
 static const int NUM_JOBS = sizeof(jobs) / sizeof(JobType);
 
 Color getColor(StatusGroup* status)
@@ -932,7 +932,7 @@ void Renderer::processMouseLeftClickSetup(const Point2D & loc)
 				{
 					--setupInfo.sideboardInfo.jobindex;
 					if (setupInfo.sideboardInfo.jobindex < 0)
-						setupInfo.sideboardInfo.jobindex = NUM_JOBS / (SideboardInfoBox::JOB_WIDTH * SideboardInfoBox::JOB_HEIGHT);
+						setupInfo.sideboardInfo.jobindex = (NUM_JOBS - 1) / (SideboardInfoBox::JOB_WIDTH * SideboardInfoBox::JOB_HEIGHT);
 
 				}
 
@@ -1115,9 +1115,6 @@ void Renderer::processMouseRightClickSetup(const Point2D & loc)
 			if (battleInfo.info->getRoundNumber() > 100)
 				++totalTerminates;
 
-			
-			if (battleInfo.groupAInfo.info) delete battleInfo.groupAInfo.info;
-			if (battleInfo.groupBInfo.info) delete battleInfo.groupBInfo.info;
 			if (battleInfo.info) delete battleInfo.info;
 			
 			if (i % 10 == 0)

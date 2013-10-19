@@ -437,7 +437,7 @@ protected:
 	static const ActionType ACT = ABILITY_STANDARD;
 	static const AbilityType TYPE = ABILITY_ATTACK_MELEE;
 	static const bool BASIC = false;
-	static const bool RESPONDABLE = true;
+	static const bool RESPONDABLE = false;
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
@@ -1122,13 +1122,28 @@ public:
 	~DisorientingMist() {}
 };
 
+class Enervate : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Enervate() : Ability("Enervate", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Enervate() {}
+};
+
 class NaturesGrasp : public Ability
 {
 protected:
 	static const ActionType ACT = ABILITY_STANDARD;
 	static const AbilityType TYPE = ABILITY_ATTACK_MAGIC;
 	static const bool BASIC = false;
-	static const bool RESPONDABLE = true;
+	static const bool RESPONDABLE = false;
 	static const bool INTERRUPTIBLE = true;
 	static const int COST = 1;
 public:
@@ -1150,6 +1165,36 @@ public:
 	NaturesEmbrace() : Ability("Nature's Embrace", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
 	virtual void action(Ability* previous, Unit* current, Battle* battle);
 	~NaturesEmbrace() {}
+};
+
+class ManaTree : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	ManaTree() : Ability("Mana Tree", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~ManaTree() {}
+};
+
+class Tranquility : public Ability
+{
+protected:
+	static const ActionType ACT = ABILITY_STANDARD;
+	static const AbilityType TYPE = ABILITY_SPECIAL;
+	static const bool BASIC = false;
+	static const bool RESPONDABLE = false;
+	static const bool INTERRUPTIBLE = true;
+	static const int COST = 1;
+public:
+	Tranquility() : Ability("Tranquility", ACT, TYPE, BASIC, RESPONDABLE, INTERRUPTIBLE, COST) {}
+	virtual void action(Ability* previous, Unit* current, Battle* battle);
+	~Tranquility() {}
 };
 
 #endif

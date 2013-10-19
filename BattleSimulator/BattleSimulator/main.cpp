@@ -147,8 +147,6 @@ void GLprocessKeyboardPress(unsigned char key, int x, int y)
 		if (mode == MODE_SETUP) {
 			exit(0);
 		} else {
-			delete groupA;
-			delete groupB;
 			delete battle;
 			mode = MODE_SETUP;
 			renderer->setupInfo.done = false;
